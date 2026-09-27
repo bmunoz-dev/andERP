@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "pnpm --filter @anderp/shared build && pnpm -r --parallel dev",
     "build": "pnpm -r build",
-    "lint": "eslint .",
+    "lint": "pnpm --filter @anderp/shared build && eslint .",
     "typecheck": "pnpm --filter @anderp/shared build && pnpm -r typecheck",
     "test": "pnpm --filter @anderp/shared build && vitest run",
     "test:watch": "vitest",
