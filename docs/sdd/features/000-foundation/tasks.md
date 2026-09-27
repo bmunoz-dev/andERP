@@ -81,6 +81,6 @@
 
 ## Bloque G — CI y cierre
 
-- [ ] F00-T030 Crear `.github/workflows/ci.yml` según el plan.
+- [x] F00-T030 Crear `.github/workflows/ci.yml` según el plan.
       Depende de: F00-T024 · Verificación: CA-11
 - [ ] F00-T031 Cierre: ejecutar los tres comandos de CA-1 desde un clon limpio, revisar la Definición de Hecho y actualizar `roadmap.md`.
