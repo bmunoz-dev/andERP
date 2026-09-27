@@ -1,0 +1,55 @@
+{
+  "id": "411ea27c-8b93-44eb-8055-cdf0b920be1c",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {},
+  "enums": {
+    "anderp.member_role": {
+      "name": "member_role",
+      "schema": "anderp",
+      "values": [
+        "admin"
+      ]
+    },
+    "anderp.organization_status": {
+      "name": "organization_status",
+      "schema": "anderp",
+      "values": [
+        "active",
+        "suspended"
+      ]
+    },
+    "anderp.payment_frequency": {
+      "name": "payment_frequency",
+      "schema": "anderp",
+      "values": [
+        "weekly",
+        "biweekly",
+        "monthly",
+        "bimonthly"
+      ]
+    },
+    "anderp.user_status": {
+      "name": "user_status",
+      "schema": "anderp",
+      "values": [
+        "active",
+        "locked",
+        "inactive"
+      ]
+    }
+  },
+  "schemas": {
+    "anderp": "anderp"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

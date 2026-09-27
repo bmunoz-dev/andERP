@@ -4,4 +4,10 @@ packages:
 
 # pnpm 11 bloquea los scripts de instalación por defecto; solo se permiten los necesarios.
 allowBuilds:
+  '@swc/core': true
   esbuild: true
+  # Telemetría y compilaciones nativas opcionales (tienen alternativa en JS).
+  '@scarf/scarf': false
+  cpu-features: false
+  protobufjs: false
+  ssh2: false

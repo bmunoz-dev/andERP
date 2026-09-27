@@ -34,36 +34,36 @@
 
 ## Bloque D — `@anderp/api`
 
-- [ ] F00-T011 Crear el esqueleto de NestJS con SWC en `apps/api`, prefijo global `/api/v1` y las carpetas `modules/` y `shared/`.
+- [x] F00-T011 Crear el esqueleto de NestJS con SWC en `apps/api`, prefijo global `/api/v1` y las carpetas `modules/` y `shared/`.
       Depende de: F00-T003
-- [ ] F00-T012 [TDD] Crear `config/`: esquema Zod del entorno que falla al arrancar si falta una variable, y `.env.example`.
+- [x] F00-T012 [TDD] Crear `config/`: esquema Zod del entorno que falla al arrancar si falta una variable, y `.env.example`.
       Depende de: F00-T011
-- [ ] F00-T013 Configurar `nestjs-pino`: `genReqId`, cabecera `x-request-id` en la respuesta y `redact` según el plan.
+- [x] F00-T013 Configurar `nestjs-pino`: `genReqId`, cabecera `x-request-id` en la respuesta y `redact` según el plan.
       Depende de: F00-T011
-- [ ] F00-T014 Configurar `nestjs-cls` con `requestId` en el contexto.
+- [x] F00-T014 Configurar `nestjs-cls` con `requestId` en el contexto.
       Depende de: F00-T013
-- [ ] F00-T015 Crear `db/client.ts`: módulo de base de datos con postgres-js + drizzle, token de inyección `DB` y cierre de conexiones al apagar.
+- [x] F00-T015 Crear `db/client.ts`: módulo de base de datos con postgres-js + drizzle, token de inyección `DB` y cierre de conexiones al apagar.
       Depende de: F00-T012
-- [ ] F00-T016 Crear `drizzle.config.ts` (usa `DATABASE_URL_MIGRATIONS`) y los scripts `db:generate`, `db:generate:custom` y `db:migrate`.
+- [x] F00-T016 Crear `drizzle.config.ts` (usa `DATABASE_URL_MIGRATIONS`) y los scripts `db:generate`, `db:generate:custom` y `db:migrate`.
       Depende de: F00-T015
-- [ ] F00-T017 Crear la migración custom `0000_base`: esquema `anderp`, extensiones, enums de §5.2 y privilegios por defecto para `app_runtime`. Configurar Drizzle con `pgSchema('anderp')`.
+- [x] F00-T017 Crear la migración custom `0000_base`: esquema `anderp`, extensiones, enums de §5.2 y privilegios por defecto para `app_runtime`. Configurar Drizzle con `pgSchema('anderp')`.
       Depende de: F00-T016 · Verificación: CA-8
-- [ ] F00-T018 Crear `db/columns.ts` (`id()` con uuid v7, `auditColumns`, `orgColumn`) y declarar los enums en Drizzle (`pgEnum`) sin volver a crearlos en migraciones.
+- [x] F00-T018 Crear `db/columns.ts` (`id()` con uuid v7, `auditColumns`, `orgColumn`) y declarar los enums en Drizzle (`pgEnum`) sin volver a crearlos en migraciones.
       Depende de: F00-T017
-- [ ] F00-T019 [TDD] Crear `DomainError` y `pg-error.mapper.ts`, con pruebas unitarias de cada SQLSTATE de §7 (`23505`, `23P01`, `23503`, `23514`, `P0001` con código en el mensaje, y otros → 500).
+- [x] F00-T019 [TDD] Crear `DomainError` y `pg-error.mapper.ts`, con pruebas unitarias de cada SQLSTATE de §7 (`23505`, `23P01`, `23503`, `23514`, `P0001` con código en el mensaje, y otros → 500).
       Depende de: F00-T011
-- [ ] F00-T020 Crear `ProblemDetailsFilter` global, `ZodValidationPipe` global (nestjs-zod) y el manejo de 404.
+- [x] F00-T020 Crear `ProblemDetailsFilter` global, `ZodValidationPipe` global (nestjs-zod) y el manejo de 404.
       Depende de: F00-T019
-- [ ] F00-T021 [P] Configurar Swagger en `/api/docs`, desactivado cuando `NODE_ENV=production`.
+- [x] F00-T021 [P] Configurar Swagger en `/api/docs`, desactivado cuando `NODE_ENV=production`.
       Depende de: F00-T020
-- [ ] F00-T022 Crear el módulo `health`: `GET /health` con `SELECT 1` y 503 si falla. Marcarlo público desde ya con un decorador `@Public()` (sin efecto hasta F01).
+- [x] F00-T022 Crear el módulo `health`: `GET /health` con `SELECT 1` y 503 si falla. Marcarlo público desde ya con un decorador `@Public()` (sin efecto hasta F01).
       Depende de: F00-T015
 
 ## Bloque E — Harness de pruebas de integración
 
-- [ ] F00-T023 Crear `test/setup/global-setup.ts` (Testcontainers `postgres:17` + `bootstrap.sql` + migraciones), `reset-db.ts` y `create-test-app.ts`.
+- [x] F00-T023 Crear `test/setup/global-setup.ts` (Testcontainers `postgres:17` + `bootstrap.sql` + migraciones), `reset-db.ts` y `create-test-app.ts`.
       Depende de: F00-T017 · Verificación: CA-9
-- [ ] F00-T024 [TDD] Escribir las pruebas de integración de CA-2, CA-5, CA-6 (con una ruta de prueba que lanza un error y captura del log para verificar el `redact`) y CA-7 (con una ruta de prueba con esquema Zod).
+- [x] F00-T024 [TDD] Escribir las pruebas de integración de CA-2, CA-5, CA-6 (con una ruta de prueba que lanza un error y captura del log para verificar el `redact`) y CA-7 (con una ruta de prueba con esquema Zod).
       Depende de: F00-T020, F00-T022, F00-T023
 
 ## Bloque F — `@anderp/web`
