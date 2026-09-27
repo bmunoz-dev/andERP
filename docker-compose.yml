@@ -1,0 +1,26 @@
+# Servicios locales de desarrollo. Las credenciales son solo para esta máquina.
+name: anderp
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: anderp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      APP_RUNTIME_PASSWORD: app_runtime
+      TZ: America/Bogota
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/bootstrap.sql:/anderp/bootstrap.sql:ro
+      - ./db/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d anderp']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:

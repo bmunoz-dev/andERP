@@ -1,0 +1,9 @@
+dist
+coverage
+pnpm-lock.yaml
+apps/api/drizzle/meta
+apps/web/src/routeTree.gen.ts
+
+# Documentación escrita a mano y componentes generados por shadcn
+*.md
+apps/web/src/components/ui

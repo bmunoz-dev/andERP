@@ -1,0 +1,19 @@
+packages:
+  - apps/*
+  - packages/*
+
+# pnpm 11 bloquea los scripts de instalación por defecto; solo se permiten los necesarios.
+allowBuilds:
+  '@swc/core': true
+  esbuild: true
+  # Telemetría y compilaciones nativas opcionales (tienen alternativa en JS).
+  '@scarf/scarf': false
+  cpu-features: false
+  protobufjs: false
+  ssh2: false
+
+minimumReleaseAgeExclude:
+  - '@tanstack/react-router@1.170.40'
+  - '@tanstack/router-core@1.171.33'
+  - '@tanstack/router-generator@1.167.39'
+  - '@tanstack/router-plugin@1.168.41'

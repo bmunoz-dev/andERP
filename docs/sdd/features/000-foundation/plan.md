@@ -59,7 +59,7 @@
   pnpm-workspace.yaml
   tsconfig.base.json
   eslint.config.js
-  vitest.workspace.ts
+  vitest.config.ts             test.projects con los tres paquetes
 ```
 
 ## Decisiones técnicas
@@ -73,7 +73,7 @@
 - `weekOfMonth(date) = min(floor((día − 1) / 7) + 1, 4)`.
 - `weekRange(y, m, w)`: el inicio es el día `(w − 1) × 7 + 1`; el fin es `inicio + 6` en las semanas 1–3 y el último día del mes en la semana 4.
 - Las fechas se manejan como strings `YYYY-MM-DD` (fechas de calendario sin zona horaria). **No se usa `Date` con zona para fechas de negocio**, porque un `Date` en UTC puede caer en el día anterior en Bogotá.
-- Aritmética de fechas con `date-fns` sobre fechas locales.
+- Aritmética de fechas propia en UTC sobre strings `YYYY-MM-DD` (`dates/calendar-date.ts`), sin dependencias: sumar días, días del mes y día de la semana.
 
 **Festivos de Colombia**
 - Implementación propia, sin dependencia externa:
@@ -105,10 +105,11 @@
   - `DATABASE_URL`: rol `app_runtime`, lo usa la aplicación.
   - `DATABASE_URL_MIGRATIONS`: rol dueño del esquema, lo usan `drizzle-kit` y el script de migración.
 - `db/bootstrap.sql` crea `app_runtime` con `LOGIN` y sin privilegios de DDL. En local se monta en `/docker-entrypoint-initdb.d`. En Supabase se ejecuta a mano una vez (F07).
-- **Esquema `anderp`:** todas las tablas, vistas y funciones van ahí, nunca en `public`, porque Supabase expone `public` por su Data API (ver F07). En Drizzle, `export const anderp = pgSchema('anderp')` y todas las tablas se declaran con `anderp.table(...)`. `bootstrap.sql` fija `ALTER ROLE app_runtime SET search_path = anderp`.
+- **Esquema `anderp`:** todas las tablas, vistas y funciones van ahí, nunca en `public`, porque Supabase expone `public` por su Data API (ver F07). En Drizzle, `export const anderp = pgSchema('anderp')` y todas las tablas se declaran con `anderp.table(...)`. `bootstrap.sql` fija `ALTER ROLE app_runtime SET search_path = anderp, extensions`. `extensions` tiene que estar en el `search_path` o los operadores de `citext` no se encuentran y la comparación de emails pasa a distinguir mayúsculas sin avisar.
 - Migración `0000_base.sql` (custom):
   - `CREATE SCHEMA anderp`.
-  - `CREATE EXTENSION IF NOT EXISTS citext` y `btree_gist` (en Supabase, en el esquema `extensions`, que ya está en el `search_path`).
+  - `CREATE SCHEMA IF NOT EXISTS extensions` y `CREATE EXTENSION IF NOT EXISTS citext` y `btree_gist` `WITH SCHEMA extensions`: el mismo esquema que usa Supabase, así local y producción se comportan igual. En Drizzle el tipo se declara como `extensions.citext` para no depender del `search_path` del rol de migraciones.
+  - `GRANT USAGE ON SCHEMA extensions TO app_runtime`.
   - Todos los enums de §5.2, en `anderp`.
   - `GRANT USAGE ON SCHEMA anderp TO app_runtime`.
   - `ALTER DEFAULT PRIVILEGES IN SCHEMA anderp GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_runtime`.
@@ -120,7 +121,7 @@
 - Las migraciones generadas se revisan a mano antes de commitearlas. Las restricciones que Drizzle no expresa (triggers, EXCLUDE, vistas, índices parciales complejos) van en migraciones custom (`drizzle-kit generate --custom`).
 
 **Pruebas**
-- Vitest en modo workspace (`packages/shared`, `apps/api`, `apps/web`).
+- Vitest con `test.projects` en el `vitest.config.ts` raíz (`packages/shared`, `apps/api`, `apps/web`).
 - Integración de la API:
   - `globalSetup` levanta `postgres:17` con Testcontainers, ejecuta `bootstrap.sql` y aplica las migraciones.
   - Expone la URL por `process.env`.
@@ -147,7 +148,7 @@
 
 ```
 NODE_ENV=development
-PORT=3000
+API_PORT=3000
 LOG_LEVEL=debug
 DATABASE_URL=postgres://app_runtime:app_runtime@localhost:5432/anderp
 DATABASE_URL_MIGRATIONS=postgres://postgres:postgres@localhost:5432/anderp
@@ -157,3 +158,14 @@ DATABASE_URL_MIGRATIONS=postgres://postgres:postgres@localhost:5432/anderp
 
 - **Columnas generadas con `EXTRACT`.** Postgres exige expresiones inmutables. Se valida con una prueba de migración en F04/F05. Si fallara, se usa una función SQL propia marcada `IMMUTABLE`.
 - **Consumo de `@anderp/shared` compilado.** Se valida en este feature importándolo desde la API y la web.
+
+## Notas de implementación
+
+Decisiones que surgieron al implementar y que cambian o precisan lo anterior:
+
+- **`API_PORT` en lugar de `PORT`.** Varias herramientas (el lanzador de vista previa, Render) definen `PORT` para su propio proceso. Con `PORT`, la API terminó escuchando en el puerto de Vite sin ningún error visible. Vite usa `strictPort: true` para que un choque de puertos falle de inmediato.
+- **`pnpm dev` compila `@anderp/shared` antes de levantar todo en paralelo**, y `tsup --watch` no limpia `dist`. Si no, la API y la web arrancan mientras `dist` está vacío.
+- **Compilación de la API:** el builder SWC de Nest usa `swc.build.json` con `stripLeadingPaths` y excluye `*.test.ts`, para que la salida sea `dist/main.js`. La configuración de Vitest de la API es `vitest.config.mts`, porque el paquete es CommonJS.
+- **Errores 5xx:** el filtro registra `Unhandled error` (nivel `error`) solo para excepciones inesperadas. Un `DomainError` 5xx, como el 503 de health, se registra como `Service error` (nivel `warn`).
+- **shadcn/ui** instala su propio paquete `cn` (repositorio `shadcn-ui/cn`) en lugar de `clsx` + `tailwind-merge`.
+- **`todayIn()`** en `@anderp/shared` da la fecha de hoy en `America/Bogota`, sin depender de la zona horaria del navegador o del servidor.
