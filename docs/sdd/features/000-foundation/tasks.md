@@ -29,7 +29,7 @@
 
 ## Bloque C — Base de datos local
 
-- [ ] F00-T010 Crear `docker-compose.yml` con `postgres:17` (base de datos `anderp`, volumen persistente, puerto 5432) y `db/bootstrap.sql` (crea el rol `app_runtime`) montado en el initdb.
+- [x] F00-T010 Crear `docker-compose.yml` con `postgres:17` (base de datos `anderp`, volumen persistente, puerto 5432) y `db/bootstrap.sql` (crea el rol `app_runtime`) montado en el initdb.
       Verificación: `psql` con `app_runtime` conecta y no puede ejecutar `CREATE TABLE`.
 
 ## Bloque D — `@anderp/api`

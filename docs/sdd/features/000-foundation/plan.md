@@ -105,10 +105,11 @@
   - `DATABASE_URL`: rol `app_runtime`, lo usa la aplicación.
   - `DATABASE_URL_MIGRATIONS`: rol dueño del esquema, lo usan `drizzle-kit` y el script de migración.
 - `db/bootstrap.sql` crea `app_runtime` con `LOGIN` y sin privilegios de DDL. En local se monta en `/docker-entrypoint-initdb.d`. En Supabase se ejecuta a mano una vez (F07).
-- **Esquema `anderp`:** todas las tablas, vistas y funciones van ahí, nunca en `public`, porque Supabase expone `public` por su Data API (ver F07). En Drizzle, `export const anderp = pgSchema('anderp')` y todas las tablas se declaran con `anderp.table(...)`. `bootstrap.sql` fija `ALTER ROLE app_runtime SET search_path = anderp`.
+- **Esquema `anderp`:** todas las tablas, vistas y funciones van ahí, nunca en `public`, porque Supabase expone `public` por su Data API (ver F07). En Drizzle, `export const anderp = pgSchema('anderp')` y todas las tablas se declaran con `anderp.table(...)`. `bootstrap.sql` fija `ALTER ROLE app_runtime SET search_path = anderp, extensions`. `extensions` tiene que estar en el `search_path` o los operadores de `citext` no se encuentran y la comparación de emails pasa a distinguir mayúsculas sin avisar.
 - Migración `0000_base.sql` (custom):
   - `CREATE SCHEMA anderp`.
-  - `CREATE EXTENSION IF NOT EXISTS citext` y `btree_gist` (en Supabase, en el esquema `extensions`, que ya está en el `search_path`).
+  - `CREATE SCHEMA IF NOT EXISTS extensions` y `CREATE EXTENSION IF NOT EXISTS citext` y `btree_gist` `WITH SCHEMA extensions`: el mismo esquema que usa Supabase, así local y producción se comportan igual. En Drizzle el tipo se declara como `extensions.citext` para no depender del `search_path` del rol de migraciones.
+  - `GRANT USAGE ON SCHEMA extensions TO app_runtime`.
   - Todos los enums de §5.2, en `anderp`.
   - `GRANT USAGE ON SCHEMA anderp TO app_runtime`.
   - `ALTER DEFAULT PRIVILEGES IN SCHEMA anderp GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_runtime`.
