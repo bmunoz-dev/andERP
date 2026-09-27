@@ -68,15 +68,15 @@
 
 ## Bloque F — `@anderp/web`
 
-- [ ] F00-T025 Crear el esqueleto de Vite + React + TS en `apps/web`, con alias `@/`, Tailwind 4 e inicialización de shadcn/ui.
+- [x] F00-T025 Crear el esqueleto de Vite + React + TS en `apps/web`, con alias `@/`, Tailwind 4 e inicialización de shadcn/ui.
       Depende de: F00-T003
-- [ ] F00-T026 Configurar TanStack Router (plugin de archivos) y TanStack Query: layout raíz, página de inicio vacía y página 404.
+- [x] F00-T026 Configurar TanStack Router (plugin de archivos) y TanStack Query: layout raíz, página de inicio vacía y página 404.
       Depende de: F00-T025
-- [ ] F00-T027 [TDD] Crear `lib/api-client.ts` y `lib/error-messages.es.ts`, con pruebas del parseo de Problem Details a `ApiError` y del mensaje por defecto.
+- [x] F00-T027 [TDD] Crear `lib/api-client.ts` y `lib/error-messages.es.ts`, con pruebas del parseo de Problem Details a `ApiError` y del mensaje por defecto.
       Depende de: F00-T025, F00-T009 · Verificación: CA-10
-- [ ] F00-T028 Configurar el proxy de Vite `/api` → `http://localhost:3000`. Mostrar en la página de inicio el estado de `/api/v1/health` para comprobar la integración.
+- [x] F00-T028 Configurar el proxy de Vite `/api` → `http://localhost:3000`. Mostrar en la página de inicio el estado de `/api/v1/health` para comprobar la integración.
       Depende de: F00-T026, F00-T022
-- [ ] F00-T029 Importar `weekRange` de `@anderp/shared` en la web y en la API (una prueba en cada una) para validar que el paquete compilado se consume bien.
+- [x] F00-T029 Importar `weekRange` de `@anderp/shared` en la web y en la API (una prueba en cada una) para validar que el paquete compilado se consume bien.
       Depende de: F00-T006, F00-T011, F00-T025
 
 ## Bloque G — CI y cierre

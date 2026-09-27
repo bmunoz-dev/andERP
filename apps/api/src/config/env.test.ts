@@ -9,14 +9,14 @@ describe('loadEnv', () => {
   it('aplica valores por defecto', () => {
     expect(loadEnv(valid)).toEqual({
       NODE_ENV: 'development',
-      PORT: 3000,
+      API_PORT: 3000,
       LOG_LEVEL: 'info',
       DATABASE_URL: valid.DATABASE_URL,
     });
   });
 
-  it('convierte PORT a número', () => {
-    expect(loadEnv({ ...valid, PORT: '4000' }).PORT).toBe(4000);
+  it('convierte API_PORT a número', () => {
+    expect(loadEnv({ ...valid, API_PORT: '4000' }).API_PORT).toBe(4000);
   });
 
   it('falla si falta DATABASE_URL e indica la variable', () => {
@@ -25,7 +25,7 @@ describe('loadEnv', () => {
   });
 
   it.each([
-    ['PORT', 'abc'],
+    ['API_PORT', 'abc'],
     ['NODE_ENV', 'staging'],
     ['LOG_LEVEL', 'verbose'],
     ['DATABASE_URL', 'mysql://localhost/anderp'],

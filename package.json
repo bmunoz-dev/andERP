@@ -7,7 +7,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "pnpm -r --parallel dev",
+    "dev": "pnpm --filter @anderp/shared build && pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "lint": "eslint .",
     "typecheck": "pnpm --filter @anderp/shared build && pnpm -r typecheck",

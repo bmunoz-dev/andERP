@@ -65,6 +65,15 @@ export function addDays(value: string, days: number): string {
   return fromUtcMs(toUtcMs(value) + days * MS_PER_DAY);
 }
 
+/** Zona horaria de negocio (design.md §5.1). */
+export const BUSINESS_TIME_ZONE = 'America/Bogota';
+
+/** Fecha de calendario de "hoy" en una zona horaria (por defecto, la de negocio). */
+export function todayIn(timeZone: string = BUSINESS_TIME_ZONE, now: Date = new Date()): string {
+  // en-CA formatea como YYYY-MM-DD.
+  return new Intl.DateTimeFormat('en-CA', { timeZone }).format(now);
+}
+
 /** 0 = domingo … 6 = sábado (misma convención que `Date#getDay`). */
 export function dayOfWeek(value: string): number {
   return new Date(toUtcMs(value)).getUTCDay();

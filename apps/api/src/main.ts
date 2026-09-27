@@ -11,7 +11,7 @@ async function bootstrap(): Promise<void> {
 
   const app = await NestFactory.create(AppModule.register({ env }), { bufferLogs: true });
   configureApp(app, env);
-  await app.listen(env.PORT);
+  await app.listen(env.API_PORT);
 }
 
 void bootstrap();

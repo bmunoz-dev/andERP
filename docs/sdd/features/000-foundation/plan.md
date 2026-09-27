@@ -148,7 +148,7 @@
 
 ```
 NODE_ENV=development
-PORT=3000
+API_PORT=3000
 LOG_LEVEL=debug
 DATABASE_URL=postgres://app_runtime:app_runtime@localhost:5432/anderp
 DATABASE_URL_MIGRATIONS=postgres://postgres:postgres@localhost:5432/anderp
@@ -158,3 +158,14 @@ DATABASE_URL_MIGRATIONS=postgres://postgres:postgres@localhost:5432/anderp
 
 - **Columnas generadas con `EXTRACT`.** Postgres exige expresiones inmutables. Se valida con una prueba de migración en F04/F05. Si fallara, se usa una función SQL propia marcada `IMMUTABLE`.
 - **Consumo de `@anderp/shared` compilado.** Se valida en este feature importándolo desde la API y la web.
+
+## Notas de implementación
+
+Decisiones que surgieron al implementar y que cambian o precisan lo anterior:
+
+- **`API_PORT` en lugar de `PORT`.** Varias herramientas (el lanzador de vista previa, Render) definen `PORT` para su propio proceso. Con `PORT`, la API terminó escuchando en el puerto de Vite sin ningún error visible. Vite usa `strictPort: true` para que un choque de puertos falle de inmediato.
+- **`pnpm dev` compila `@anderp/shared` antes de levantar todo en paralelo**, y `tsup --watch` no limpia `dist`. Si no, la API y la web arrancan mientras `dist` está vacío.
+- **Compilación de la API:** el builder SWC de Nest usa `swc.build.json` con `stripLeadingPaths` y excluye `*.test.ts`, para que la salida sea `dist/main.js`. La configuración de Vitest de la API es `vitest.config.mts`, porque el paquete es CommonJS.
+- **Errores 5xx:** el filtro registra `Unhandled error` (nivel `error`) solo para excepciones inesperadas. Un `DomainError` 5xx, como el 503 de health, se registra como `Service error` (nivel `warn`).
+- **shadcn/ui** instala su propio paquete `cn` (repositorio `shadcn-ui/cn`) en lugar de `clsx` + `tailwind-merge`.
+- **`todayIn()`** en `@anderp/shared` da la fecha de hoy en `America/Bogota`, sin depender de la zona horaria del navegador o del servidor.

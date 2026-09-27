@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { todayIn } from './calendar-date';
 import { weekOfMonth, weekRange } from './week';
+
+describe('todayIn', () => {
+  it('usa la fecha de Bogotá aunque en UTC ya sea el día siguiente', () => {
+    // 2026-09-28 03:00 UTC = 2026-09-27 22:00 en Bogotá (UTC−5).
+    expect(todayIn('America/Bogota', new Date('2026-09-28T03:00:00Z'))).toBe('2026-09-27');
+  });
+});
 
 describe('weekOfMonth (formato B: 1–7, 8–14, 15–21, 22–fin)', () => {
   it.each([

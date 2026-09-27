@@ -55,6 +55,11 @@ export default defineConfig(
     },
   },
   {
+    // TanStack Router exporta `Route` en cada archivo de ruta y gestiona el HMR por su cuenta.
+    files: ['apps/web/src/routes/**/*.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
+  {
     files: ['**/*.test.ts', '**/*.test.tsx', '**/test/**/*.ts'],
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off',
