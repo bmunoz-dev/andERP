@@ -8,7 +8,6 @@ build/
 coverage/
 *.tsbuildinfo
 .vite/
-apps/web/src/routeTree.gen.ts
 
 # Entorno
 .env
