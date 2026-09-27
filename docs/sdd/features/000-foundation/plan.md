@@ -59,7 +59,7 @@
   pnpm-workspace.yaml
   tsconfig.base.json
   eslint.config.js
-  vitest.workspace.ts
+  vitest.config.ts             test.projects con los tres paquetes
 ```
 
 ## Decisiones técnicas
@@ -73,7 +73,7 @@
 - `weekOfMonth(date) = min(floor((día − 1) / 7) + 1, 4)`.
 - `weekRange(y, m, w)`: el inicio es el día `(w − 1) × 7 + 1`; el fin es `inicio + 6` en las semanas 1–3 y el último día del mes en la semana 4.
 - Las fechas se manejan como strings `YYYY-MM-DD` (fechas de calendario sin zona horaria). **No se usa `Date` con zona para fechas de negocio**, porque un `Date` en UTC puede caer en el día anterior en Bogotá.
-- Aritmética de fechas con `date-fns` sobre fechas locales.
+- Aritmética de fechas propia en UTC sobre strings `YYYY-MM-DD` (`dates/calendar-date.ts`), sin dependencias: sumar días, días del mes y día de la semana.
 
 **Festivos de Colombia**
 - Implementación propia, sin dependencia externa:
@@ -120,7 +120,7 @@
 - Las migraciones generadas se revisan a mano antes de commitearlas. Las restricciones que Drizzle no expresa (triggers, EXCLUDE, vistas, índices parciales complejos) van en migraciones custom (`drizzle-kit generate --custom`).
 
 **Pruebas**
-- Vitest en modo workspace (`packages/shared`, `apps/api`, `apps/web`).
+- Vitest con `test.projects` en el `vitest.config.ts` raíz (`packages/shared`, `apps/api`, `apps/web`).
 - Integración de la API:
   - `globalSetup` levanta `postgres:17` con Testcontainers, ejecuta `bootstrap.sql` y aplica las migraciones.
   - Expone la URL por `process.env`.

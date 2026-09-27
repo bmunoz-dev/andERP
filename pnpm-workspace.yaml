@@ -1,0 +1,7 @@
+packages:
+  - apps/*
+  - packages/*
+
+# pnpm 11 bloquea los scripts de instalación por defecto; solo se permiten los necesarios.
+allowBuilds:
+  esbuild: true

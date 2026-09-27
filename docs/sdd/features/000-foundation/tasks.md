@@ -7,24 +7,24 @@
 
 - [x] F00-T001 Inicializar git, `.gitignore`, `.editorconfig`, `.nvmrc` (24) y un `README.md` raíz con los comandos de arranque. Primer commit con `docs/sdd/`.
       Verificación: `git log` muestra el commit inicial.
-- [ ] F00-T002 Crear `pnpm-workspace.yaml` y el `package.json` raíz con `packageManager`, `engines` y los scripts `dev`, `build`, `lint`, `typecheck`, `test`, `db:generate`, `db:migrate` (delegan con `pnpm -r` o `--filter`).
+- [x] F00-T002 Crear `pnpm-workspace.yaml` y el `package.json` raíz con `packageManager`, `engines` y los scripts `dev`, `build`, `lint`, `typecheck`, `test`, `db:generate`, `db:migrate` (delegan con `pnpm -r` o `--filter`).
       Depende de: F00-T001
-- [ ] F00-T003 Crear `tsconfig.base.json` (strict, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`), `eslint.config.js` (typescript-eslint en modo estricto con tipos) y Prettier.
+- [x] F00-T003 Crear `tsconfig.base.json` (strict, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`), `eslint.config.js` (typescript-eslint en modo estricto con tipos) y Prettier.
       Depende de: F00-T002
-- [ ] F00-T004 Crear `vitest.workspace.ts` que incluya los tres paquetes.
+- [x] F00-T004 Crear `vitest.config.ts` raíz con `test.projects` que incluya los tres paquetes (en Vitest 5 el antiguo `vitest.workspace.ts` ya no existe).
       Depende de: F00-T002
 
 ## Bloque B — `@anderp/shared`
 
-- [ ] F00-T005 Crear el paquete `packages/shared` con `tsup` (ESM + CJS + `.d.ts`), `exports` en `package.json` y script `dev` en modo watch.
+- [x] F00-T005 Crear el paquete `packages/shared` con `tsup` (ESM + CJS + `.d.ts`), `exports` en `package.json` y script `dev` en modo watch.
       Depende de: F00-T003
-- [ ] F00-T006 [TDD] Escribir las pruebas de `weekOfMonth` y `weekRange` con la tabla de CA-3 más validaciones de entrada (mes fuera de 1–12 y semana fuera de 1–4 lanzan error). Verlas fallar e implementar `src/dates/week.ts`.
+- [x] F00-T006 [TDD] Escribir las pruebas de `weekOfMonth` y `weekRange` con la tabla de CA-3 más validaciones de entrada (mes fuera de 1–12 y semana fuera de 1–4 lanzan error). Verlas fallar e implementar `src/dates/week.ts`.
       Depende de: F00-T005 · Verificación: CA-3
-- [ ] F00-T007 [TDD] Escribir las pruebas de `colombianHolidays` para 2025, 2026 y 2027 con las listas oficiales escritas a mano, más pruebas de `isColombianHoliday`. Implementar `src/dates/holidays-co.ts` (Pascua con el algoritmo de Butcher y Ley Emiliani).
+- [x] F00-T007 [TDD] Escribir las pruebas de `colombianHolidays` para 2025, 2026 y 2027 con las listas oficiales escritas a mano, más pruebas de `isColombianHoliday`. Implementar `src/dates/holidays-co.ts` (Pascua con el algoritmo de Butcher y Ley Emiliani).
       Depende de: F00-T005 · Verificación: CA-4
-- [ ] F00-T008 [P] [TDD] Escribir las pruebas de `money.ts` (`isMoney`, `toMoney` con entradas como `"150.000"`, `"150000"`, `"150000,5"` y `"abc"`, y `formatCOP`) e implementar.
+- [x] F00-T008 [P] [TDD] Escribir las pruebas de `money.ts` (`isMoney`, `toMoney` con entradas como `"150.000"`, `"150000"`, `"150000,5"` y `"abc"`, y `formatCOP`) e implementar.
       Depende de: F00-T005
-- [ ] F00-T009 [P] Crear `src/errors/codes.ts` con los códigos base: `INTERNAL_ERROR`, `VALIDATION_ERROR`, `NOT_FOUND`, `CONFLICT`, `UNPROCESSABLE`, `UNAUTHORIZED`, `FORBIDDEN`, `SERVICE_UNAVAILABLE`.
+- [x] F00-T009 [P] Crear `src/errors/codes.ts` con los códigos base: `INTERNAL_ERROR`, `VALIDATION_ERROR`, `NOT_FOUND`, `CONFLICT`, `UNPROCESSABLE`, `UNAUTHORIZED`, `FORBIDDEN`, `SERVICE_UNAVAILABLE`.
       Depende de: F00-T005
 
 ## Bloque C — Base de datos local
