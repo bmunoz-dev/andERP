@@ -48,4 +48,4 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 ## Bloqueos y notas
 
-_Ninguno por ahora._
+- **F00 · CA-11:** el workflow de CI existe y todo pasa en un clon limpio, pero todavía no ha corrido en GitHub porque falta conectar el repositorio remoto. F00 pasa a `Hecho` cuando la primera ejecución quede en verde.
