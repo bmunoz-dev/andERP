@@ -112,7 +112,10 @@ describe('F00 — fundaciones de la API', () => {
   });
 
   it('CA-7 cuerpo inválido → 422 VALIDATION_ERROR con errores por campo', async () => {
-    const res = await t.http.post('/api/v1/test/things').send({ name: '', amount: 100 }).expect(422);
+    const res = await t.http
+      .post('/api/v1/test/things')
+      .send({ name: '', amount: 100 })
+      .expect(422);
     expect(res.body).toMatchObject({ status: 422, code: 'VALIDATION_ERROR' });
     const paths = (res.body.errors as { path: string }[]).map((e) => e.path).sort();
     expect(paths).toEqual(['amount', 'name']);

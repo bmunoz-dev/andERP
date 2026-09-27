@@ -52,8 +52,12 @@ function HomePage() {
         </CardHeader>
         <CardContent>
           {health.isPending && <p className="text-muted-foreground">Verificando…</p>}
-          {health.isSuccess && <p className="font-medium text-green-700">API y base de datos en línea</p>}
-          {health.isError && <p className="font-medium text-destructive">{errorMessage(health.error)}</p>}
+          {health.isSuccess && (
+            <p className="font-medium text-green-700">API y base de datos en línea</p>
+          )}
+          {health.isError && (
+            <p className="font-medium text-destructive">{errorMessage(health.error)}</p>
+          )}
         </CardContent>
       </Card>
     </div>

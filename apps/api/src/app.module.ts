@@ -21,11 +21,7 @@ export class AppModule {
     return {
       module: AppModule,
       global: true,
-      imports: [
-        createLoggerModule(env, logStream),
-        RequestContextModule,
-        DatabaseModule.forRoot(),
-      ],
+      imports: [createLoggerModule(env, logStream), RequestContextModule, DatabaseModule.forRoot()],
       controllers: [HealthController],
       providers: [
         { provide: ENV, useValue: env },

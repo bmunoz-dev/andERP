@@ -26,9 +26,7 @@ export class InvalidEnvError extends Error {
 export function loadEnv(source: Record<string, string | undefined>): Env {
   const result = envSchema.safeParse(source);
   if (!result.success) {
-    const problems = result.error.issues.map(
-      (issue) => `${issue.path.join('.')}: ${issue.code}`,
-    );
+    const problems = result.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.code}`);
     throw new InvalidEnvError(`Invalid environment variables → ${problems.join('; ')}`);
   }
   return result.data;

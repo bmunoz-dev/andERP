@@ -18,7 +18,8 @@ export function ensureRequestId(req: IncomingMessage, res: ServerResponse): stri
   if (typeof withId.id === 'string') return withId.id;
 
   const incoming = req.headers[REQUEST_ID_HEADER];
-  const id = typeof incoming === 'string' && SAFE_REQUEST_ID.test(incoming) ? incoming : randomUUID();
+  const id =
+    typeof incoming === 'string' && SAFE_REQUEST_ID.test(incoming) ? incoming : randomUUID();
   withId.id = id;
   res.setHeader(REQUEST_ID_HEADER, id);
   return id;

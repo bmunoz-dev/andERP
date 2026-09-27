@@ -27,9 +27,7 @@ const CODE_BY_STATUS: Readonly<Record<number, string>> = {
  */
 @Catch()
 export class ProblemDetailsFilter implements ExceptionFilter {
-  constructor(
-    @InjectPinoLogger(ProblemDetailsFilter.name) private readonly logger: PinoLogger,
-  ) {}
+  constructor(@InjectPinoLogger(ProblemDetailsFilter.name) private readonly logger: PinoLogger) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const http = host.switchToHttp();
@@ -75,7 +73,9 @@ export class ProblemDetailsFilter implements ExceptionFilter {
       const status = exception.getStatus();
       return {
         status,
-        code: CODE_BY_STATUS[status] ?? (status >= 500 ? ErrorCode.INTERNAL_ERROR : ErrorCode.BAD_REQUEST),
+        code:
+          CODE_BY_STATUS[status] ??
+          (status >= 500 ? ErrorCode.INTERNAL_ERROR : ErrorCode.BAD_REQUEST),
       };
     }
 
