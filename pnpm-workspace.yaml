@@ -17,3 +17,4 @@ minimumReleaseAgeExclude:
   - '@tanstack/router-core@1.171.33'
   - '@tanstack/router-generator@1.167.39'
   - '@tanstack/router-plugin@1.168.41'
+  - nodemailer@10.0.12

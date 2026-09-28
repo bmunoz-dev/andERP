@@ -22,5 +22,12 @@ services:
       timeout: 3s
       retries: 10
 
+  # SMTP de pruebas: captura todos los correos. Bandeja en http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.29
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
 volumes:
   postgres-data:

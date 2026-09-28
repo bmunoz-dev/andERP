@@ -31,7 +31,10 @@ export default defineConfig(
     },
     rules: {
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
+      ],
     },
   },
   {
@@ -60,7 +63,7 @@ export default defineConfig(
     rules: { 'react-refresh/only-export-components': 'off' },
   },
   {
-    files: ['**/*.test.ts', '**/*.test.tsx', '**/test/**/*.ts'],
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/test/**/*.ts', '**/testing/**/*.ts'],
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',

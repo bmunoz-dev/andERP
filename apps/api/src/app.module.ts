@@ -4,7 +4,10 @@ import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import type { DestinationStream } from 'pino';
 import { ENV, type Env } from './config/env';
 import { DatabaseModule } from './db/database.module';
+import { AuditModule } from './modules/audit/audit.service';
+import { AuthModule } from './modules/auth/auth.module';
 import { HealthController } from './modules/health/health.controller';
+import { MailModule } from './modules/mail/mailer';
 import { RequestContextModule } from './shared/context/request-context';
 import { ProblemDetailsFilter } from './shared/errors/problem-details.filter';
 import { createLoggerModule } from './shared/logging/logger.module';
@@ -21,7 +24,14 @@ export class AppModule {
     return {
       module: AppModule,
       global: true,
-      imports: [createLoggerModule(env, logStream), RequestContextModule, DatabaseModule.forRoot()],
+      imports: [
+        createLoggerModule(env, logStream),
+        RequestContextModule,
+        DatabaseModule.forRoot(),
+        AuditModule,
+        MailModule,
+        AuthModule,
+      ],
       controllers: [HealthController],
       providers: [
         { provide: ENV, useValue: env },

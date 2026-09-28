@@ -4,8 +4,8 @@
 
 | ID | Feature | Depende de | Spec | Plan | Implementación |
 |---|---|---|---|---|---|
-| F00 | [Fundaciones](features/000-foundation/spec.md) | — | Aprobado | Aprobado | En progreso |
-| F01 | [Auth y usuarios](features/001-auth/spec.md) | F00 | Aprobado | Aprobado | Pendiente |
+| F00 | [Fundaciones](features/000-foundation/spec.md) | — | Aprobado | Aprobado | Hecho |
+| F01 | [Auth y usuarios](features/001-auth/spec.md) | F00 | Aprobado | Aprobado | En progreso |
 | F02 | [Organizaciones, catálogos y usuarios](features/002-organizations-catalogs/spec.md) | F01 | Aprobado | Aprobado | Pendiente |
 | F03 | [Prestadores y contratos](features/003-service-providers/spec.md) | F02 | Aprobado | Aprobado | Pendiente |
 | F04 | [Pagos de honorarios](features/004-fee-payments/spec.md) | F03 | Aprobado | Aprobado | Pendiente |
@@ -48,4 +48,4 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 ## Bloqueos y notas
 
-- **F00 · CA-11:** el workflow de CI existe y todo pasa en un clon limpio, pero todavía no ha corrido en GitHub porque falta conectar el repositorio remoto. F00 pasa a `Hecho` cuando la primera ejecución quede en verde.
+_Ninguno por ahora._

@@ -19,6 +19,8 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-09-27 | Todas las tablas van en el esquema **`anderp`**, no en `public`. | Supabase expone `public` por su Data API con la llave `anon`: sería una fuga de datos (F00, F07). |
 | 2026-09-27 | La web se publica en **Cloudflare Pages** con una Pages Function como proxy de `/api/*`. La API exige `X-Proxy-Secret`. | El plan gratuito de Vercel no permite uso comercial, y la API no debe quedar abierta directamente (F07). |
 | 2026-09-27 | Función SQL `week_of_month(date)` compartida por la columna generada y las vistas. | Una sola fórmula en SQL, probada contra la de TypeScript (F05). |
+| 2026-09-28 | `users.password_hash` es nullable (NULL = invitación pendiente). | Los usuarios invitados existen antes de definir su contraseña (F01, F02). |
+| 2026-09-28 | El access token lleva la `family_id` de su sesión y el guard verifica en cada petición que siga activa. | Logout, cambio de contraseña y reutilización de tokens invalidan también los access tokens (F01). |
 
 ---
 
@@ -179,7 +181,7 @@ packages/
 |---|---|---|
 | id | uuid PK | |
 | email | citext NOT NULL | UNIQUE parcial; no distingue mayúsculas |
-| password_hash | text NOT NULL | argon2id en formato PHC |
+| password_hash | text NULL | argon2id en formato PHC. NULL mientras una invitación no se acepta |
 | first_name | varchar(30) NOT NULL | |
 | last_name | varchar(30) NOT NULL | |
 | is_super_admin | boolean NOT NULL | default `false` |

@@ -1,5 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 import { Logger } from 'nestjs-pino';
 import { cleanupOpenApiDoc } from 'nestjs-zod';
 import type { Env } from './config/env';
@@ -11,6 +12,7 @@ export const API_PREFIX = 'api/v1';
 export function configureApp(app: INestApplication, env: Env): void {
   app.useLogger(app.get(Logger));
   app.use(requestIdMiddleware);
+  app.use(cookieParser());
   app.setGlobalPrefix(API_PREFIX);
   app.enableShutdownHooks();
 
