@@ -57,17 +57,17 @@
 
 ## Bloque F — Web
 
-- [ ] F01-T021 Crear `AuthProvider`: token en memoria, recuperación de sesión al montar y `logout`.
+- [x] F01-T021 Crear `AuthProvider`: token en memoria, recuperación de sesión al montar y `logout`.
       Depende de: F00-T027
-- [ ] F01-T022 [TDD] Hacer que `api-client` añada el header `Authorization`, refresque una sola vez ante peticiones concurrentes y redirija al login si el refresh falla.
+- [x] F01-T022 [TDD] Hacer que `api-client` añada el header `Authorization`, refresque una sola vez ante peticiones concurrentes y redirija al login si el refresh falla.
       Depende de: F01-T021 · Verificación: CA-9
-- [ ] F01-T023 Crear las rutas `/login`, `/olvide-contrasena` y `/restablecer`, y el layout privado `_app` con `beforeLoad`.
+- [x] F01-T023 Crear las rutas `/login`, `/olvide-contrasena` y `/restablecer`, y el layout privado `_app` con `beforeLoad`.
       Depende de: F01-T021 · Verificación: CA-19, CA-20
-- [ ] F01-T024 Añadir al menú de usuario el diálogo de cambiar contraseña y el botón de cerrar sesión.
+- [x] F01-T024 Añadir al menú de usuario el diálogo de cambiar contraseña y el botón de cerrar sesión.
       Depende de: F01-T023
-- [ ] F01-T025 Añadir los mensajes en español de los códigos de F01-T018 a `error-messages.es.ts`.
+- [x] F01-T025 Añadir los mensajes en español de los códigos de F01-T018 a `error-messages.es.ts`.
       Depende de: F01-T018
 
 ## Cierre
 
-- [ ] F01-T026 Verificación manual del hito M1: seed → login → recargar la página (la sesión sigue) → cambiar la contraseña → logout → olvidé mi contraseña (el correo llega a Mailpit) → restablecer → login. Revisar la Definición de Hecho y actualizar `roadmap.md`.
+- [x] F01-T026 Verificación manual del hito M1: seed → login → recargar la página (la sesión sigue) → cambiar la contraseña → logout → olvidé mi contraseña (el correo llega a Mailpit) → restablecer → login. Revisar la Definición de Hecho y actualizar `roadmap.md`.

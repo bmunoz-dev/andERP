@@ -124,3 +124,6 @@ En local la cookie `Secure` funciona igual, porque los navegadores tratan `local
 - **Longitud de la contraseña:** el dominio cuenta grafemas (`Intl.Segmenter`) y Zod cuenta unidades UTF-16. El límite de Zod es el más estricto de los dos.
 - **Pruebas:** la política de contraseñas y el bloqueo se hicieron con TDD. Los casos de uso se escribieron antes que sus pruebas unitarias con dobles en memoria; esas pruebas, y las de integración de la API, se escribieron inmediatamente después y cubren todos los criterios de aceptación.
 - **Correo:** las pruebas de API usan una bandeja en memoria (`FakeMailer`). Una prueba aparte envía por SMTP real a un Mailpit de Testcontainers y verifica que el HTML escapa los datos del usuario.
+- **Web:** el refresh se serializa entre pestañas con Web Locks (`navigator.locks`). Como la API rota el token en cada uso, dos pestañas que refrescaran a la vez con el mismo token dispararían la detección de reutilización y cerrarían la sesión.
+- **Web:** el parámetro `redirect` del login solo acepta rutas internas (`safeRedirect`), para evitar redirecciones abiertas a sitios externos.
+- **Web:** en `DropdownMenuCheckboxItem` (generado por shadcn) se quitó `checked={checked}`, porque `exactOptionalPropertyTypes` no acepta `undefined` explícito. La prop sigue llegando dentro de `...props`.

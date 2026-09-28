@@ -4,7 +4,10 @@ import { z } from 'zod';
 export const PASSWORD_MIN_LENGTH = 12;
 export const PASSWORD_MAX_LENGTH = 128;
 
-export const emailSchema = z.email().max(254);
+// Los mensajes están en español porque la web los muestra tal cual en los formularios.
+export const emailSchema = z
+  .email('Ingresa un correo válido')
+  .max(254, 'El correo es demasiado largo');
 
 export const newPasswordSchema = z
   .string()
@@ -14,12 +17,12 @@ export const newPasswordSchema = z
 export const loginRequestSchema = z.object({
   email: emailSchema,
   // En el login no se valida la política: una contraseña antigua más corta debe poder entrar.
-  password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
+  password: z.string().min(1, 'Ingresa tu contraseña').max(PASSWORD_MAX_LENGTH),
 });
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
 export const changePasswordRequestSchema = z.object({
-  currentPassword: z.string().min(1).max(PASSWORD_MAX_LENGTH),
+  currentPassword: z.string().min(1, 'Ingresa tu contraseña actual').max(PASSWORD_MAX_LENGTH),
   newPassword: newPasswordSchema,
 });
 export type ChangePasswordRequest = z.infer<typeof changePasswordRequestSchema>;

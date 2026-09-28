@@ -60,7 +60,11 @@ export default defineConfig(
   {
     // TanStack Router exporta `Route` en cada archivo de ruta y gestiona el HMR por su cuenta.
     files: ['apps/web/src/routes/**/*.tsx'],
-    rules: { 'react-refresh/only-export-components': 'off' },
+    // `throw redirect(...)` es el patrón de TanStack Router para redirigir en beforeLoad.
+    rules: {
+      'react-refresh/only-export-components': 'off',
+      '@typescript-eslint/only-throw-error': 'off',
+    },
   },
   {
     files: ['**/*.test.ts', '**/*.test.tsx', '**/test/**/*.ts', '**/testing/**/*.ts'],

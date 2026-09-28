@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { apiFetch } from '@/lib/api-client';
 import { errorMessage } from '@/lib/error-messages.es';
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute('/_app/')({
   component: HomePage,
 });
 
