@@ -3,3 +3,4 @@ export * from './dates/holidays-co';
 export * from './dates/week';
 export * from './errors/codes';
 export * from './money';
+export * from './schemas/auth';

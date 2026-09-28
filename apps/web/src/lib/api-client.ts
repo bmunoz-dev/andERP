@@ -1,4 +1,10 @@
-import { ErrorCode, type ProblemDetails, type ProblemFieldError } from '@anderp/shared';
+import {
+  type AuthSessionResponse,
+  ErrorCode,
+  type ProblemDetails,
+  type ProblemFieldError,
+} from '@anderp/shared';
+import { authStore } from './auth-store';
 
 export const API_BASE = '/api/v1';
 
@@ -25,11 +31,75 @@ export interface ApiRequestInit extends Omit<RequestInit, 'body'> {
   json?: unknown;
 }
 
+// ── Sesión ────────────────────────────────────────────────────────────────────────────────
+
+const sessionExpiredListeners = new Set<() => void>();
+
+/** El router se suscribe para llevar al login cuando la sesión ya no se puede renovar. */
+export function onSessionExpired(listener: () => void): () => void {
+  sessionExpiredListeners.add(listener);
+  return () => sessionExpiredListeners.delete(listener);
+}
+
+let refreshInFlight: Promise<boolean> | null = null;
+
+/**
+ * Renueva la sesión con la cookie del refresh token. Las llamadas simultáneas comparten una
+ * sola petición; entre pestañas se serializa con Web Locks, porque la API rota el token en cada
+ * uso y dos pestañas con el mismo token cerrarían la sesión por "reutilización" (F01 CA-8).
+ */
+export function refreshSession(): Promise<boolean> {
+  refreshInFlight ??= withCrossTabLock(doRefresh).finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+async function doRefresh(): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { accept: 'application/json' },
+    });
+    if (!response.ok) {
+      authStore.clear();
+      return false;
+    }
+    authStore.setSession((await response.json()) as AuthSessionResponse);
+    return true;
+  } catch {
+    authStore.clear();
+    return false;
+  }
+}
+
+function withCrossTabLock<T>(fn: () => Promise<T>): Promise<T> {
+  const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined;
+  return locks ? locks.request('anderp-auth-refresh', fn) : fn();
+}
+
+// ── Peticiones ────────────────────────────────────────────────────────────────────────────
+
 export async function apiFetch<T>(path: string, init: ApiRequestInit = {}): Promise<T> {
+  try {
+    return await send<T>(path, init);
+  } catch (error) {
+    if (!(error instanceof ApiError && error.code === ErrorCode.TOKEN_EXPIRED)) throw error;
+    // El access token venció: se renueva una sola vez y se repite la petición.
+    if (await refreshSession()) return send<T>(path, init);
+    for (const listener of sessionExpiredListeners) listener();
+    throw error;
+  }
+}
+
+async function send<T>(path: string, init: ApiRequestInit): Promise<T> {
   const { json, headers, ...rest } = init;
   const requestHeaders = new Headers(headers);
   requestHeaders.set('accept', 'application/json');
   if (json !== undefined) requestHeaders.set('content-type', 'application/json');
+  const { accessToken } = authStore.get();
+  if (accessToken) requestHeaders.set('authorization', `Bearer ${accessToken}`);
 
   let response: Response;
   try {
@@ -44,7 +114,7 @@ export async function apiFetch<T>(path: string, init: ApiRequestInit = {}): Prom
   }
 
   if (!response.ok) throw await toApiError(response);
-  if (response.status === 204) return undefined as T;
+  if (response.status === 202 || response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }
 

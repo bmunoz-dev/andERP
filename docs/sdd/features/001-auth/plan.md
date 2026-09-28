@@ -113,3 +113,17 @@ SEED_SUPERADMIN_LAST_NAME=
 ```
 
 En local la cookie `Secure` funciona igual, porque los navegadores tratan `localhost` como contexto seguro.
+
+## Notas de implementación
+
+- **`users.password_hash` es nullable.** Un usuario invitado (F02) existe antes de definir su contraseña. Con el hash en NULL, el login responde `INVALID_CREDENTIALS`, igual que con un email inexistente.
+- **El access token lleva `sid` (la `family_id` de su sesión)**, y el guard comprueba en cada petición que esa familia siga activa. Un logout, un cambio de contraseña o la detección de reutilización invalidan también los access tokens, no solo los refresh. Si la sesión está cerrada, responde `401 SESSION_REVOKED`.
+- **El quinto intento fallido responde `401 INVALID_CREDENTIALS` y bloquea la cuenta.** Los siguientes intentos, mientras dure el bloqueo, responden `423 ACCOUNT_LOCKED`.
+- **`AUTH_THROTTLE_LIMIT`** (por defecto 10 por minuto por IP) hace configurable el límite. Las pruebas lo suben para poder iniciar sesión muchas veces, y una prueba específica lo baja a 3.
+- **Tipo `citext` en Drizzle:** drizzle-kit cita el nombre completo del tipo, así que se declara como `extensions"."citext` para que el SQL resultante sea `"extensions"."citext"`.
+- **Longitud de la contraseña:** el dominio cuenta grafemas (`Intl.Segmenter`) y Zod cuenta unidades UTF-16. El límite de Zod es el más estricto de los dos.
+- **Pruebas:** la política de contraseñas y el bloqueo se hicieron con TDD. Los casos de uso se escribieron antes que sus pruebas unitarias con dobles en memoria; esas pruebas, y las de integración de la API, se escribieron inmediatamente después y cubren todos los criterios de aceptación.
+- **Correo:** las pruebas de API usan una bandeja en memoria (`FakeMailer`). Una prueba aparte envía por SMTP real a un Mailpit de Testcontainers y verifica que el HTML escapa los datos del usuario.
+- **Web:** el refresh se serializa entre pestañas con Web Locks (`navigator.locks`). Como la API rota el token en cada uso, dos pestañas que refrescaran a la vez con el mismo token dispararían la detección de reutilización y cerrarían la sesión.
+- **Web:** el parámetro `redirect` del login solo acepta rutas internas (`safeRedirect`), para evitar redirecciones abiertas a sitios externos.
+- **Web:** en `DropdownMenuCheckboxItem` (generado por shadcn) se quitó `checked={checked}`, porque `exactOptionalPropertyTypes` no acepta `undefined` explícito. La prop sigue llegando dentro de `...props`.

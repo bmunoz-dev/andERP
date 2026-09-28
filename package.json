@@ -17,7 +17,8 @@
     "format:check": "prettier --check .",
     "db:generate": "pnpm --filter @anderp/api db:generate",
     "db:generate:custom": "pnpm --filter @anderp/api db:generate:custom",
-    "db:migrate": "pnpm --filter @anderp/api db:migrate"
+    "db:migrate": "pnpm --filter @anderp/api db:migrate",
+    "db:seed": "pnpm --filter @anderp/shared build && pnpm --filter @anderp/api db:seed"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

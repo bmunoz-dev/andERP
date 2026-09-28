@@ -19,6 +19,18 @@ const MESSAGES = {
   FORBIDDEN: 'No tienes permiso para hacer esto.',
   TOO_MANY_REQUESTS: 'Demasiados intentos. Espera un momento e inténtalo de nuevo.',
   SERVICE_UNAVAILABLE: 'El servicio no está disponible en este momento. Intenta más tarde.',
+  // F01 — auth
+  INVALID_CREDENTIALS: 'El correo o la contraseña no son correctos.',
+  ACCOUNT_LOCKED:
+    'Tu cuenta está bloqueada por demasiados intentos fallidos. Intenta de nuevo en 15 minutos.',
+  ACCOUNT_DISABLED: 'Tu cuenta está desactivada. Contacta al administrador.',
+  TOKEN_EXPIRED: 'Tu sesión venció. Inicia sesión de nuevo.',
+  SESSION_REVOKED: 'Tu sesión se cerró. Inicia sesión de nuevo.',
+  INVALID_CURRENT_PASSWORD: 'La contraseña actual no es correcta.',
+  WEAK_PASSWORD:
+    'Esa contraseña es demasiado común o no cumple la longitud (entre 12 y 128 caracteres). Elige otra.',
+  INVALID_RESET_TOKEN:
+    'El enlace no es válido o ya venció. Solicita uno nuevo desde "¿Olvidaste tu contraseña?".',
 } satisfies Record<ErrorCode, string>;
 
 const CLIENT_MESSAGES: Record<string, string> = {

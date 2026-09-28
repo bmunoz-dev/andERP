@@ -8,6 +8,19 @@ export const envSchema = z.object({
   API_PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   DATABASE_URL: postgresUrl,
+
+  // F01 — auth
+  JWT_SECRET: z.string().min(32),
+  WEB_URL: z.url({ protocol: /^https?$/ }),
+  AUTH_THROTTLE_LIMIT: z.coerce.number().int().min(1).default(10),
+
+  // F01 — correo
+  SMTP_HOST: z.string().min(1),
+  SMTP_PORT: z.coerce.number().int().min(1).max(65_535),
+  SMTP_SECURE: z.stringbool().default(false),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  MAIL_FROM: z.string().min(3),
 });
 
 export type Env = z.infer<typeof envSchema>;

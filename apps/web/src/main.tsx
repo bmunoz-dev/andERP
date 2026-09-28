@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ApiError } from './lib/api-client';
+import { ApiError, onSessionExpired, refreshSession } from './lib/api-client';
 import { routeTree } from './routeTree.gen';
 import './index.css';
 
@@ -30,13 +30,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+// Si la sesión ya no se puede renovar, se limpia la caché y se vuelve al login.
+onSessionExpired(() => {
+  queryClient.clear();
+  void router.navigate({ to: '/login', search: { redirect: router.state.location.href } });
+});
+
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing #root element');
 
-createRoot(root).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  </StrictMode>,
-);
+// Antes de pintar, se intenta recuperar la sesión con la cookie del refresh token (F01 CA-20).
+void refreshSession().finally(() => {
+  createRoot(root).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </StrictMode>,
+  );
+});

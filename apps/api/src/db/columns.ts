@@ -27,5 +27,6 @@ export const organizationId = () => uuid().notNull();
  * migraciones no dependan del `search_path` del rol que las ejecuta.
  */
 export const citext = customType<{ data: string }>({
-  dataType: () => 'extensions.citext',
+  // drizzle-kit cita el nombre del tipo completo; así el SQL resultante es "extensions"."citext".
+  dataType: () => 'extensions"."citext',
 });

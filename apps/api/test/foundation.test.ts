@@ -5,6 +5,7 @@ import { createZodDto } from 'nestjs-zod';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { DB, type Database } from '../src/db/database.module';
+import { Public } from '../src/shared/auth/public.decorator';
 import { DomainError } from '../src/shared/errors/domain-error';
 import { createTestApp, type TestApp } from './setup/create-test-app';
 import { resetDb, withOwnerSql, withRuntimeSql } from './setup/reset-db';
@@ -20,6 +21,7 @@ class CreateThingDto extends createZodDto(
 ) {}
 
 // Rutas que solo existen en las pruebas.
+@Public()
 @Controller('test')
 class TestErrorsController {
   constructor(@Inject(DB) private readonly db: Database) {}
