@@ -78,6 +78,14 @@ import {
     SuperAdminGuard,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],
-  exports: [SuperAdminGuard, PASSWORD_HASHER, USER_REPOSITORY, PASSWORD_RESET_REPOSITORY],
+  exports: [
+    SuperAdminGuard,
+    PASSWORD_HASHER,
+    USER_REPOSITORY,
+    PASSWORD_RESET_REPOSITORY,
+    SESSION_REPOSITORY,
+    OPAQUE_TOKENS,
+    CLOCK,
+  ],
 })
 export class AuthModule {}

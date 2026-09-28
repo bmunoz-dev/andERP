@@ -4,10 +4,24 @@ import { existsSync } from 'node:fs';
 import postgres from 'postgres';
 import { z } from 'zod';
 import type { PasswordHasher } from '../modules/auth/application/ports';
+import {
+  DEFAULT_ACCOUNT_TYPES,
+  DEFAULT_BANKS,
+  DEFAULT_DOCUMENT_TYPES,
+  DEFAULT_EXPENSE_CATEGORIES,
+} from '../modules/catalogs/default-categories';
 import { Argon2PasswordHasher } from '../modules/auth/infrastructure/argon2-password-hasher';
-import type { Database } from './database.module';
+import type { Database, Tx } from './database.module';
 import * as schema from './schema';
-import { organizationMembers, organizations, users } from './schema';
+import {
+  accountTypes,
+  banks,
+  documentTypes,
+  expenseCategories,
+  organizationMembers,
+  organizations,
+  users,
+} from './schema';
 
 export const seedInputSchema = z.object({
   SEED_ORG_NAME: z.string().min(1).max(100),
@@ -25,8 +39,9 @@ export interface SeedResult {
 }
 
 /**
- * Crea la organización inicial y el super admin (F01 CA-16). Es idempotente: busca por NIT y por
- * email, y nunca sobrescribe la contraseña de un usuario que ya existe.
+ * Crea la organización inicial, el super admin (F01 CA-16), los catálogos globales y las categorías
+ * iniciales (F02 CA-6). Es idempotente: busca por NIT y por email, nunca sobrescribe la contraseña de
+ * un usuario que ya existe y solo inserta los valores de catálogo que falten.
  */
 export async function seed(
   db: Database,
@@ -72,8 +87,57 @@ export async function seed(
       .values({ userId: user.id, organizationId: organization.id, role: 'admin' })
       .onConflictDoNothing();
 
+    await seedGlobalCatalogs(tx);
+    await seedExpenseCategories(tx, organization.id);
+
     return { organizationId: organization.id, userId: user.id };
   });
+}
+
+/** Inserta solo los valores que faltan: si alguien desactivó o renombró uno, no se toca. */
+async function seedGlobalCatalogs(tx: Tx): Promise<void> {
+  const existingBanks = new Set(
+    (await tx.select({ name: banks.name }).from(banks)).map((b) => b.name),
+  );
+  const missingBanks = DEFAULT_BANKS.filter((name) => !existingBanks.has(name));
+  if (missingBanks.length > 0)
+    await tx
+      .insert(banks)
+      .values(missingBanks.map((name) => ({ name })))
+      .onConflictDoNothing();
+
+  const existingAccountTypes = new Set(
+    (await tx.select({ name: accountTypes.name }).from(accountTypes)).map((a) => a.name),
+  );
+  const missingAccountTypes = DEFAULT_ACCOUNT_TYPES.filter(
+    (name) => !existingAccountTypes.has(name),
+  );
+  if (missingAccountTypes.length > 0) {
+    await tx
+      .insert(accountTypes)
+      .values(missingAccountTypes.map((name) => ({ name })))
+      .onConflictDoNothing();
+  }
+
+  const existingCodes = new Set(
+    (await tx.select({ code: documentTypes.code }).from(documentTypes)).map((d) => d.code),
+  );
+  const missingDocumentTypes = DEFAULT_DOCUMENT_TYPES.filter((d) => !existingCodes.has(d.code));
+  if (missingDocumentTypes.length > 0)
+    await tx.insert(documentTypes).values(missingDocumentTypes).onConflictDoNothing();
+}
+
+/** Solo si la organización aún no tiene categorías (una organización recién sembrada). */
+async function seedExpenseCategories(tx: Tx, organizationId: string): Promise<void> {
+  const [existing] = await tx
+    .select({ id: expenseCategories.id })
+    .from(expenseCategories)
+    .where(eq(expenseCategories.organizationId, organizationId))
+    .limit(1);
+  if (existing) return;
+  await tx
+    .insert(expenseCategories)
+    .values(DEFAULT_EXPENSE_CATEGORIES.map((category) => ({ ...category, organizationId })));
 }
 
 async function main(): Promise<void> {

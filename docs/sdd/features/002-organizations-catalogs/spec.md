@@ -44,10 +44,10 @@ Dejar AndERP configurado para operar:
 - **CA-10.** Renombrar, desactivar o borrar una categoría con `system_code` responde `422 SYSTEM_CATEGORY_PROTECTED`, tanto desde la API como con un `UPDATE` directo en SQL (trigger).
 
 **Usuarios de la organización (admin)**
-- **CA-11.** `POST /members` con `{ email, firstName, lastName }` crea el usuario (o reutiliza el existente por email), crea la membresía con rol `admin` y envía una invitación: un `password_resets` con `purpose = 'invite'` que vence en 72 horas y un correo con el enlace a `WEB_URL/activar?token=…`. Si el email ya es miembro, responde `409 ALREADY_MEMBER`.
+- **CA-11.** `POST /members` con `{ email, firstName, lastName }` crea el usuario (o reutiliza el existente por email) y la membresía con rol `admin`. Si el usuario **no tiene contraseña**, envía una invitación: un `password_resets` con `purpose = 'invite'` que vence en 72 horas y un correo con el enlace a `WEB_URL/activar?token=…`. Si **ya tiene contraseña** (pertenece a otra organización), solo recibe un aviso con el enlace al login. Si el email ya es miembro, responde `409 ALREADY_MEMBER`.
 - **CA-12.** `POST /auth/password/reset` acepta tokens `invite` igual que los `reset`. Al usarlo, el usuario queda con contraseña y puede iniciar sesión.
-- **CA-13.** `POST /members/:userId/resend-invite` invalida las invitaciones anteriores y envía una nueva.
-- **CA-14.** `PATCH /members/:userId` con `{ status: 'inactive' | 'active' }` desactiva o reactiva al usuario y revoca sus sesiones. Un admin **no puede** desactivarse a sí mismo (`422 CANNOT_DEACTIVATE_SELF`) ni dejar la organización sin ningún admin activo (`422 LAST_ADMIN`).
+- **CA-13.** `POST /members/:userId/resend-invite` invalida las invitaciones anteriores y envía una nueva. Si el usuario ya activó su cuenta, responde `422 INVITE_NOT_PENDING`.
+- **CA-14.** `PATCH /members/:userId` con `{ isActive: boolean }` desactiva o reactiva la **membresía** en la organización (no al usuario globalmente) y, al desactivar, revoca sus sesiones. Un admin **no puede** desactivarse a sí mismo (`422 CANNOT_DEACTIVATE_SELF`), ni dejar la organización sin ningún admin activo (`422 LAST_ADMIN`), ni modificar la membresía de un super admin (`403 FORBIDDEN`).
 - **CA-15.** `GET /members` lista los miembros con su estado y si tienen una invitación pendiente.
 
 **Aislamiento y navegación**

@@ -6,8 +6,10 @@ import { ENV, type Env } from './config/env';
 import { DatabaseModule } from './db/database.module';
 import { AuditModule } from './modules/audit/audit.service';
 import { AuthModule } from './modules/auth/auth.module';
+import { CatalogsModule } from './modules/catalogs/catalogs.module';
 import { HealthController } from './modules/health/health.controller';
 import { MailModule } from './modules/mail/mailer';
+import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { RequestContextModule } from './shared/context/request-context';
 import { ProblemDetailsFilter } from './shared/errors/problem-details.filter';
 import { createLoggerModule } from './shared/logging/logger.module';
@@ -31,6 +33,8 @@ export class AppModule {
         AuditModule,
         MailModule,
         AuthModule,
+        CatalogsModule,
+        OrganizationsModule,
       ],
       controllers: [HealthController],
       providers: [

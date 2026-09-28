@@ -67,6 +67,7 @@ export class DrizzleUserRepository implements UserRepository {
       .where(
         and(
           eq(organizationMembers.userId, userId),
+          eq(organizationMembers.isActive, true),
           isNull(organizationMembers.deletedAt),
           isNull(organizations.deletedAt),
         ),
