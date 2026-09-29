@@ -6,3 +6,5 @@ export * from './money';
 export * from './schemas/auth';
 export * from './schemas/catalogs';
 export * from './schemas/organizations';
+export * from './schemas/common';
+export * from './schemas/service-providers';
