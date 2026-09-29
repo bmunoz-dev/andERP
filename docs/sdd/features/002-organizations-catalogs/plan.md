@@ -87,3 +87,13 @@ El super admin también tiene acceso a las rutas de admin: el guard lo trata com
 - **Catálogos globales:** un solo controlador con `:kind` (`banks`, `account-types`, `document-types`). El cuerpo se valida con el esquema de cada tipo; el código de tipo de documento se normaliza a mayúsculas.
 - **Reordenamiento de categorías:** `PUT /expense-categories/order` exige la lista completa de categorías vigentes, sin repetidos. Si no, responde `422 INVALID_CATEGORY_ORDER`, un código nuevo.
 - **Pruebas:** los archivos de prueba de la API corren en serie (`fileParallelism: false`). Comparten un Postgres y cada uno lo vacía con TRUNCATE; en paralelo se pisaban los datos. El seed usa `ON CONFLICT DO NOTHING` para tolerar ejecuciones concurrentes.
+- **Web — reordenamiento:** botones "Subir" y "Bajar" por fila en lugar de dnd-kit. Son accesibles con teclado y lector de pantalla, no suman dependencias y alcanzan para 7 a 15 categorías. La lógica pura (`moveItem`) tiene pruebas.
+- **Web — dependencias:** TanStack Table queda fijado en la versión 8 (la 9 cambió su API). El `Toaster` de shadcn se usa sin `next-themes`, porque aún no hay modo oscuro. Los textos del `Sidebar` generado se tradujeron al español.
+- **Web — plataforma:** la ruta `/plataforma` tiene un `beforeLoad` que devuelve al inicio a quien no es super admin. La API lo exige de todas formas.
+- **Verificación manual (hito M2):**
+  1. el super admin crea "Servicios Andinos" desde la interfaz;
+  2. la invitación llega a Mailpit;
+  3. la nueva administradora activa su cuenta y entra;
+  4. no ve Plataforma, ni siquiera entrando por URL;
+  5. reordena departamentos, ve "Honorarios" protegido y recibe el error de nombre duplicado;
+  6. en usuarios se ve a sí misma sin la opción de desactivarse.

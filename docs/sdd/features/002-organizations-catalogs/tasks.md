@@ -46,17 +46,17 @@
 
 ## Bloque F — Web
 
-- [ ] F02-T015 Crear el layout `_app` con sidebar según el rol, header y páginas "Próximamente".
+- [x] F02-T015 Crear el layout `_app` con sidebar según el rol, header y páginas "Próximamente".
       Depende de: F01-T023 · Verificación: CA-18
-- [ ] F02-T016 Crear los componentes reutilizables `DataTable` y `FormDialog`.
+- [x] F02-T016 Crear los componentes reutilizables `DataTable` y `FormDialog`.
       Depende de: F02-T015
-- [ ] F02-T017 [P] Crear la pantalla de categorías: CRUD, reordenamiento con dnd-kit y candado en las de sistema.
+- [x] F02-T017 [P] Crear la pantalla de categorías: CRUD, reordenamiento con dnd-kit y candado en las de sistema.
       Depende de: F02-T016
-- [ ] F02-T018 [P] Crear la pantalla de usuarios (invitar, reenviar invitación, activar/desactivar) y la ruta pública `/activar`.
+- [x] F02-T018 [P] Crear la pantalla de usuarios (invitar, reenviar invitación, activar/desactivar) y la ruta pública `/activar`.
       Depende de: F02-T016
-- [ ] F02-T019 [P] Crear las pantallas de plataforma: organizaciones y catálogos con pestañas.
+- [x] F02-T019 [P] Crear las pantallas de plataforma: organizaciones y catálogos con pestañas.
       Depende de: F02-T016 · Verificación: CA-19
 
 ## Cierre
 
-- [ ] F02-T020 Verificación manual del hito M2: crear una segunda organización, activar a su admin con el correo en Mailpit, comprobar que no ve datos de la primera, y probar el reordenamiento y la protección de categorías. Revisar la Definición de Hecho y actualizar `roadmap.md`.
+- [x] F02-T020 Verificación manual del hito M2: crear una segunda organización, activar a su admin con el correo en Mailpit, comprobar que no ve datos de la primera, y probar el reordenamiento y la protección de categorías. Revisar la Definición de Hecho y actualizar `roadmap.md`.

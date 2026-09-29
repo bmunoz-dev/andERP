@@ -31,6 +31,16 @@ const MESSAGES = {
     'Esa contraseña es demasiado común o no cumple la longitud (entre 12 y 128 caracteres). Elige otra.',
   INVALID_RESET_TOKEN:
     'El enlace no es válido o ya venció. Solicita uno nuevo desde "¿Olvidaste tu contraseña?".',
+  // F02 — organizaciones, catálogos y usuarios
+  TAX_ID_TAKEN: 'Ya existe una organización con ese NIT.',
+  DUPLICATE_NAME: 'Ya existe un registro con ese nombre.',
+  SYSTEM_CATEGORY_PROTECTED:
+    'Esta categoría la usa el sistema para los honorarios: no se puede renombrar, desactivar ni eliminar.',
+  INVALID_CATEGORY_ORDER: 'La lista de categorías cambió. Recarga la página e inténtalo de nuevo.',
+  ALREADY_MEMBER: 'Esa persona ya pertenece a la organización.',
+  CANNOT_DEACTIVATE_SELF: 'No puedes desactivar tu propio usuario.',
+  LAST_ADMIN: 'La organización necesita al menos un administrador activo.',
+  INVITE_NOT_PENDING: 'Esa persona ya activó su cuenta; no hace falta reenviar la invitación.',
 } satisfies Record<ErrorCode, string>;
 
 const CLIENT_MESSAGES: Record<string, string> = {
