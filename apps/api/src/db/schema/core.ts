@@ -71,6 +71,8 @@ export const organizationMembers = anderp.table(
       .notNull()
       .references(() => organizations.id),
     role: memberRole().notNull(),
+    /** Desactivar a alguien es por organización: `users.status` es global (F02 CA-14). */
+    isActive: boolean().notNull().default(true),
     ...auditColumns,
   },
   (t) => [

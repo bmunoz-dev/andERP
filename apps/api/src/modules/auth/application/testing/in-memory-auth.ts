@@ -80,9 +80,23 @@ export class FakeAudit implements AuditLogger {
 
 export class FakeMailer implements Mailer {
   sent: MailMessage[] = [];
+  /** Si se define, el próximo envío falla con este error (para probar reversiones). */
+  failNext: Error | null = null;
   send(message: MailMessage): Promise<void> {
+    if (this.failNext) {
+      const error = this.failNext;
+      this.failNext = null;
+      return Promise.reject(error);
+    }
     this.sent.push(message);
     return Promise.resolve();
+  }
+  /** Último enlace (http…) del último correo enviado a `to`. */
+  lastLinkTo(to: string): URL {
+    const message = this.sent.findLast((m) => m.to === to);
+    const match = message ? /https?:\/\/\S+/.exec(message.text) : null;
+    if (!match) throw new Error(`No link sent to ${to}`);
+    return new URL(match[0]);
   }
 }
 

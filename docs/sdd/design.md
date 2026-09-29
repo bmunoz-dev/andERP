@@ -21,6 +21,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-09-27 | Función SQL `week_of_month(date)` compartida por la columna generada y las vistas. | Una sola fórmula en SQL, probada contra la de TypeScript (F05). |
 | 2026-09-28 | `users.password_hash` es nullable (NULL = invitación pendiente). | Los usuarios invitados existen antes de definir su contraseña (F01, F02). |
 | 2026-09-28 | El access token lleva la `family_id` de su sesión y el guard verifica en cada petición que siga activa. | Logout, cambio de contraseña y reutilización de tokens invalidan también los access tokens (F01). |
+| 2026-09-28 | `organization_members.is_active`: activar o desactivar a alguien es por organización. | `users.status` es global; desactivar en una organización no debe bloquear al usuario en otra (F02). |
 
 ---
 
@@ -197,6 +198,7 @@ packages/
 | user_id | uuid FK → users | |
 | organization_id | uuid FK → organizations | |
 | role | member_role NOT NULL | |
+| is_active | boolean NOT NULL | default `true`. Desactivación por organización |
 | audit | | |
 
 PK `(user_id, organization_id)`.

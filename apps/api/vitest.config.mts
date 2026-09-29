@@ -8,6 +8,9 @@ export default defineProject({
     name: 'api',
     include: ['src/**/*.test.ts', 'test/**/*.test.ts'],
     globalSetup: ['./test/setup/global-setup.ts'],
+    // Todos los archivos comparten un Postgres y cada uno lo vacía con TRUNCATE al empezar:
+    // en paralelo se pisarían los datos.
+    fileParallelism: false,
     testTimeout: 30_000,
     hookTimeout: 120_000,
   },

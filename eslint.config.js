@@ -15,6 +15,7 @@ export default defineConfig(
       'apps/api/drizzle/**',
       'apps/web/src/routeTree.gen.ts',
       'apps/web/src/components/ui/**',
+      'apps/web/src/hooks/use-mobile.ts',
     ],
   },
   js.configs.recommended,

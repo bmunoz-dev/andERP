@@ -10,13 +10,29 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as ActivarRouteImport } from './routes/activar'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OlvideContrasenaRouteImport } from './routes/olvide-contrasena'
 import { Route as RestablecerRouteImport } from './routes/restablecer'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppCredencialesRouteImport } from './routes/_app/credenciales'
+import { Route as AppEgresosRouteImport } from './routes/_app/egresos'
+import { Route as AppHonorariosRouteImport } from './routes/_app/honorarios'
+import { Route as AppPlataformaRouteRouteImport } from './routes/_app/plataforma/route'
+import { Route as AppPrestadoresRouteImport } from './routes/_app/prestadores'
+import { Route as AppResponsablesRouteImport } from './routes/_app/responsables'
+import { Route as AppConfiguracionCategoriasRouteImport } from './routes/_app/configuracion/categorias'
+import { Route as AppConfiguracionUsuariosRouteImport } from './routes/_app/configuracion/usuarios'
+import { Route as AppPlataformaCatalogosRouteImport } from './routes/_app/plataforma/catalogos'
+import { Route as AppPlataformaOrganizacionesRouteImport } from './routes/_app/plataforma/organizaciones'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ActivarRoute = ActivarRouteImport.update({
+  id: '/activar',
+  path: '/activar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -39,43 +55,171 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCredencialesRoute = AppCredencialesRouteImport.update({
+  id: '/credenciales',
+  path: '/credenciales',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEgresosRoute = AppEgresosRouteImport.update({
+  id: '/egresos',
+  path: '/egresos',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHonorariosRoute = AppHonorariosRouteImport.update({
+  id: '/honorarios',
+  path: '/honorarios',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlataformaRouteRoute = AppPlataformaRouteRouteImport.update({
+  id: '/plataforma',
+  path: '/plataforma',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPrestadoresRoute = AppPrestadoresRouteImport.update({
+  id: '/prestadores',
+  path: '/prestadores',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppResponsablesRoute = AppResponsablesRouteImport.update({
+  id: '/responsables',
+  path: '/responsables',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppConfiguracionCategoriasRoute =
+  AppConfiguracionCategoriasRouteImport.update({
+    id: '/configuracion/categorias',
+    path: '/configuracion/categorias',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppConfiguracionUsuariosRoute =
+  AppConfiguracionUsuariosRouteImport.update({
+    id: '/configuracion/usuarios',
+    path: '/configuracion/usuarios',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppPlataformaCatalogosRoute = AppPlataformaCatalogosRouteImport.update({
+  id: '/catalogos',
+  path: '/catalogos',
+  getParentRoute: () => AppPlataformaRouteRoute,
+} as any)
+const AppPlataformaOrganizacionesRoute =
+  AppPlataformaOrganizacionesRouteImport.update({
+    id: '/organizaciones',
+    path: '/organizaciones',
+    getParentRoute: () => AppPlataformaRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/activar': typeof ActivarRoute
   '/login': typeof LoginRoute
   '/olvide-contrasena': typeof OlvideContrasenaRoute
   '/restablecer': typeof RestablecerRoute
+  '/plataforma': typeof AppPlataformaRouteRouteWithChildren
+  '/credenciales': typeof AppCredencialesRoute
+  '/egresos': typeof AppEgresosRoute
+  '/honorarios': typeof AppHonorariosRoute
+  '/prestadores': typeof AppPrestadoresRoute
+  '/responsables': typeof AppResponsablesRoute
+  '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
+  '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
+  '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
+  '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
 }
 export interface FileRoutesByTo {
+  '/activar': typeof ActivarRoute
   '/login': typeof LoginRoute
   '/olvide-contrasena': typeof OlvideContrasenaRoute
   '/restablecer': typeof RestablecerRoute
+  '/plataforma': typeof AppPlataformaRouteRouteWithChildren
+  '/credenciales': typeof AppCredencialesRoute
+  '/egresos': typeof AppEgresosRoute
+  '/honorarios': typeof AppHonorariosRoute
+  '/prestadores': typeof AppPrestadoresRoute
+  '/responsables': typeof AppResponsablesRoute
   '/': typeof AppIndexRoute
+  '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
+  '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
+  '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
+  '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/activar': typeof ActivarRoute
   '/login': typeof LoginRoute
   '/olvide-contrasena': typeof OlvideContrasenaRoute
   '/restablecer': typeof RestablecerRoute
+  '/_app/plataforma': typeof AppPlataformaRouteRouteWithChildren
+  '/_app/credenciales': typeof AppCredencialesRoute
+  '/_app/egresos': typeof AppEgresosRoute
+  '/_app/honorarios': typeof AppHonorariosRoute
+  '/_app/prestadores': typeof AppPrestadoresRoute
+  '/_app/responsables': typeof AppResponsablesRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
+  '/_app/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
+  '/_app/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
+  '/_app/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/olvide-contrasena' | '/restablecer'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/olvide-contrasena' | '/restablecer' | '/'
-  id:
-    | '__root__'
-    | '/_app'
+  fullPaths:
+    | '/'
+    | '/activar'
     | '/login'
     | '/olvide-contrasena'
     | '/restablecer'
+    | '/plataforma'
+    | '/credenciales'
+    | '/egresos'
+    | '/honorarios'
+    | '/prestadores'
+    | '/responsables'
+    | '/configuracion/categorias'
+    | '/configuracion/usuarios'
+    | '/plataforma/catalogos'
+    | '/plataforma/organizaciones'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/activar'
+    | '/login'
+    | '/olvide-contrasena'
+    | '/restablecer'
+    | '/plataforma'
+    | '/credenciales'
+    | '/egresos'
+    | '/honorarios'
+    | '/prestadores'
+    | '/responsables'
+    | '/'
+    | '/configuracion/categorias'
+    | '/configuracion/usuarios'
+    | '/plataforma/catalogos'
+    | '/plataforma/organizaciones'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/activar'
+    | '/login'
+    | '/olvide-contrasena'
+    | '/restablecer'
+    | '/_app/plataforma'
+    | '/_app/credenciales'
+    | '/_app/egresos'
+    | '/_app/honorarios'
+    | '/_app/prestadores'
+    | '/_app/responsables'
     | '/_app/'
+    | '/_app/configuracion/categorias'
+    | '/_app/configuracion/usuarios'
+    | '/_app/plataforma/catalogos'
+    | '/_app/plataforma/organizaciones'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  ActivarRoute: typeof ActivarRoute
   LoginRoute: typeof LoginRoute
   OlvideContrasenaRoute: typeof OlvideContrasenaRoute
   RestablecerRoute: typeof RestablecerRoute
@@ -88,6 +232,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/activar': {
+      id: '/activar'
+      path: '/activar'
+      fullPath: '/activar'
+      preLoaderRoute: typeof ActivarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -118,21 +269,121 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/credenciales': {
+      id: '/_app/credenciales'
+      path: '/credenciales'
+      fullPath: '/credenciales'
+      preLoaderRoute: typeof AppCredencialesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/egresos': {
+      id: '/_app/egresos'
+      path: '/egresos'
+      fullPath: '/egresos'
+      preLoaderRoute: typeof AppEgresosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/honorarios': {
+      id: '/_app/honorarios'
+      path: '/honorarios'
+      fullPath: '/honorarios'
+      preLoaderRoute: typeof AppHonorariosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/plataforma': {
+      id: '/_app/plataforma'
+      path: '/plataforma'
+      fullPath: '/plataforma'
+      preLoaderRoute: typeof AppPlataformaRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/prestadores': {
+      id: '/_app/prestadores'
+      path: '/prestadores'
+      fullPath: '/prestadores'
+      preLoaderRoute: typeof AppPrestadoresRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/responsables': {
+      id: '/_app/responsables'
+      path: '/responsables'
+      fullPath: '/responsables'
+      preLoaderRoute: typeof AppResponsablesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/configuracion/categorias': {
+      id: '/_app/configuracion/categorias'
+      path: '/configuracion/categorias'
+      fullPath: '/configuracion/categorias'
+      preLoaderRoute: typeof AppConfiguracionCategoriasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/configuracion/usuarios': {
+      id: '/_app/configuracion/usuarios'
+      path: '/configuracion/usuarios'
+      fullPath: '/configuracion/usuarios'
+      preLoaderRoute: typeof AppConfiguracionUsuariosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/plataforma/catalogos': {
+      id: '/_app/plataforma/catalogos'
+      path: '/catalogos'
+      fullPath: '/plataforma/catalogos'
+      preLoaderRoute: typeof AppPlataformaCatalogosRouteImport
+      parentRoute: typeof AppPlataformaRouteRoute
+    }
+    '/_app/plataforma/organizaciones': {
+      id: '/_app/plataforma/organizaciones'
+      path: '/organizaciones'
+      fullPath: '/plataforma/organizaciones'
+      preLoaderRoute: typeof AppPlataformaOrganizacionesRouteImport
+      parentRoute: typeof AppPlataformaRouteRoute
+    }
   }
 }
 
+interface AppPlataformaRouteRouteChildren {
+  AppPlataformaCatalogosRoute: typeof AppPlataformaCatalogosRoute
+  AppPlataformaOrganizacionesRoute: typeof AppPlataformaOrganizacionesRoute
+}
+
+const AppPlataformaRouteRouteChildren: AppPlataformaRouteRouteChildren = {
+  AppPlataformaCatalogosRoute: AppPlataformaCatalogosRoute,
+  AppPlataformaOrganizacionesRoute: AppPlataformaOrganizacionesRoute,
+}
+
+const AppPlataformaRouteRouteWithChildren =
+  AppPlataformaRouteRoute._addFileChildren(AppPlataformaRouteRouteChildren)
+
 interface AppRouteChildren {
+  AppPlataformaRouteRoute: typeof AppPlataformaRouteRouteWithChildren
+  AppCredencialesRoute: typeof AppCredencialesRoute
+  AppEgresosRoute: typeof AppEgresosRoute
+  AppHonorariosRoute: typeof AppHonorariosRoute
+  AppPrestadoresRoute: typeof AppPrestadoresRoute
+  AppResponsablesRoute: typeof AppResponsablesRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppConfiguracionCategoriasRoute: typeof AppConfiguracionCategoriasRoute
+  AppConfiguracionUsuariosRoute: typeof AppConfiguracionUsuariosRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppPlataformaRouteRoute: AppPlataformaRouteRouteWithChildren,
+  AppCredencialesRoute: AppCredencialesRoute,
+  AppEgresosRoute: AppEgresosRoute,
+  AppHonorariosRoute: AppHonorariosRoute,
+  AppPrestadoresRoute: AppPrestadoresRoute,
+  AppResponsablesRoute: AppResponsablesRoute,
   AppIndexRoute: AppIndexRoute,
+  AppConfiguracionCategoriasRoute: AppConfiguracionCategoriasRoute,
+  AppConfiguracionUsuariosRoute: AppConfiguracionUsuariosRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  ActivarRoute: ActivarRoute,
   LoginRoute: LoginRoute,
   OlvideContrasenaRoute: OlvideContrasenaRoute,
   RestablecerRoute: RestablecerRoute,
