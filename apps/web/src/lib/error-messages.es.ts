@@ -41,6 +41,15 @@ const MESSAGES = {
   CANNOT_DEACTIVATE_SELF: 'No puedes desactivar tu propio usuario.',
   LAST_ADMIN: 'La organización necesita al menos un administrador activo.',
   INVITE_NOT_PENDING: 'Esa persona ya activó su cuenta; no hace falta reenviar la invitación.',
+  // F03 — prestadores y contratos
+  INCOMPLETE_BANK_ACCOUNT:
+    'La cuenta bancaria va completa o no va: indica banco, tipo de cuenta y número, o deja los tres vacíos.',
+  DUPLICATE_DOCUMENT: 'Ya hay un prestador con ese tipo y número de documento.',
+  INACTIVE_CATALOG_VALUE:
+    'Uno de los valores elegidos (banco, tipo de cuenta o de documento) está desactivado.',
+  PROVIDER_HAS_CONTRACTS: 'Este prestador tiene contratos. Elimina primero sus contratos.',
+  INVALID_DATE_RANGE: 'La fecha de fin no puede ser anterior a la de inicio.',
+  CONTRACT_OVERLAP: 'Las fechas se cruzan con otro contrato de este prestador.',
 } satisfies Record<ErrorCode, string>;
 
 const CLIENT_MESSAGES: Record<string, string> = {

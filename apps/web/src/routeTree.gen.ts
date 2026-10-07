@@ -19,12 +19,13 @@ import { Route as AppCredencialesRouteImport } from './routes/_app/credenciales'
 import { Route as AppEgresosRouteImport } from './routes/_app/egresos'
 import { Route as AppHonorariosRouteImport } from './routes/_app/honorarios'
 import { Route as AppPlataformaRouteRouteImport } from './routes/_app/plataforma/route'
-import { Route as AppPrestadoresRouteImport } from './routes/_app/prestadores'
 import { Route as AppResponsablesRouteImport } from './routes/_app/responsables'
 import { Route as AppConfiguracionCategoriasRouteImport } from './routes/_app/configuracion/categorias'
 import { Route as AppConfiguracionUsuariosRouteImport } from './routes/_app/configuracion/usuarios'
 import { Route as AppPlataformaCatalogosRouteImport } from './routes/_app/plataforma/catalogos'
 import { Route as AppPlataformaOrganizacionesRouteImport } from './routes/_app/plataforma/organizaciones'
+import { Route as AppPrestadoresIndexRouteImport } from './routes/_app/prestadores/index'
+import { Route as AppPrestadoresIdRouteImport } from './routes/_app/prestadores/$id'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -75,11 +76,6 @@ const AppPlataformaRouteRoute = AppPlataformaRouteRouteImport.update({
   path: '/plataforma',
   getParentRoute: () => AppRoute,
 } as any)
-const AppPrestadoresRoute = AppPrestadoresRouteImport.update({
-  id: '/prestadores',
-  path: '/prestadores',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppResponsablesRoute = AppResponsablesRouteImport.update({
   id: '/responsables',
   path: '/responsables',
@@ -108,6 +104,16 @@ const AppPlataformaOrganizacionesRoute =
     path: '/organizaciones',
     getParentRoute: () => AppPlataformaRouteRoute,
   } as any)
+const AppPrestadoresIndexRoute = AppPrestadoresIndexRouteImport.update({
+  id: '/prestadores/',
+  path: '/prestadores/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPrestadoresIdRoute = AppPrestadoresIdRouteImport.update({
+  id: '/prestadores/$id',
+  path: '/prestadores/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -119,12 +125,13 @@ export interface FileRoutesByFullPath {
   '/credenciales': typeof AppCredencialesRoute
   '/egresos': typeof AppEgresosRoute
   '/honorarios': typeof AppHonorariosRoute
-  '/prestadores': typeof AppPrestadoresRoute
   '/responsables': typeof AppResponsablesRoute
   '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
   '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
   '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
   '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
+  '/prestadores/$id': typeof AppPrestadoresIdRoute
+  '/prestadores/': typeof AppPrestadoresIndexRoute
 }
 export interface FileRoutesByTo {
   '/activar': typeof ActivarRoute
@@ -135,13 +142,14 @@ export interface FileRoutesByTo {
   '/credenciales': typeof AppCredencialesRoute
   '/egresos': typeof AppEgresosRoute
   '/honorarios': typeof AppHonorariosRoute
-  '/prestadores': typeof AppPrestadoresRoute
   '/responsables': typeof AppResponsablesRoute
   '/': typeof AppIndexRoute
   '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
   '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
   '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
   '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
+  '/prestadores/$id': typeof AppPrestadoresIdRoute
+  '/prestadores': typeof AppPrestadoresIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -154,13 +162,14 @@ export interface FileRoutesById {
   '/_app/credenciales': typeof AppCredencialesRoute
   '/_app/egresos': typeof AppEgresosRoute
   '/_app/honorarios': typeof AppHonorariosRoute
-  '/_app/prestadores': typeof AppPrestadoresRoute
   '/_app/responsables': typeof AppResponsablesRoute
   '/_app/': typeof AppIndexRoute
   '/_app/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
   '/_app/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
   '/_app/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
   '/_app/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
+  '/_app/prestadores/$id': typeof AppPrestadoresIdRoute
+  '/_app/prestadores/': typeof AppPrestadoresIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -174,12 +183,13 @@ export interface FileRouteTypes {
     | '/credenciales'
     | '/egresos'
     | '/honorarios'
-    | '/prestadores'
     | '/responsables'
     | '/configuracion/categorias'
     | '/configuracion/usuarios'
     | '/plataforma/catalogos'
     | '/plataforma/organizaciones'
+    | '/prestadores/$id'
+    | '/prestadores/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/activar'
@@ -190,13 +200,14 @@ export interface FileRouteTypes {
     | '/credenciales'
     | '/egresos'
     | '/honorarios'
-    | '/prestadores'
     | '/responsables'
     | '/'
     | '/configuracion/categorias'
     | '/configuracion/usuarios'
     | '/plataforma/catalogos'
     | '/plataforma/organizaciones'
+    | '/prestadores/$id'
+    | '/prestadores'
   id:
     | '__root__'
     | '/_app'
@@ -208,13 +219,14 @@ export interface FileRouteTypes {
     | '/_app/credenciales'
     | '/_app/egresos'
     | '/_app/honorarios'
-    | '/_app/prestadores'
     | '/_app/responsables'
     | '/_app/'
     | '/_app/configuracion/categorias'
     | '/_app/configuracion/usuarios'
     | '/_app/plataforma/catalogos'
     | '/_app/plataforma/organizaciones'
+    | '/_app/prestadores/$id'
+    | '/_app/prestadores/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -297,13 +309,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPlataformaRouteRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/prestadores': {
-      id: '/_app/prestadores'
-      path: '/prestadores'
-      fullPath: '/prestadores'
-      preLoaderRoute: typeof AppPrestadoresRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/responsables': {
       id: '/_app/responsables'
       path: '/responsables'
@@ -339,6 +344,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPlataformaOrganizacionesRouteImport
       parentRoute: typeof AppPlataformaRouteRoute
     }
+    '/_app/prestadores/': {
+      id: '/_app/prestadores/'
+      path: '/prestadores'
+      fullPath: '/prestadores/'
+      preLoaderRoute: typeof AppPrestadoresIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/prestadores/$id': {
+      id: '/_app/prestadores/$id'
+      path: '/prestadores/$id'
+      fullPath: '/prestadores/$id'
+      preLoaderRoute: typeof AppPrestadoresIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -360,11 +379,12 @@ interface AppRouteChildren {
   AppCredencialesRoute: typeof AppCredencialesRoute
   AppEgresosRoute: typeof AppEgresosRoute
   AppHonorariosRoute: typeof AppHonorariosRoute
-  AppPrestadoresRoute: typeof AppPrestadoresRoute
   AppResponsablesRoute: typeof AppResponsablesRoute
   AppIndexRoute: typeof AppIndexRoute
   AppConfiguracionCategoriasRoute: typeof AppConfiguracionCategoriasRoute
   AppConfiguracionUsuariosRoute: typeof AppConfiguracionUsuariosRoute
+  AppPrestadoresIdRoute: typeof AppPrestadoresIdRoute
+  AppPrestadoresIndexRoute: typeof AppPrestadoresIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -372,11 +392,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppCredencialesRoute: AppCredencialesRoute,
   AppEgresosRoute: AppEgresosRoute,
   AppHonorariosRoute: AppHonorariosRoute,
-  AppPrestadoresRoute: AppPrestadoresRoute,
   AppResponsablesRoute: AppResponsablesRoute,
   AppIndexRoute: AppIndexRoute,
   AppConfiguracionCategoriasRoute: AppConfiguracionCategoriasRoute,
   AppConfiguracionUsuariosRoute: AppConfiguracionUsuariosRoute,
+  AppPrestadoresIdRoute: AppPrestadoresIdRoute,
+  AppPrestadoresIndexRoute: AppPrestadoresIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

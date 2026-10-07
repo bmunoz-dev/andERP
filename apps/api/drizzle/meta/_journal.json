@@ -36,6 +36,20 @@
       "when": 1790639148837,
       "tag": "0004_expense_categories_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790641279693,
+      "tag": "0005_service_providers",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790641345637,
+      "tag": "0006_contracts_no_overlap",
+      "breakpoints": true
     }
   ]
 }

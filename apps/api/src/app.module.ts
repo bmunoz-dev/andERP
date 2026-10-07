@@ -10,6 +10,7 @@ import { CatalogsModule } from './modules/catalogs/catalogs.module';
 import { HealthController } from './modules/health/health.controller';
 import { MailModule } from './modules/mail/mailer';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
+import { ServiceProvidersModule } from './modules/service-providers/service-providers.module';
 import { RequestContextModule } from './shared/context/request-context';
 import { ProblemDetailsFilter } from './shared/errors/problem-details.filter';
 import { createLoggerModule } from './shared/logging/logger.module';
@@ -35,6 +36,7 @@ export class AppModule {
         AuthModule,
         CatalogsModule,
         OrganizationsModule,
+        ServiceProvidersModule,
       ],
       controllers: [HealthController],
       providers: [
