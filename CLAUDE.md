@@ -43,7 +43,18 @@ Si el usuario decide seguir sin instalarla en ese momento, aplica su principio a
 4. **Si la spec o el diseño cambian, se actualiza el documento primero** (y el historial de `design.md`). Las decisiones de implementación van en "Notas de implementación" del `plan.md`.
 5. Al cerrar: `roadmap.md` actualizado, push y PR con el resumen. El merge lo hace el usuario.
 
-**Git:** commits como `bmunoz-dev <bayrol.dev@gmail.com>`, configurado por repositorio. Remoto: `github.com/bmunoz-dev/andERP`.
+**Git:** commits como `bmunoz-dev <bayrol.dev@gmail.com>`, configurado por repositorio. Remoto: `github.com/bmunoz-dev/andERP`. Merge con `gh pr merge N --merge` (merge commit, como los PR anteriores), solo cuando el usuario lo pida y con el CI en verde.
+
+**Estado y siguiente paso:** en [`docs/sdd/roadmap.md`](docs/sdd/roadmap.md), que incluye "Bloqueos y notas" con las decisiones pendientes. Al retomar después de una pausa o de una compresión del contexto, léelo primero junto con el `tasks.md` de la feature en curso.
+
+## Notas del entorno
+
+- **Cuentas de GitHub:** en esta máquina la CLI `gh` tiene dos sesiones: `bmunoz-dev` (dueña del repo, debe estar activa) y `BayrolM` (solo lectura). Si un push da 403, ejecuta `gh auth switch --hostname github.com --user bmunoz-dev`. Las herramientas de PR de la app de escritorio actúan como `BayrolM`: sirven para leer el estado del CI, pero no para mergear ni activar auto-merge; para eso usa `gh`.
+- **Credenciales de prueba locales:** el super admin del seed es `SEED_SUPERADMIN_EMAIL` / `SEED_SUPERADMIN_PASSWORD` en `apps/api/.env`. No las repitas en el chat; indica el archivo.
+- **Docker Desktop** puede estar cerrado al empezar el día; ábrelo antes de migrar o de correr pruebas.
+- **Vitest en `New folder\personal`:** a veces un trabajador termina al arrancar con `0xC0000409`. Repite el archivo afectado antes de buscar un error en el código.
+- **`node_modules` desincronizado** (pnpm pide confirmación sin TTY): `CI=true pnpm install --frozen-lockfile`.
+- **Scripts con `node -e` o heredocs:** las comillas invertidas de TypeScript se rompen dentro de comillas dobles de bash. Para editar código usa la herramienta de edición.
 
 ## Comandos
 
