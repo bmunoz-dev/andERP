@@ -85,6 +85,20 @@ function ProviderDetailPage() {
       cell: ({ row }) => formatCOP(row.original.totalAmount),
     },
     {
+      id: 'paid',
+      header: 'Pagado',
+      cell: ({ row }) => formatCOP(row.original.paidAmount),
+    },
+    {
+      id: 'balance',
+      header: 'Saldo',
+      cell: ({ row }) => (
+        <span className={row.original.balance.startsWith('-') ? 'text-destructive' : undefined}>
+          {formatCOP(row.original.balance)}
+        </span>
+      ),
+    },
+    {
       id: 'status',
       header: 'Estado',
       cell: ({ row }) => <ContractStatusBadge status={row.original.status} />,

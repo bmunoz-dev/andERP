@@ -50,6 +50,18 @@ const MESSAGES = {
   PROVIDER_HAS_CONTRACTS: 'Este prestador tiene contratos. Elimina primero sus contratos.',
   INVALID_DATE_RANGE: 'La fecha de fin no puede ser anterior a la de inicio.',
   CONTRACT_OVERLAP: 'Las fechas se cruzan con otro contrato de este prestador.',
+  // F04 — pagos de honorarios
+  FEE_PAYMENT_WITHOUT_DAYS: 'Ingresa el valor de al menos un día.',
+  DUPLICATE_WORK_DATE: 'Hay una fecha repetida en el pago.',
+  WORK_DATE_OUTSIDE_WEEK: 'Hay días fuera de la semana elegida.',
+  WORK_DATE_OUTSIDE_CONTRACT: 'Hay días fuera de las fechas del contrato.',
+  FEE_PAYMENT_ALREADY_EXISTS:
+    'Esa semana ya está pagada para este contrato. Edita el pago existente.',
+  FEE_PAYMENT_PERIOD_IMMUTABLE:
+    'El contrato y la semana de un pago no se cambian. Elimina el pago y créalo de nuevo.',
+  CONTRACT_HAS_PAYMENTS: 'Este contrato tiene pagos de honorarios. Elimina primero esos pagos.',
+  CONTRACT_DATES_EXCLUDE_PAYMENTS: 'Con esas fechas quedarían días ya pagados fuera del contrato.',
+  CONTRACT_BALANCE_EXCEEDED: 'Lo pagado supera el valor total del contrato.',
 } satisfies Record<ErrorCode, string>;
 
 const CLIENT_MESSAGES: Record<string, string> = {

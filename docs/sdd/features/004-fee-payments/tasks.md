@@ -60,13 +60,13 @@
 
 ## Bloque E — Web
 
-- [ ] F04-T019 [TDD] Crear el componente `WeekGrid`: 7 y 10 columnas, días fuera del contrato deshabilitados, festivos marcados y total en vivo.
+- [x] F04-T019 [TDD] Crear el componente `WeekGrid`: 7 y 10 columnas, días fuera del contrato deshabilitados, festivos marcados y total en vivo.
       Depende de: F04-T015
-- [ ] F04-T020 Crear `FeePaymentForm` con el flujo de periodo → contrato → cuadrícula → fecha de pago, y el aviso de saldo.
+- [x] F04-T020 Crear `FeePaymentForm` con el flujo de periodo → contrato → cuadrícula → fecha de pago, y el aviso de saldo.
       Depende de: F04-T019
-- [ ] F04-T021 Crear el listado de honorarios con filtros, y las páginas de nuevo pago y edición.
+- [x] F04-T021 Crear el listado de honorarios con filtros, y las páginas de nuevo pago y edición.
       Depende de: F04-T020 · Verificación: CA-19
-- [ ] F04-T022 Mostrar pagado y saldo en el detalle del prestador (F03).
+- [x] F04-T022 Mostrar pagado y saldo en el detalle del prestador (F03).
       Depende de: F04-T014
 
 ## Cierre

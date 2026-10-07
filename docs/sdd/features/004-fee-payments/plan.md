@@ -99,3 +99,6 @@ modules/fee-payments/
 - **Saldo:** las consultas de contratos se unen a `v_contract_balances` (`paidAmount`, `balance`). El aviso de saldo se calcula dentro de la misma transacción del guardado.
 - **Las vistas se declaran en Drizzle con `.existing()`:** las crea la migración escrita a mano y drizzle-kit no las gestiona.
 - **Entorno local (Windows):** en el árbol `New folder\personal`, el trabajador de Vitest a veces termina al arrancar con `0xC0000409`, antes de ejecutar pruebas. No depende del código: cuando arranca, la suite pasa completa. El CI en Linux no lo presenta.
+- **Web — festivos:** cada día de la cuadrícula tiene una casilla "Festivo", marcada por defecto si `isColombianHoliday`. El usuario puede cambiarla (CA-8) y se guarda tal como queda.
+- **Web — edición:** al editar un pago, año, mes, semana y prestador quedan deshabilitados; el formulario explica que para cambiarlos hay que borrar el pago y crearlo de nuevo.
+- **Web — pruebas:** `testTimeout` de 20 s en la web, porque jsdom se vuelve lento cuando corre junto a las pruebas de la API.
