@@ -107,3 +107,4 @@ modules/fee-payments/
 - **Web — festivos:** cada día de la cuadrícula tiene una casilla "Festivo", marcada por defecto si `isColombianHoliday`. El usuario puede cambiarla (CA-8) y se guarda tal como queda.
 - **Web — edición:** al editar un pago, año, mes, semana y prestador quedan deshabilitados; el formulario explica que para cambiarlos hay que borrar el pago y crearlo de nuevo.
 - **Web — pruebas:** `testTimeout` de 20 s en la web, porque jsdom se vuelve lento cuando corre junto a las pruebas de la API.
+- **Verificación manual (T023):** la hizo el usuario en su navegador, incluido el rechazo de un pago que supera el valor del contrato, y confirmó que funciona.

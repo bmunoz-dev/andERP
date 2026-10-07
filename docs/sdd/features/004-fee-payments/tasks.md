@@ -71,4 +71,4 @@
 
 ## Cierre
 
-- [ ] F04-T023 Verificación manual: registrar la semana 3 de agosto de 2026 (incluye el festivo del lunes 17) y la semana 4 (10 días, del 22 al 31), editar un pago, borrarlo y superar el saldo del contrato. Revisar la Definición de Hecho y actualizar `roadmap.md`.
+- [x] F04-T023 Verificación manual: registrar la semana 3 de agosto de 2026 (incluye el festivo del lunes 17) y la semana 4 (10 días, del 22 al 31), editar un pago, borrarlo y superar el saldo del contrato. Revisar la Definición de Hecho y actualizar `roadmap.md`.
