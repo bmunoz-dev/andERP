@@ -25,6 +25,7 @@ interface SelectFieldProps {
   /** Si se define, agrega una opción que deja el campo vacío (''). */
   noneLabel?: string;
   error?: string | undefined;
+  disabled?: boolean;
 }
 
 /** Select con etiqueta y error accesibles; el valor vacío es ''. */
@@ -36,6 +37,7 @@ export function SelectField({
   placeholder,
   noneLabel,
   error,
+  disabled = false,
 }: SelectFieldProps) {
   const id = useId();
   const errorId = `${id}-error`;
@@ -44,6 +46,7 @@ export function SelectField({
     <div className="grid gap-2">
       <Label htmlFor={id}>{label}</Label>
       <Select
+        disabled={disabled}
         value={value === '' ? (noneLabel ? NONE : '') : value}
         onValueChange={(next) => {
           onChange(next === NONE ? '' : next);

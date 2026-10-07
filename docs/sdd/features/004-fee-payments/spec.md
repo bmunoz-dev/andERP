@@ -27,7 +27,7 @@ Registrar el pago semanal de honorarios de un contrato, con un valor por cada fe
 - **CA-8.** `isHoliday` lo propone la web con `isColombianHoliday` y el usuario puede cambiarlo. Se guarda tal como llega.
 
 **Saldo del contrato**
-- **CA-9.** Si, después de guardar, lo pagado supera el `totalAmount` del contrato, la respuesta incluye `warnings: [{ code: "CONTRACT_BALANCE_EXCEEDED", balance }]`. El pago **sí** se guarda.
+- **CA-9.** Si con el pago (al crearlo o editarlo) lo pagado supera el `totalAmount` del contrato, responde `422 CONTRACT_BALANCE_EXCEEDED` y **no se guarda nada**. Dos pagos simultáneos no pueden superar el total entre ambos. Tampoco se puede bajar el `totalAmount` de un contrato por debajo de lo ya pagado (mismo código). *(Cambio del 2026-10-06: antes solo se avisaba.)*
 - **CA-10.** `GET /service-providers/:id/contracts` (F03) agrega a cada contrato `paidAmount` y `balance`, calculados en `v_contract_balances`.
 
 **Edición y borrado**

@@ -77,6 +77,10 @@ export const contractSchema = z.object({
   paymentFrequency: paymentFrequencySchema,
   totalAmount: z.string(),
   status: contractStatusSchema,
+  /** Suma de los pagos de honorarios del contrato (F04 CA-10). */
+  paidAmount: z.string(),
+  /** totalAmount - paidAmount. Negativo si se pagó de más. */
+  balance: z.string(),
 });
 export type Contract = z.infer<typeof contractSchema>;
 

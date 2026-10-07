@@ -1,12 +1,18 @@
-import { type Contract, type CreateContract, ErrorCode, type UpdateContract } from '@anderp/shared';
+import {
+  type Contract,
+  type ContractOption,
+  type CreateContract,
+  ErrorCode,
+  type UpdateContract,
+} from '@anderp/shared';
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, isNull, lte, or } from 'drizzle-orm';
 import { DB, type Database } from '../../db/database.module';
-import { providerContracts } from '../../db/schema';
+import { contractBalances, providerContracts, serviceProviders } from '../../db/schema';
 import { OrgScope } from '../../shared/db/org-scope';
 import { DomainError } from '../../shared/errors/domain-error';
 import { AUDIT_LOGGER, type AuditLogger } from '../audit/audit.service';
-import { contractColumns } from './contract-queries';
+import { balanceJoin, contractColumns } from './contract-queries';
 import { ServiceProvidersService } from './service-providers.service';
 
 const notFound = () => new DomainError(ErrorCode.NOT_FOUND, 404);
@@ -41,6 +47,7 @@ export class ContractsService {
     return this.db
       .select(contractColumns(this.providers.today()))
       .from(providerContracts)
+      .innerJoin(contractBalances, balanceJoin)
       .where(
         and(
           this.scope.where(providerContracts),
@@ -50,10 +57,38 @@ export class ContractsService {
       .orderBy(desc(providerContracts.startDate));
   }
 
+  /** Contratos vigentes en algún día del rango (F04 CA-17): a quién se le puede pagar esa semana. */
+  overlapping(start: string, end: string): Promise<ContractOption[]> {
+    return this.db
+      .select({
+        id: providerContracts.id,
+        serviceProvider: { id: serviceProviders.id, name: serviceProviders.name },
+        startDate: providerContracts.startDate,
+        endDate: providerContracts.endDate,
+      })
+      .from(providerContracts)
+      .innerJoin(
+        serviceProviders,
+        and(
+          eq(serviceProviders.organizationId, providerContracts.organizationId),
+          eq(serviceProviders.id, providerContracts.serviceProviderId),
+        ),
+      )
+      .where(
+        and(
+          this.scope.where(providerContracts),
+          lte(providerContracts.startDate, end),
+          or(isNull(providerContracts.endDate), gte(providerContracts.endDate, start)),
+        ),
+      )
+      .orderBy(asc(serviceProviders.name));
+  }
+
   async get(id: string): Promise<Contract> {
     const [row] = await this.db
       .select(contractColumns(this.providers.today()))
       .from(providerContracts)
+      .innerJoin(contractBalances, balanceJoin)
       .where(and(this.scope.where(providerContracts), eq(providerContracts.id, id)));
     if (!row) throw notFound();
     return row;

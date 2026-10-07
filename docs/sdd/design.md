@@ -22,6 +22,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-09-28 | `users.password_hash` es nullable (NULL = invitación pendiente). | Los usuarios invitados existen antes de definir su contraseña (F01, F02). |
 | 2026-09-28 | El access token lleva la `family_id` de su sesión y el guard verifica en cada petición que siga activa. | Logout, cambio de contraseña y reutilización de tokens invalidan también los access tokens (F01). |
 | 2026-09-28 | `organization_members.is_active`: activar o desactivar a alguien es por organización. | `users.status` es global; desactivar en una organización no debe bloquear al usuario en otra (F02). |
+| 2026-10-06 | Un pago que haga superar el valor total del contrato se **rechaza** (`CONTRACT_BALANCE_EXCEEDED`), en vez de solo avisar. | Decisión del usuario: no se debe pagar más de lo acordado; las adiciones se registran aumentando el valor del contrato (F04). |
 
 ---
 
@@ -330,7 +331,7 @@ PK `(user_id, organization_id)`.
 **Reglas de dominio (backend):**
 - Un pago de honorarios tiene al menos un día.
 - Al editar un pago, sus días se reemplazan dentro de una transacción.
-- Si la suma de lo pagado supera `total_amount` del contrato, se muestra una **advertencia**; no se bloquea (puede haber adiciones al contrato).
+- La suma de lo pagado **nunca** puede superar `total_amount` del contrato: se rechaza con `CONTRACT_BALANCE_EXCEEDED`. Para pagar más, primero se aumenta el valor del contrato (una adición). El valor del contrato tampoco puede bajar de lo ya pagado.
 - Los festivos de Colombia se calculan en `packages/shared`; no hay tabla de festivos.
 
 ### 5.6 Egresos

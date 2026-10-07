@@ -17,11 +17,13 @@ import { Route as RestablecerRouteImport } from './routes/restablecer'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppCredencialesRouteImport } from './routes/_app/credenciales'
 import { Route as AppEgresosRouteImport } from './routes/_app/egresos'
-import { Route as AppHonorariosRouteImport } from './routes/_app/honorarios'
 import { Route as AppPlataformaRouteRouteImport } from './routes/_app/plataforma/route'
 import { Route as AppResponsablesRouteImport } from './routes/_app/responsables'
 import { Route as AppConfiguracionCategoriasRouteImport } from './routes/_app/configuracion/categorias'
 import { Route as AppConfiguracionUsuariosRouteImport } from './routes/_app/configuracion/usuarios'
+import { Route as AppHonorariosIndexRouteImport } from './routes/_app/honorarios/index'
+import { Route as AppHonorariosIdRouteImport } from './routes/_app/honorarios/$id'
+import { Route as AppHonorariosNuevoRouteImport } from './routes/_app/honorarios/nuevo'
 import { Route as AppPlataformaCatalogosRouteImport } from './routes/_app/plataforma/catalogos'
 import { Route as AppPlataformaOrganizacionesRouteImport } from './routes/_app/plataforma/organizaciones'
 import { Route as AppPrestadoresIndexRouteImport } from './routes/_app/prestadores/index'
@@ -66,11 +68,6 @@ const AppEgresosRoute = AppEgresosRouteImport.update({
   path: '/egresos',
   getParentRoute: () => AppRoute,
 } as any)
-const AppHonorariosRoute = AppHonorariosRouteImport.update({
-  id: '/honorarios',
-  path: '/honorarios',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppPlataformaRouteRoute = AppPlataformaRouteRouteImport.update({
   id: '/plataforma',
   path: '/plataforma',
@@ -93,6 +90,21 @@ const AppConfiguracionUsuariosRoute =
     path: '/configuracion/usuarios',
     getParentRoute: () => AppRoute,
   } as any)
+const AppHonorariosIndexRoute = AppHonorariosIndexRouteImport.update({
+  id: '/honorarios/',
+  path: '/honorarios/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHonorariosIdRoute = AppHonorariosIdRouteImport.update({
+  id: '/honorarios/$id',
+  path: '/honorarios/$id',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHonorariosNuevoRoute = AppHonorariosNuevoRouteImport.update({
+  id: '/honorarios/nuevo',
+  path: '/honorarios/nuevo',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPlataformaCatalogosRoute = AppPlataformaCatalogosRouteImport.update({
   id: '/catalogos',
   path: '/catalogos',
@@ -124,13 +136,15 @@ export interface FileRoutesByFullPath {
   '/plataforma': typeof AppPlataformaRouteRouteWithChildren
   '/credenciales': typeof AppCredencialesRoute
   '/egresos': typeof AppEgresosRoute
-  '/honorarios': typeof AppHonorariosRoute
   '/responsables': typeof AppResponsablesRoute
   '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
   '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
+  '/honorarios/$id': typeof AppHonorariosIdRoute
+  '/honorarios/nuevo': typeof AppHonorariosNuevoRoute
   '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
   '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
   '/prestadores/$id': typeof AppPrestadoresIdRoute
+  '/honorarios/': typeof AppHonorariosIndexRoute
   '/prestadores/': typeof AppPrestadoresIndexRoute
 }
 export interface FileRoutesByTo {
@@ -141,14 +155,16 @@ export interface FileRoutesByTo {
   '/plataforma': typeof AppPlataformaRouteRouteWithChildren
   '/credenciales': typeof AppCredencialesRoute
   '/egresos': typeof AppEgresosRoute
-  '/honorarios': typeof AppHonorariosRoute
   '/responsables': typeof AppResponsablesRoute
   '/': typeof AppIndexRoute
   '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
   '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
+  '/honorarios/$id': typeof AppHonorariosIdRoute
+  '/honorarios/nuevo': typeof AppHonorariosNuevoRoute
   '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
   '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
   '/prestadores/$id': typeof AppPrestadoresIdRoute
+  '/honorarios': typeof AppHonorariosIndexRoute
   '/prestadores': typeof AppPrestadoresIndexRoute
 }
 export interface FileRoutesById {
@@ -161,14 +177,16 @@ export interface FileRoutesById {
   '/_app/plataforma': typeof AppPlataformaRouteRouteWithChildren
   '/_app/credenciales': typeof AppCredencialesRoute
   '/_app/egresos': typeof AppEgresosRoute
-  '/_app/honorarios': typeof AppHonorariosRoute
   '/_app/responsables': typeof AppResponsablesRoute
   '/_app/': typeof AppIndexRoute
   '/_app/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
   '/_app/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
+  '/_app/honorarios/$id': typeof AppHonorariosIdRoute
+  '/_app/honorarios/nuevo': typeof AppHonorariosNuevoRoute
   '/_app/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
   '/_app/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
   '/_app/prestadores/$id': typeof AppPrestadoresIdRoute
+  '/_app/honorarios/': typeof AppHonorariosIndexRoute
   '/_app/prestadores/': typeof AppPrestadoresIndexRoute
 }
 export interface FileRouteTypes {
@@ -182,13 +200,15 @@ export interface FileRouteTypes {
     | '/plataforma'
     | '/credenciales'
     | '/egresos'
-    | '/honorarios'
     | '/responsables'
     | '/configuracion/categorias'
     | '/configuracion/usuarios'
+    | '/honorarios/$id'
+    | '/honorarios/nuevo'
     | '/plataforma/catalogos'
     | '/plataforma/organizaciones'
     | '/prestadores/$id'
+    | '/honorarios/'
     | '/prestadores/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -199,14 +219,16 @@ export interface FileRouteTypes {
     | '/plataforma'
     | '/credenciales'
     | '/egresos'
-    | '/honorarios'
     | '/responsables'
     | '/'
     | '/configuracion/categorias'
     | '/configuracion/usuarios'
+    | '/honorarios/$id'
+    | '/honorarios/nuevo'
     | '/plataforma/catalogos'
     | '/plataforma/organizaciones'
     | '/prestadores/$id'
+    | '/honorarios'
     | '/prestadores'
   id:
     | '__root__'
@@ -218,14 +240,16 @@ export interface FileRouteTypes {
     | '/_app/plataforma'
     | '/_app/credenciales'
     | '/_app/egresos'
-    | '/_app/honorarios'
     | '/_app/responsables'
     | '/_app/'
     | '/_app/configuracion/categorias'
     | '/_app/configuracion/usuarios'
+    | '/_app/honorarios/$id'
+    | '/_app/honorarios/nuevo'
     | '/_app/plataforma/catalogos'
     | '/_app/plataforma/organizaciones'
     | '/_app/prestadores/$id'
+    | '/_app/honorarios/'
     | '/_app/prestadores/'
   fileRoutesById: FileRoutesById
 }
@@ -295,13 +319,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEgresosRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/honorarios': {
-      id: '/_app/honorarios'
-      path: '/honorarios'
-      fullPath: '/honorarios'
-      preLoaderRoute: typeof AppHonorariosRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/plataforma': {
       id: '/_app/plataforma'
       path: '/plataforma'
@@ -328,6 +345,27 @@ declare module '@tanstack/react-router' {
       path: '/configuracion/usuarios'
       fullPath: '/configuracion/usuarios'
       preLoaderRoute: typeof AppConfiguracionUsuariosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/honorarios/': {
+      id: '/_app/honorarios/'
+      path: '/honorarios'
+      fullPath: '/honorarios/'
+      preLoaderRoute: typeof AppHonorariosIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/honorarios/$id': {
+      id: '/_app/honorarios/$id'
+      path: '/honorarios/$id'
+      fullPath: '/honorarios/$id'
+      preLoaderRoute: typeof AppHonorariosIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/honorarios/nuevo': {
+      id: '/_app/honorarios/nuevo'
+      path: '/honorarios/nuevo'
+      fullPath: '/honorarios/nuevo'
+      preLoaderRoute: typeof AppHonorariosNuevoRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/plataforma/catalogos': {
@@ -378,12 +416,14 @@ interface AppRouteChildren {
   AppPlataformaRouteRoute: typeof AppPlataformaRouteRouteWithChildren
   AppCredencialesRoute: typeof AppCredencialesRoute
   AppEgresosRoute: typeof AppEgresosRoute
-  AppHonorariosRoute: typeof AppHonorariosRoute
   AppResponsablesRoute: typeof AppResponsablesRoute
   AppIndexRoute: typeof AppIndexRoute
   AppConfiguracionCategoriasRoute: typeof AppConfiguracionCategoriasRoute
   AppConfiguracionUsuariosRoute: typeof AppConfiguracionUsuariosRoute
+  AppHonorariosIdRoute: typeof AppHonorariosIdRoute
+  AppHonorariosNuevoRoute: typeof AppHonorariosNuevoRoute
   AppPrestadoresIdRoute: typeof AppPrestadoresIdRoute
+  AppHonorariosIndexRoute: typeof AppHonorariosIndexRoute
   AppPrestadoresIndexRoute: typeof AppPrestadoresIndexRoute
 }
 
@@ -391,12 +431,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppPlataformaRouteRoute: AppPlataformaRouteRouteWithChildren,
   AppCredencialesRoute: AppCredencialesRoute,
   AppEgresosRoute: AppEgresosRoute,
-  AppHonorariosRoute: AppHonorariosRoute,
   AppResponsablesRoute: AppResponsablesRoute,
   AppIndexRoute: AppIndexRoute,
   AppConfiguracionCategoriasRoute: AppConfiguracionCategoriasRoute,
   AppConfiguracionUsuariosRoute: AppConfiguracionUsuariosRoute,
+  AppHonorariosIdRoute: AppHonorariosIdRoute,
+  AppHonorariosNuevoRoute: AppHonorariosNuevoRoute,
   AppPrestadoresIdRoute: AppPrestadoresIdRoute,
+  AppHonorariosIndexRoute: AppHonorariosIndexRoute,
   AppPrestadoresIndexRoute: AppPrestadoresIndexRoute,
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCOP, isMoney, moneySchema, toMoney } from './money';
+import { formatCOP, isMoney, moneySchema, sumMoney, toMoney } from './money';
 
 describe('isMoney', () => {
   it.each(['0.00', '150000.00', '-25.50', '999999999999.99'])('acepta %s', (value) => {
@@ -58,5 +58,16 @@ describe('moneySchema', () => {
     expect(moneySchema.safeParse('10.00').success).toBe(true);
     expect(moneySchema.safeParse('10').success).toBe(false);
     expect(moneySchema.safeParse(10).success).toBe(false);
+  });
+});
+
+describe('sumMoney (centavos en BigInt, sin pérdida)', () => {
+  it.each([
+    [[], '0.00'],
+    [['0.10', '0.20'], '0.30'],
+    [['150000.00', '150000.50', '-0.50'], '300000.00'],
+    [['999999999999.99', '0.01'], '1000000000000.00'],
+  ])('%j → %s', (values, expected) => {
+    expect(sumMoney(values)).toBe(expected);
   });
 });
