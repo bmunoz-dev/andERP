@@ -58,6 +58,7 @@ export function FeePaymentForm({
     enabled: range !== null,
   });
   const contract = contracts.data?.find((c) => c.id === contractId);
+  const noContracts = !editing && contracts.data?.length === 0;
 
   const save = useMutation({
     mutationFn: () => {
@@ -151,8 +152,14 @@ export function FeePaymentForm({
 
       <SelectField
         label="Prestador (contrato vigente en esa semana)"
-        disabled={editing}
-        placeholder={contracts.isPending ? 'Cargando…' : 'Elige un prestador'}
+        disabled={editing || noContracts}
+        placeholder={
+          contracts.isPending
+            ? 'Cargando…'
+            : noContracts
+              ? 'Ningún prestador tiene contrato vigente en esa semana'
+              : 'Elige un prestador'
+        }
         value={contractId}
         onChange={setContractId}
         options={(contracts.data ?? []).map((c) => ({
@@ -160,6 +167,12 @@ export function FeePaymentForm({
           label: `${c.serviceProvider.name} · desde ${formatDate(c.startDate)}`,
         }))}
       />
+      {noContracts && (
+        <p className="-mt-4 text-sm text-muted-foreground">
+          Solo aparecen prestadores cuyo contrato cubre algún día de la semana elegida. Revisa las
+          fechas del contrato en Prestadores o elige otra semana.
+        </p>
+      )}
       {editing && (
         <p className="-mt-4 text-xs text-muted-foreground">
           El contrato y la semana de un pago no se cambian. Para corregirlos, elimina el pago y
