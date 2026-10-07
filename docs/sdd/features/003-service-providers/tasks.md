@@ -33,10 +33,10 @@
 
 ## Bloque D — Web
 
-- [ ] F03-T010 [P] [TDD] Crear los componentes `MoneyInput` (formatea mientras se escribe y entrega un string decimal) y `DateInput` (`YYYY-MM-DD` ↔ `dd/mm/aaaa`).
-- [ ] F03-T011 Crear el listado de prestadores y su formulario de alta y edición.
+- [x] F03-T010 [P] [TDD] Crear los componentes `MoneyInput` (formatea mientras se escribe y entrega un string decimal) y `DateInput` (`YYYY-MM-DD` ↔ `dd/mm/aaaa`).
+- [x] F03-T011 Crear el listado de prestadores y su formulario de alta y edición.
       Depende de: F03-T010
-- [ ] F03-T012 Crear el detalle del prestador con la tabla de contratos y su formulario.
+- [x] F03-T012 Crear el detalle del prestador con la tabla de contratos y su formulario.
       Depende de: F03-T011 · Verificación: CA-12
 
 ## Cierre
