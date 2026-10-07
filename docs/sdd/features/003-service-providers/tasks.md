@@ -41,4 +41,4 @@
 
 ## Cierre
 
-- [ ] F03-T013 Verificación manual: prestador con y sin cuenta bancaria, dos contratos seguidos, intento de solapamiento y borrado bloqueado. Revisar la Definición de Hecho y actualizar `roadmap.md`.
+- [x] F03-T013 Verificación manual: prestador con y sin cuenta bancaria, dos contratos seguidos, intento de solapamiento y borrado bloqueado. Revisar la Definición de Hecho y actualizar `roadmap.md`.

@@ -66,3 +66,4 @@ Todas las restricciones se nombran explícitamente en las migraciones.
 - **`DateInput`:** no hay componente propio; se usa `<input type="date">` nativo, que guarda `YYYY-MM-DD` y se muestra en el formato del navegador. Para mostrar fechas en tablas está `formatDate()` (`dd/mm/aaaa`, sin pasar por `Date`).
 - **`MoneyInput`:** acepta "1.500.000" o "1500000,5", entrega el string canónico y formatea al salir del campo. Solo se resincroniza cuando cambia la prop, para no borrar lo que el usuario escribe.
 - **Formulario del prestador:** la regla de "cuenta completa o vacía" también se valida en el cliente, marcando el campo que falta; la API la sigue exigiendo (`INCOMPLETE_BANK_ACCOUNT`) y la base de datos también (CHECK).
+- **Verificación manual (T013):** la hizo el usuario en su navegador (crear prestadores con y sin cuenta, contratos cruzados, borrado con contratos) y confirmó que funciona.
