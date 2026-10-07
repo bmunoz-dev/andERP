@@ -88,7 +88,6 @@ describe('Registro', () => {
       periodEnd: '2026-08-31',
       paymentDate: '2026-09-02',
       total: '250000.50',
-      warnings: [],
       days: [day('2026-08-24'), day('2026-08-31', '150000.50', true)],
     } satisfies Partial<FeePayment>);
   });
@@ -142,21 +141,62 @@ describe('Registro', () => {
 });
 
 describe('Saldo del contrato', () => {
-  it('CA-9 y CA-10 avisa cuando lo pagado supera el contrato y lo refleja en el saldo', async () => {
-    const res = await api()
-      .post(
-        '/fee-payments',
-        payment({ days: [day('2026-08-24', '900000.00'), day('2026-08-25', '200000.00')] }),
-      )
-      .expect(201);
-    expect((res.body as FeePayment).warnings).toEqual([
-      { code: 'CONTRACT_BALANCE_EXCEEDED', balance: '-100000.00' },
-    ]);
+  const contractsOf = async () =>
+    (await api().get(`/service-providers/${contract.serviceProviderId}/contracts`).expect(200))
+      .body as Contract[];
 
-    const contracts = (
-      await api().get(`/service-providers/${contract.serviceProviderId}/contracts`).expect(200)
-    ).body as Contract[];
-    expect(contracts[0]).toMatchObject({ paidAmount: '1100000.00', balance: '-100000.00' });
+  it('CA-9 y CA-10 rechaza el pago que supera el valor del contrato y no guarda nada', async () => {
+    await api()
+      .post('/fee-payments', payment({ days: [day('2026-08-24', '900000.00')] }))
+      .expect(201);
+    expect((await contractsOf())[0]).toMatchObject({
+      paidAmount: '900000.00',
+      balance: '100000.00',
+    });
+
+    const res = await api()
+      .post('/fee-payments', payment({ weekOfMonth: 1, days: [day('2026-08-03', '100000.01')] }))
+      .expect(422);
+    expect(res.body).toMatchObject({ code: 'CONTRACT_BALANCE_EXCEEDED' });
+    expect((await contractsOf())[0]).toMatchObject({ paidAmount: '900000.00' });
+    const august = (await api().get('/fee-payments?periodYear=2026&periodMonth=8').expect(200))
+      .body as FeePayment[];
+    expect(august).toHaveLength(1);
+  });
+
+  it('CA-9 editar un pago tampoco puede superar el valor del contrato', async () => {
+    const created = (await api().post('/fee-payments', payment()).expect(201)).body as FeePayment;
+    const res = await api()
+      .put(`/fee-payments/${created.id}`, payment({ days: [day('2026-08-24', '1000000.01')] }))
+      .expect(422);
+    expect(res.body).toMatchObject({ code: 'CONTRACT_BALANCE_EXCEEDED' });
+    expect(
+      ((await api().get(`/fee-payments/${created.id}`).expect(200)).body as FeePayment).total,
+    ).toBe('250000.50');
+  });
+
+  it('CA-9 dos pagos simultáneos no pueden superar el valor entre ambos', async () => {
+    const [a, b] = await Promise.all([
+      api().post(
+        '/fee-payments',
+        payment({ weekOfMonth: 1, days: [day('2026-08-03', '600000.00')] }),
+      ),
+      api().post(
+        '/fee-payments',
+        payment({ weekOfMonth: 2, days: [day('2026-08-10', '600000.00')] }),
+      ),
+    ]);
+    expect([a.status, b.status].sort()).toEqual([201, 422]);
+    expect((await contractsOf())[0]).toMatchObject({ paidAmount: '600000.00' });
+  });
+
+  it('CA-9 el valor del contrato no baja de lo ya pagado', async () => {
+    await api().post('/fee-payments', payment()).expect(201);
+    const res = await api()
+      .patch(`/contracts/${contract.id}`, { totalAmount: '250000.49' })
+      .expect(422);
+    expect(res.body).toMatchObject({ code: 'CONTRACT_BALANCE_EXCEEDED' });
+    await api().patch(`/contracts/${contract.id}`, { totalAmount: '250000.50' }).expect(200);
   });
 });
 

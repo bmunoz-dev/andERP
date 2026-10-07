@@ -1,4 +1,4 @@
-import { type FeePayment, formatCOP, todayIn, weekOfMonth, weekRange } from '@anderp/shared';
+import { type FeePayment, todayIn, weekOfMonth, weekRange } from '@anderp/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -81,11 +81,6 @@ export function FeePaymentForm({
     },
     onSuccess: async (saved) => {
       toast.success(editing ? 'Pago actualizado' : 'Pago registrado');
-      for (const warning of saved.warnings) {
-        toast.warning(
-          `Lo pagado supera el valor del contrato. Saldo: ${formatCOP(warning.balance)}`,
-        );
-      }
       await queryClient.invalidateQueries({ queryKey: feePaymentKeys.all });
       await queryClient.invalidateQueries({ queryKey: providerKeys.all });
       await onSaved(saved);

@@ -133,20 +133,46 @@ describe('fee_payments en la base de datos', () => {
       await day(sql, p1.id, '2026-07-01', '400.00');
       await day(sql, p1.id, '2026-07-02', '350.50');
       const p2 = await payment(sql, c, 2026, 7, 2);
-      await day(sql, p2.id, '2026-07-08', '500.00');
+      await day(sql, p2.id, '2026-07-08', '249.50');
 
       const [total] = await sql<{ total_amount: string }[]>`
         select total_amount::text from v_fee_payment_totals where fee_payment_id = ${p1.id}`;
       expect(total?.total_amount).toBe('750.50');
 
-      const [over] = await sql<{ paid_amount: string; balance: string }[]>`
+      const [full] = await sql<{ paid_amount: string; balance: string }[]>`
         select paid_amount::text, balance::text from v_contract_balances where contract_id = ${c}`;
-      expect(over).toEqual({ paid_amount: '1250.50', balance: '-250.50' });
+      expect(full).toEqual({ paid_amount: '1000.00', balance: '0.00' });
 
       await sql`update fee_payments set deleted_at = now() where id = ${p2.id}`;
       const [after] = await sql<{ balance: string }[]>`
         select balance::text from v_contract_balances where contract_id = ${c}`;
       expect(after?.balance).toBe('249.50');
+    });
+  });
+
+  it('CA-9 lo pagado nunca supera el valor del contrato (trigger diferido)', async () => {
+    await withRuntimeSql(async (sql) => {
+      const c = await contract(sql, '2026-10-01', null);
+      const p = await payment(sql, c, 2026, 10, 1);
+      await day(sql, p.id, '2026-10-01', '1000.00');
+      await expect(day(sql, p.id, '2026-10-02', '0.01')).rejects.toThrow(
+        'CONTRACT_BALANCE_EXCEEDED',
+      );
+      await expect(
+        sql`update fee_payment_days set amount = '1000.01' where fee_payment_id = ${p.id}`,
+      ).rejects.toThrow('CONTRACT_BALANCE_EXCEEDED');
+    });
+  });
+
+  it('CA-9 el valor del contrato no baja de lo ya pagado', async () => {
+    await withRuntimeSql(async (sql) => {
+      const c = await contract(sql, '2026-11-01', null);
+      const p = await payment(sql, c, 2026, 11, 1);
+      await day(sql, p.id, '2026-11-02', '600.00');
+      await expect(
+        sql`update provider_contracts set total_amount = '599.99' where id = ${c}`,
+      ).rejects.toThrow('CONTRACT_BALANCE_EXCEEDED');
+      await sql`update provider_contracts set total_amount = '600.00' where id = ${c}`;
     });
   });
 });

@@ -61,7 +61,8 @@ const MESSAGES = {
     'El contrato y la semana de un pago no se cambian. Elimina el pago y créalo de nuevo.',
   CONTRACT_HAS_PAYMENTS: 'Este contrato tiene pagos de honorarios. Elimina primero esos pagos.',
   CONTRACT_DATES_EXCLUDE_PAYMENTS: 'Con esas fechas quedarían días ya pagados fuera del contrato.',
-  CONTRACT_BALANCE_EXCEEDED: 'Lo pagado supera el valor total del contrato.',
+  CONTRACT_BALANCE_EXCEEDED:
+    'Con este pago se superaría el valor total del contrato. Si se acordó pagar más, aumenta primero el valor del contrato en Prestadores.',
 } satisfies Record<ErrorCode, string>;
 
 const CLIENT_MESSAGES: Record<string, string> = {

@@ -23,12 +23,6 @@ export const saveFeePaymentSchema = z.object({
 });
 export type SaveFeePayment = z.infer<typeof saveFeePaymentSchema>;
 
-export const feePaymentWarningSchema = z.object({
-  code: z.literal('CONTRACT_BALANCE_EXCEEDED'),
-  balance: z.string(),
-});
-export type FeePaymentWarning = z.infer<typeof feePaymentWarningSchema>;
-
 export const feePaymentSchema = z.object({
   id: z.uuid(),
   contractId: z.uuid(),
@@ -42,7 +36,6 @@ export const feePaymentSchema = z.object({
   notes: z.string().nullable(),
   total: z.string(),
   days: z.array(feePaymentDaySchema),
-  warnings: z.array(feePaymentWarningSchema),
 });
 export type FeePayment = z.infer<typeof feePaymentSchema>;
 

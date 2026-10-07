@@ -1,14 +1,8 @@
-import {
-  ErrorCode,
-  type FeePayment,
-  type FeePaymentWarning,
-  type SaveFeePayment,
-} from '@anderp/shared';
+import { ErrorCode, type FeePayment, type SaveFeePayment } from '@anderp/shared';
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, desc, eq, inArray, type SQL } from 'drizzle-orm';
 import { DB, type Database, type DbExecutor } from '../../db/database.module';
 import {
-  contractBalances,
   feePaymentDays,
   feePaymentTotals,
   feePayments,
@@ -69,9 +63,9 @@ export class FeePaymentsService {
 
   async create(input: SaveFeePayment): Promise<FeePayment> {
     assertValidDays(input, input.days);
-    await this.assertContractExists(input.contractId);
 
     const payment = await this.db.transaction(async (tx) => {
+      await this.lockContract(tx, input.contractId);
       const [row] = await tx
         .insert(feePayments)
         .values(
@@ -87,7 +81,7 @@ export class FeePaymentsService {
         .returning({ id: feePayments.id });
       if (!row) throw new Error('Insert returned no rows');
       await this.insertDays(tx, row.id, input);
-      return this.withWarnings(tx, await this.get(row.id, tx));
+      return this.get(row.id, tx);
     });
 
     await this.audit.log({
@@ -113,13 +107,14 @@ export class FeePaymentsService {
     assertValidDays(input, input.days);
 
     const after = await this.db.transaction(async (tx) => {
+      await this.lockContract(tx, before.contractId);
       await tx
         .update(feePayments)
         .set(this.scope.forUpdate({ paymentDate: input.paymentDate, notes: input.notes ?? null }))
         .where(and(this.scope.where(feePayments), eq(feePayments.id, id)));
       await tx.delete(feePaymentDays).where(eq(feePaymentDays.feePaymentId, id));
       await this.insertDays(tx, id, input);
-      return this.withWarnings(tx, await this.get(id, tx));
+      return this.get(id, tx);
     });
 
     await this.audit.log({
@@ -145,11 +140,17 @@ export class FeePaymentsService {
     });
   }
 
-  private async assertContractExists(contractId: string): Promise<void> {
-    const [contract] = await this.db
+  /**
+   * Bloquea la fila del contrato hasta el fin de la transacción (404 si no es de la organización).
+   * Así dos pagos simultáneos del mismo contrato se serializan, y el trigger diferido
+   * `fee_payment_days_check_balance` ve lo pagado por el otro: juntos no superan el total (CA-9).
+   */
+  private async lockContract(tx: DbExecutor, contractId: string): Promise<void> {
+    const [contract] = await tx
       .select({ id: providerContracts.id })
       .from(providerContracts)
-      .where(and(this.scope.where(providerContracts), eq(providerContracts.id, contractId)));
+      .where(and(this.scope.where(providerContracts), eq(providerContracts.id, contractId)))
+      .for('update');
     if (!contract) throw notFound();
   }
 
@@ -163,19 +164,6 @@ export class FeePaymentsService {
         isHoliday: day.isHoliday,
       })),
     );
-  }
-
-  /** CA-9: si lo pagado supera el valor del contrato, se avisa pero no se bloquea. */
-  private async withWarnings(tx: DbExecutor, payment: FeePayment): Promise<FeePayment> {
-    const [row] = await tx
-      .select({ balance: contractBalances.balance })
-      .from(contractBalances)
-      .where(eq(contractBalances.contractId, payment.contractId));
-    const warnings: FeePaymentWarning[] =
-      row && row.balance.startsWith('-')
-        ? [{ code: 'CONTRACT_BALANCE_EXCEEDED', balance: row.balance }]
-        : [];
-    return { ...payment, warnings };
   }
 
   /** Cabeceras con prestador y total (de la vista) y sus días, en dos consultas. */
@@ -233,7 +221,6 @@ export class FeePaymentsService {
       days: days
         .filter((d) => d.feePaymentId === h.id)
         .map(({ workDate, amount, isHoliday }) => ({ workDate, amount, isHoliday })),
-      warnings: [],
     }));
   }
 }
