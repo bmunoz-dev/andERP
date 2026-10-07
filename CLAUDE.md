@@ -10,17 +10,22 @@ Sistema de gestión de egresos, honorarios, prestadores y credenciales. Monorepo
 
 **No abras ni uses ningún navegador sin que el usuario lo autorice en el chat**, cada vez. Esto incluye el navegador integrado (`mcp__Claude_Browser__*`, `preview_start`), Claude in Chrome y cualquier herramienta que abra páginas. Para verificar cambios usa primero pruebas, `curl` y las consultas a la base de datos. Si una verificación visual de verdad hace falta, pídela y espera el sí.
 
-### 2. Skill `ponytail` en toda tarea
+### 2. Skill `ponytail` obligatoria en toda tarea
 
 Usa la skill `ponytail` siempre que crees o corrijas código o cumplas una tarea: favorece la solución más simple y mínima que funciona.
 
-- **Instalarla le corresponde al usuario**, porque es de un repositorio de terceros. Claude no la instala:
+**Tiene que estar instalada a nivel de proyecto, sí o sí.** Al empezar cada sesión, antes de escribir código, comprueba que existe `.claude/skills/ponytail/`. Si no está:
 
-  ```bash
-  npx skills add https://github.com/dietrichgebert/ponytail --skill ponytail
-  ```
+1. **Detente** y pide al usuario que la instale desde la raíz del repositorio:
 
-- Mientras no esté instalada, aplica su principio a mano: lo mínimo que cumpla la spec, sin capas, opciones ni abstracciones que nadie pidió (constitución, principio XI, YAGNI).
+   ```bash
+   npx skills add https://github.com/dietrichgebert/ponytail --skill ponytail
+   ```
+
+2. **La instalación la ejecuta el usuario, no Claude.** Es código de un repositorio de terceros, y Claude no descarga ni ejecuta código de fuentes externas por su cuenta.
+3. Cuando el usuario confirme que la instaló, verifica que la carpeta exista y activa la skill.
+
+Si el usuario decide seguir sin instalarla en ese momento, aplica su principio a mano: lo mínimo que cumpla la spec, sin capas, opciones ni abstracciones que nadie pidió (constitución, principio XI, YAGNI). Recuérdaselo en la siguiente sesión.
 
 ### 3. Economía de tokens
 
