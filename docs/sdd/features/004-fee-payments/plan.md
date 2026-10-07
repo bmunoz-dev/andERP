@@ -87,3 +87,15 @@ modules/fee-payments/
 - `WeekGrid`: recibe `periodStart`/`periodEnd` (calculados en el cliente con `weekRange`) y el rango del contrato. Muestra entre 7 y 10 columnas con desplazamiento horizontal en móvil.
 - El total en vivo usa `sumMoney`.
 - El aviso de saldo usa un `Alert` de shadcn.
+
+## Notas de implementación
+
+- **Sin capas hexagonales (skill `ponytail`):** cada puerto del plan (repositorio, `ContractReader`, `BalanceReader`, `UnitOfWork`) habría tenido una sola implementación. En su lugar:
+  - `fee-payment-rules.ts` tiene las invariantes que no necesitan la base de datos (al menos un día, sin fechas repetidas, dentro de la semana), como funciones puras con pruebas unitarias;
+  - `FeePaymentsService` usa Drizzle con `db.transaction`;
+  - las reglas que necesitan datos de otras tablas (día dentro del contrato, periodo inmutable, contrato con pagos, fechas que excluyen días pagados) viven solo en triggers, que devuelven el mismo `code` que la API.
+- **F03 no duplica las reglas `CONTRACT_HAS_PAYMENTS` ni `CONTRACT_DATES_EXCLUDE_PAYMENTS` en el servicio:** las aplica el trigger `provider_contracts_protect_payments` y el mapper las traduce a 422.
+- **PUT recibe el cuerpo completo** (el mismo esquema que el alta). Si el contrato o el periodo difieren, responde `FEE_PAYMENT_PERIOD_IMMUTABLE` antes de tocar nada.
+- **Saldo:** las consultas de contratos se unen a `v_contract_balances` (`paidAmount`, `balance`). El aviso de saldo se calcula dentro de la misma transacción del guardado.
+- **Las vistas se declaran en Drizzle con `.existing()`:** las crea la migración escrita a mano y drizzle-kit no las gestiona.
+- **Entorno local (Windows):** en el árbol `New folder\personal`, el trabajador de Vitest a veces termina al arrancar con `0xC0000409`, antes de ejecutar pruebas. No depende del código: cuando arranca, la suite pasa completa. El CI en Linux no lo presenta.

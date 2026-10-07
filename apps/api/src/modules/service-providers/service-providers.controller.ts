@@ -1,5 +1,8 @@
 import {
   type Contract,
+  type ContractOption,
+  ErrorCode,
+  isIsoDate,
   createContractSchema,
   createServiceProviderSchema,
   type ServiceProvider,
@@ -20,6 +23,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { createZodDto } from 'nestjs-zod';
+import { DomainError } from '../../shared/errors/domain-error';
 import { ContractsService } from './contracts.service';
 import { ServiceProvidersService } from './service-providers.service';
 
@@ -94,6 +98,20 @@ export class ServiceProvidersController {
 @Controller('contracts')
 export class ContractsController {
   constructor(private readonly contracts: ContractsService) {}
+
+  /** `?overlaps=YYYY-MM-DD..YYYY-MM-DD`: contratos vigentes en algún día de ese rango (F04 CA-17). */
+  @Get()
+  overlapping(@Query('overlaps') overlaps?: string): Promise<ContractOption[]> {
+    const [start = '', end = ''] = (overlaps ?? '').split('..');
+    if (!isIsoDate(start) || !isIsoDate(end) || end < start) {
+      throw new DomainError(
+        ErrorCode.VALIDATION_ERROR,
+        422,
+        'overlaps must be YYYY-MM-DD..YYYY-MM-DD',
+      );
+    }
+    return this.contracts.overlapping(start, end);
+  }
 
   @Patch(':id')
   update(

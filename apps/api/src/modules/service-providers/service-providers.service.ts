@@ -13,6 +13,7 @@ import { DB, type Database } from '../../db/database.module';
 import {
   accountTypes,
   banks,
+  contractBalances,
   documentTypes,
   providerContracts,
   serviceProviders,
@@ -21,7 +22,7 @@ import { OrgScope } from '../../shared/db/org-scope';
 import { DomainError } from '../../shared/errors/domain-error';
 import { CLOCK, type Clock } from '../auth/application/ports';
 import { GlobalCatalogsService } from '../catalogs/global-catalogs.service';
-import { activeOn, contractColumns } from './contract-queries';
+import { activeOn, balanceJoin, contractColumns } from './contract-queries';
 
 const notFound = () => new DomainError(ErrorCode.NOT_FOUND, 404);
 
@@ -118,6 +119,7 @@ export class ServiceProvidersService {
         : await this.db
             .select(contractColumns(today))
             .from(providerContracts)
+            .innerJoin(contractBalances, balanceJoin)
             .where(
               and(
                 this.scope.where(providerContracts),

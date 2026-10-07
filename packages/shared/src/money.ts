@@ -54,6 +54,20 @@ export function toMoney(input: string): Money | null {
   return isMoney(result) ? result : null;
 }
 
+/**
+ * Suma exacta en centavos con `BigInt` (F04: total en vivo de la cuadrícula semanal). El total
+ * oficial siempre sale de SQL; esto es solo para mostrarlo mientras se escribe.
+ */
+export function sumMoney(values: readonly Money[]): string {
+  const cents = values.reduce((total, value) => {
+    if (!isMoney(value)) throw new RangeError(`Invalid money amount: ${JSON.stringify(value)}`);
+    return total + BigInt(value.replace('.', ''));
+  }, 0n);
+  const negative = cents < 0n;
+  const digits = (negative ? -cents : cents).toString().padStart(3, '0');
+  return `${negative ? '-' : ''}${digits.slice(0, -2)}.${digits.slice(-2)}`;
+}
+
 const formatters = {
   whole: new Intl.NumberFormat('es-CO', {
     style: 'currency',

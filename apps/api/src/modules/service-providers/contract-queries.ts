@@ -1,6 +1,6 @@
 import type { ContractStatus } from '@anderp/shared';
-import { and, isNull, lte, or, gte, sql, type SQL } from 'drizzle-orm';
-import { providerContracts } from '../../db/schema';
+import { and, eq, gte, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
+import { contractBalances, providerContracts } from '../../db/schema';
 
 /** Estado del contrato en una fecha (hoy en Bogotá), calculado en SQL (F03 CA-8). */
 export function contractStatusSql(today: string): SQL<ContractStatus> {
@@ -21,6 +21,7 @@ export function activeOn(today: string): SQL {
   return condition;
 }
 
+/** Columnas del contrato con su saldo; la consulta debe unir `contractBalances` (ver `balanceJoin`). */
 export function contractColumns(today: string) {
   return {
     id: providerContracts.id,
@@ -31,5 +32,10 @@ export function contractColumns(today: string) {
     paymentFrequency: providerContracts.paymentFrequency,
     totalAmount: providerContracts.totalAmount,
     status: contractStatusSql(today),
+    paidAmount: contractBalances.paidAmount,
+    balance: contractBalances.balance,
   };
 }
+
+/** Une el saldo calculado por la vista `v_contract_balances` (F04 CA-10). */
+export const balanceJoin = eq(contractBalances.contractId, providerContracts.id);
