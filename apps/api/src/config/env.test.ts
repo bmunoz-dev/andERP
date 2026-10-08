@@ -8,6 +8,8 @@ const valid = {
   SMTP_HOST: 'localhost',
   SMTP_PORT: '1025',
   MAIL_FROM: 'AndERP <no-reply@anderp.local>',
+  CREDENTIALS_KEYS: JSON.stringify({ '1': Buffer.alloc(32, 1).toString('base64') }),
+  CREDENTIALS_ACTIVE_KEY_VERSION: '1',
 };
 
 describe('loadEnv', () => {
@@ -24,6 +26,8 @@ describe('loadEnv', () => {
       SMTP_PORT: 1025,
       SMTP_SECURE: false,
       MAIL_FROM: valid.MAIL_FROM,
+      CREDENTIALS_KEYS: new Map([[1, Buffer.alloc(32, 1)]]),
+      CREDENTIALS_ACTIVE_KEY_VERSION: 1,
     });
   });
 
@@ -46,6 +50,25 @@ describe('loadEnv', () => {
     ['WEB_URL', 'ftp://example.com'],
   ])('rechaza %s=%s', (key, value) => {
     expect(() => loadEnv({ ...valid, [key]: value })).toThrow(new RegExp(key));
+  });
+
+  // F06 CA-10: sin una llave activa válida la API no arranca.
+  it.each([
+    ['no es JSON', 'not-json'],
+    ['falta la llave activa', JSON.stringify({ '2': Buffer.alloc(32).toString('base64') })],
+    ['la llave no mide 32 bytes', JSON.stringify({ '1': Buffer.alloc(16).toString('base64') })],
+    ['la versión no es un número', JSON.stringify({ uno: Buffer.alloc(32).toString('base64') })],
+  ])('rechaza CREDENTIALS_KEYS si %s', (_case, keys) => {
+    expect(() => loadEnv({ ...valid, CREDENTIALS_KEYS: keys })).toThrow(/CREDENTIALS_KEYS/);
+  });
+
+  it('acepta varias versiones de llave', () => {
+    const keys = JSON.stringify({
+      '1': Buffer.alloc(32, 1).toString('base64'),
+      '2': Buffer.alloc(32, 2).toString('base64'),
+    });
+    const env = loadEnv({ ...valid, CREDENTIALS_KEYS: keys, CREDENTIALS_ACTIVE_KEY_VERSION: '2' });
+    expect([...env.CREDENTIALS_KEYS.keys()]).toEqual([1, 2]);
   });
 
   it('no incluye los valores en el mensaje de error', () => {

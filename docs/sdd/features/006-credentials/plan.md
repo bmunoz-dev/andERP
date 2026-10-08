@@ -77,3 +77,15 @@ El runbook de F07 documenta estos pasos.
 CREDENTIALS_KEYS={"1":"<openssl rand -base64 32>"}
 CREDENTIALS_ACTIVE_KEY_VERSION=1
 ```
+
+## Notas de implementación
+
+- **Migraciones reales:** `0015_responsible_persons_and_credentials` y `0016_responsible_persons_guard`.
+- **Sin capas hexagonales:** `credentials/` tiene `credential-cipher.ts` (AES-256-GCM, una clase con las llaves), `credentials.service.ts` (consultas, comandos y auditoría), `credentials.module.ts` (controlador) y `rotate-keys.ts` (caso de uso y script). No hubo un segundo adaptador que justificara puertos.
+- **Llaves en `env.ts`:** `CREDENTIALS_KEYS` se valida y se convierte a `Map<versión, Buffer>` con el resto del entorno; si falta la llave activa o no mide 32 bytes, `loadEnv` falla y la API no arranca.
+- **Reglas en la base de datos:** `CONTACT_REQUIRED` sale del CHECK `responsible_persons_contact_ck` (también al editar) y `DUPLICATE_CREDENTIAL` del índice `entity_credentials_uq`; el servicio no las repite.
+- **Auditoría:** `credential.update` (con `passwordChanged`) y `credential.reveal`, como pide la spec. Crear y borrar no se auditan (§5.9). Los responsables tampoco.
+- **CA-8:** el servicio registra `Credential integrity check failed` con nivel `error` antes de responder `500`.
+- **Rotación:** recorre también las credenciales borradas. Si un registro no se puede descifrar, se detiene con error en lugar de saltarlo.
+- **Script:** `pnpm credentials:rotate` ejecuta `apps/api/src/modules/credentials/rotate-keys.ts`.
+- **Web:** `RevealButton` y `CopyButton` (`components/credentials/password-buttons.tsx`) llaman a reveal con `apiFetch` directo, sin `useQuery` ni `useMutation`, así la contraseña solo vive en el estado del botón. El tiempo visible es una prop (`visibleMs`, 30 s por defecto) para probarlo con timers reales: los simulados de Vitest no capturan el `setTimeout` del efecto en este entorno. Los formularios de responsables y credenciales viven en su ruta, porque no se reutilizan.

@@ -6,7 +6,9 @@ import { ENV, type Env } from './config/env';
 import { DatabaseModule } from './db/database.module';
 import { AuditModule } from './modules/audit/audit.service';
 import { AuthModule } from './modules/auth/auth.module';
+import { CredentialsModule } from './modules/credentials/credentials.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
+import { ResponsiblePersonsModule } from './modules/responsible-persons/responsible-persons.module';
 import { FeePaymentsModule } from './modules/fee-payments/fee-payments.module';
 import { CatalogsModule } from './modules/catalogs/catalogs.module';
 import { HealthController } from './modules/health/health.controller';
@@ -41,6 +43,8 @@ export class AppModule {
         ServiceProvidersModule,
         FeePaymentsModule,
         ExpensesModule,
+        ResponsiblePersonsModule,
+        CredentialsModule,
       ],
       controllers: [HealthController],
       providers: [

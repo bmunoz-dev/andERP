@@ -35,6 +35,8 @@ export const TEST_ENV = {
   SMTP_HOST: 'localhost',
   SMTP_PORT: '1025',
   MAIL_FROM: 'AndERP <no-reply@anderp.test>',
+  CREDENTIALS_KEYS: JSON.stringify({ '1': Buffer.alloc(32, 7).toString('base64') }),
+  CREDENTIALS_ACTIVE_KEY_VERSION: '1',
 };
 
 /** Crea la app completa, configurada igual que en `main.ts`, contra el Postgres de pruebas. */

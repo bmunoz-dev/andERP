@@ -68,6 +68,14 @@ const MESSAGES = {
   INACTIVE_CATEGORY: 'Ese departamento está inactivo. Elige otro o actívalo en Configuración.',
   CATEGORY_HAS_EXPENSES:
     'Ese departamento tiene egresos registrados y no se puede borrar. Puedes desactivarlo.',
+  CONTACT_REQUIRED: 'Ingresa al menos un correo o un teléfono del responsable.',
+  RESPONSIBLE_IN_USE:
+    'Ese responsable tiene credenciales asignadas. Asígnalas a otra persona antes de borrarlo.',
+  DUPLICATE_CREDENTIAL: 'Ya existe una credencial con esa entidad y ese usuario.',
+  CREDENTIAL_DECRYPT_FAILED:
+    'No se pudo descifrar la contraseña: el registro está dañado. Avisa al administrador.',
+  CREDENTIAL_KEY_UNAVAILABLE:
+    'La llave con la que se cifró esta contraseña ya no está configurada. Avisa al administrador.',
 } satisfies Record<ErrorCode, string>;
 
 const CLIENT_MESSAGES: Record<string, string> = {

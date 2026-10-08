@@ -18,7 +18,8 @@
     "db:generate": "pnpm --filter @anderp/api db:generate",
     "db:generate:custom": "pnpm --filter @anderp/api db:generate:custom",
     "db:migrate": "pnpm --filter @anderp/api db:migrate",
-    "db:seed": "pnpm --filter @anderp/shared build && pnpm --filter @anderp/api db:seed"
+    "db:seed": "pnpm --filter @anderp/shared build && pnpm --filter @anderp/api db:seed",
+    "credentials:rotate": "pnpm --filter @anderp/shared build && pnpm --filter @anderp/api credentials:rotate"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

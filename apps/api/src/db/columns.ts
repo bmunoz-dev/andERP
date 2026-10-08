@@ -30,3 +30,8 @@ export const citext = customType<{ data: string }>({
   // drizzle-kit cita el nombre del tipo completo; así el SQL resultante es "extensions"."citext".
   dataType: () => 'extensions"."citext',
 });
+
+/** Bytes crudos (cifrado de credenciales, F06). postgres-js entrega y recibe `Buffer`. */
+export const bytea = customType<{ data: Buffer }>({
+  dataType: () => 'bytea',
+});
