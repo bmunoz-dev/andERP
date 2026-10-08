@@ -50,4 +50,4 @@
 
 ## Cierre
 
-- [ ] F05-T017 Verificación manual con datos de un mes real de la empresa: comparar la matriz de AndERP con la hoja que usan hoy. Revisar la Definición de Hecho y actualizar `roadmap.md`.
+- [x] F05-T017 Verificación manual con datos de un mes real de la empresa: comparar la matriz de AndERP con la hoja que usan hoy. Revisar la Definición de Hecho y actualizar `roadmap.md`.
