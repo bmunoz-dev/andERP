@@ -70,4 +70,4 @@
 
 ## Cierre
 
-- [ ] F06-T017 Verificación manual: crear, revelar, copiar y editar sin cambiar la contraseña; consultar `audit_logs`; rotar la llave en local y revelar de nuevo. Revisar la Definición de Hecho y actualizar `roadmap.md`.
+- [x] F06-T017 Verificación manual: crear, revelar, copiar y editar sin cambiar la contraseña; consultar `audit_logs`; rotar la llave en local y revelar de nuevo. Revisar la Definición de Hecho y actualizar `roadmap.md`.
