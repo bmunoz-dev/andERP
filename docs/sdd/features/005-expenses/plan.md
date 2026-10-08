@@ -80,3 +80,12 @@ modules/reports/
   - Contiene `MonthPicker`, `ExpenseMatrix` (tabla con columnas fijas: la categoría a la izquierda y el total a la derecha) y `LedgerSheet` (panel lateral `Sheet` de shadcn).
   - El mes seleccionado va en la URL (`?y=2026&m=9`) para poder compartir el enlace.
 - **`ExpenseForm`:** `WeekSelect` + `DateInput` con `min`/`max` según `weekRange`. Después de guardar, invalida las consultas de la matriz y del libro.
+
+## Notas de implementación
+
+- **Migraciones reales:** `0011_week_of_month_fn`, `0012_expenses`, `0013_expenses_rules` y `0014_expense_ledger` (F04 ocupó hasta la `0010`).
+- **Sin `v_expense_monthly_summary`:** la matriz sale de una sola consulta `GROUP BY GROUPING SETS` sobre `v_expense_ledger` (celdas, totales por categoría, por semana y del mes). Una vista menos que mantener.
+- **Sin `GET /expenses`:** el listado del mes lo da el libro (`/reports/expenses/ledger`), que ya une egresos manuales y honorarios.
+- **Reglas solo en la base de datos:** `FEES_CATEGORY_NOT_ALLOWED` y `CATEGORY_HAS_EXPENSES` las lanzan los triggers y el filtro de errores las devuelve como `422` con su `code`; el servicio no las repite. El servicio sí valida `INACTIVE_CATEGORY` (no hay trigger para eso).
+- **Pruebas (T010):** el escenario completo está repartido en varias pruebas de `test/expenses.test.ts`: matriz con honorarios pagados el mes siguiente, totales por semana y del mes, categoría inactiva con montos y filtros del libro.
+- **Web:** el selector de mes son dos flechas dentro de `egresos.tsx` (no hay un componente `MonthPicker` aparte: no se reutiliza). La fecha es un `<input type="date">` nativo con `min`/`max` de la semana (sin `DateInput`). La ruta `/` redirige a `/egresos` y "Inicio" sale del menú. Guardar o borrar un pago de honorarios invalida también la matriz.

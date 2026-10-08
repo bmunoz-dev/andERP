@@ -6,7 +6,6 @@ describe('navigationFor (F02 CA-18)', () => {
     const groups = navigationFor({ isSuperAdmin: false });
     expect(groups.map((g) => g.label)).toEqual(['Operación', 'Configuración']);
     expect(groups[0]?.items.map((i) => i.label)).toEqual([
-      'Inicio',
       'Egresos',
       'Honorarios',
       'Prestadores',

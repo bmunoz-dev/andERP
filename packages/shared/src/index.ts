@@ -9,3 +9,4 @@ export * from './schemas/organizations';
 export * from './schemas/common';
 export * from './schemas/service-providers';
 export * from './schemas/fee-payments';
+export * from './schemas/expenses';
