@@ -9,7 +9,7 @@
       Verificación: CA-8
 - [x] F07-T002 Añadir `helmet`, desactivar Swagger en producción (ya estaba) y exigir `PROXY_SECRET` en la validación del entorno de producción.
       Depende de: F07-T001 · Verificación: CA-9
-- [ ] F07-T003 Crear el `Dockerfile` multi-etapa y `.dockerignore`. Verificar en local con `docker build` + `docker run` contra el Postgres de Docker.
+- [x] F07-T003 Crear el `Dockerfile` multi-etapa y `.dockerignore`. Verificar en local con `docker build` + `docker run` contra el Postgres de Docker.
       Verificación: CA-6
 
 ## Bloque B — Web
