@@ -2,7 +2,6 @@ import {
   Building2,
   FileText,
   HandCoins,
-  Home,
   KeyRound,
   Library,
   type LucideIcon,
@@ -26,7 +25,6 @@ export interface NavGroup {
 const operation: NavGroup = {
   label: 'Operación',
   items: [
-    { label: 'Inicio', to: '/', icon: Home },
     { label: 'Egresos', to: '/egresos', icon: Receipt },
     { label: 'Honorarios', to: '/honorarios', icon: HandCoins },
     { label: 'Prestadores', to: '/prestadores', icon: FileText },

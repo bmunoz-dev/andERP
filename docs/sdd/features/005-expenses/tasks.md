@@ -38,14 +38,14 @@
 
 ## Bloque D — Web
 
-- [ ] F05-T012 [P] Crear `MonthPicker` con el mes sincronizado en la URL.
-- [ ] F05-T013 [TDD] Crear `ExpenseMatrix`: render con los datos de ejemplo de CA-11, celdas en cero, totales y clic en una celda.
+- [x] F05-T012 [P] Crear `MonthPicker` con el mes sincronizado en la URL.
+- [x] F05-T013 [TDD] Crear `ExpenseMatrix`: render con los datos de ejemplo de CA-11, celdas en cero, totales y clic en una celda.
       Depende de: F05-T012
-- [ ] F05-T014 Crear `LedgerSheet`: filas manuales editables y borrables, y filas de honorarios con enlace a F04.
+- [x] F05-T014 Crear `LedgerSheet`: filas manuales editables y borrables, y filas de honorarios con enlace a F04.
       Depende de: F05-T013 · Verificación: CA-14
-- [ ] F05-T015 [TDD] Crear `ExpenseForm` con `WeekSelect` + `DateInput` acotado, autoselección de la semana y exclusión de "Honorarios".
+- [x] F05-T015 [TDD] Crear `ExpenseForm` con `WeekSelect` + `DateInput` acotado, autoselección de la semana y exclusión de "Honorarios".
       Depende de: F05-T012 · Verificación: CA-15
-- [ ] F05-T016 Hacer de Egresos la ruta de inicio después del login y quitar su "Próximamente".
+- [x] F05-T016 Hacer de Egresos la ruta de inicio después del login y quitar su "Próximamente".
       Depende de: F05-T013
 
 ## Cierre

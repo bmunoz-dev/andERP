@@ -12,6 +12,7 @@ import { PageHeader } from '@/components/page-header';
 import { SelectField } from '@/components/select-field';
 import { Button } from '@/components/ui/button';
 import { errorMessage } from '@/lib/error-messages.es';
+import { expenseKeys } from '@/lib/expenses-api';
 import { deleteFeePayment, feePaymentKeys, listFeePayments, MONTHS } from '@/lib/fee-payments-api';
 import { formatDate } from '@/lib/format';
 import { providerKeys } from '@/lib/providers-api';
@@ -40,6 +41,7 @@ function FeePaymentsPage() {
       toast.success('Pago eliminado');
       await queryClient.invalidateQueries({ queryKey: feePaymentKeys.all });
       await queryClient.invalidateQueries({ queryKey: providerKeys.all });
+      await queryClient.invalidateQueries({ queryKey: expenseKeys.all });
     },
     onError: (e) => toast.error(errorMessage(e)),
   });

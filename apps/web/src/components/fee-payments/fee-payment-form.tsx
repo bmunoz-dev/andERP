@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { errorMessage } from '@/lib/error-messages.es';
+import { expenseKeys } from '@/lib/expenses-api';
 import {
   createFeePayment,
   feePaymentKeys,
@@ -83,6 +84,7 @@ export function FeePaymentForm({
       toast.success(editing ? 'Pago actualizado' : 'Pago registrado');
       await queryClient.invalidateQueries({ queryKey: feePaymentKeys.all });
       await queryClient.invalidateQueries({ queryKey: providerKeys.all });
+      await queryClient.invalidateQueries({ queryKey: expenseKeys.all });
       await onSaved(saved);
     },
     onError: (e) => {
