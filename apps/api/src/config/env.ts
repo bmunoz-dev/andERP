@@ -58,6 +58,8 @@ export const envSchema = z
       .min(32)
       .optional()
       .or(z.literal('').transform(() => undefined)),
+    // Commit desplegado; lo define Render en cada build y lo expone /health.
+    RENDER_GIT_COMMIT: z.string().optional(),
   })
   .refine((env) => env.NODE_ENV !== 'production' || env.PROXY_SECRET !== undefined, {
     path: ['PROXY_SECRET'],

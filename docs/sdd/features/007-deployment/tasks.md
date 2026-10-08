@@ -34,7 +34,7 @@
 
 ## Bloque D — Pipeline
 
-- [ ] F07-T011 Crear `.github/workflows/deploy.yml`: CI → aprobación del environment `production` → `db:migrate` → deploy hook de Render → espera del health check.
+- [x] F07-T011 Crear `.github/workflows/deploy.yml`: CI → aprobación del environment `production` → `db:migrate` → deploy hook de Render → espera del health check.
       Depende de: F07-T008 · Verificación: CA-13, CA-14
 - [ ] F07-T012 Probar el pipeline con una migración deliberadamente rota en una rama de prueba, y comprobar que la API no se despliega.
       Depende de: F07-T011 · Verificación: CA-14

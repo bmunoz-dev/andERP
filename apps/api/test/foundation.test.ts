@@ -62,7 +62,7 @@ describe('F00 — fundaciones de la API', () => {
   describe('CA-2 health', () => {
     it('responde 200 con la base de datos disponible', async () => {
       const res = await t.http.get('/api/v1/health').expect(200);
-      expect(res.body).toEqual({ status: 'ok', db: 'ok' });
+      expect(res.body).toEqual({ status: 'ok', db: 'ok', version: null });
     });
 
     it('responde 503 Problem Details si la base de datos no responde', async () => {
