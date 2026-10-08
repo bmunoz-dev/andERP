@@ -50,9 +50,7 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 **Siguiente paso:** F05 (egresos y matriz mensual), en la rama `feat/005-expenses` desde `main`.
 
-**Decisiones pendientes del usuario:**
-- **Archivos de la skill `ponytail` sin versionar** (`.agents/`, `.claude/skills/`, `skills-lock.json`): ¿se agregan al repo? `.claude/skills/ponytail` es un enlace simbólico (en Windows git puede guardarlo como texto).
-- **Protección de `main`:** el repo no exige el CI antes de mergear (*Settings → Branches → Require status checks*). Por eso `gh pr merge --auto` mergea al instante. Lo configura el usuario.
+**Decisiones tomadas:** la skill `ponytail` se versiona en el repo (`.agents/`, `skills-lock.json` y una copia real en `.claude/skills/ponytail/`, sin enlace simbólico). No se protege `main`: es un proyecto personal.
 
 **Entorno:**
 - En el árbol `New folder\personal`, el trabajador de Vitest a veces termina al arrancar un archivo de la API con `0xC0000409`, antes de ejecutar pruebas. Cuando arranca, todo pasa. El CI en Linux no lo presenta.
