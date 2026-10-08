@@ -44,7 +44,7 @@
 - [ ] F07-T013 Crear el paquete `e2e/` con Playwright y los flujos de humo de CA-15, ejecutables contra local (`BASE_URL`).
       Estado: escrito y compila; falta la primera ejecución (abre un navegador: requiere autorización del usuario).
       Verificación: CA-15
-- [ ] F07-T014 [P] Escribir los runbooks 01–06 en `docs/runbooks/`.
+- [x] F07-T014 [P] Escribir los runbooks 01–06 en `docs/runbooks/`.
       Verificación: CA-16
 - [ ] F07-T015 Ensayar la restauración: restaurar un backup de producción en un proyecto temporal siguiendo el runbook 03, y anotar el tiempo que tomó.
       Depende de: F07-T014

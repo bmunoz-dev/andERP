@@ -68,3 +68,14 @@ docs/runbooks/
   05-rotar-secretos.md
   06-nueva-organizacion.md
 ```
+
+## Notas de implementación
+
+- **Proxy:** en lugar de `ProxySecretGuard` + middleware de IP, un solo middleware de Express al inicio de la cadena (`shared/http/proxy-secret.ts`). Compara los SHA-256 con `timingSafeEqual` (misma longitud siempre), deja abierto `/api/v1/health` y, con el secreto válido, fija `req.ip` desde `X-Client-IP`; el throttler y la auditoría la usan sin cambios. Sin `PROXY_SECRET` no hace nada; en producción `loadEnv` lo exige (mínimo 32 caracteres).
+- **helmet:** con su CSP solo en producción, porque fuera de ella bloquearía Swagger UI.
+- **`/health` informa `version`** (`RENDER_GIT_COMMIT`). El pipeline espera a que coincida con el commit desplegado: la instancia anterior sigue respondiendo 200 mientras Render construye la nueva.
+- **Pipeline:** `ci.yml` pasó a `pull_request` + `workflow_call`; en `main` lo llama `deploy.yml`. El job de despliegue se salta mientras no exista la variable de repositorio `API_HEALTH_URL`, así no quedan ejecuciones esperando aprobación antes de que exista la infraestructura.
+- **Docker:** `pnpm deploy --legacy` (pnpm 11 exige `inject-workspace-packages` sin esa opción). La imagen pesa ~430 MB y el script de rotación queda compilado en `dist/modules/credentials/rotate-keys.js`.
+- **Pages Function:** reenvía también `Accept` y `User-Agent` (la auditoría guarda el user agent). El cuerpo se lee como `ArrayBuffer`: las peticiones son JSON pequeños.
+- **E2E:** la prueba de humo crea prestador, contrato y credencial por la API con nombres únicos (se puede repetir) y hace por la interfaz solo los pasos de CA-15. Usa un admin existente (`E2E_EMAIL`, `E2E_PASSWORD`).
+- **Render no tiene región en Sudamérica:** el runbook 01 recomienda la de EE. UU. con menor latencia hacia `sa-east-1`.
