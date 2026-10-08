@@ -9,7 +9,7 @@
 | F02 | [Organizaciones, catálogos y usuarios](features/002-organizations-catalogs/spec.md) | F01 | Aprobado | Aprobado | Hecho |
 | F03 | [Prestadores y contratos](features/003-service-providers/spec.md) | F02 | Aprobado | Aprobado | Hecho |
 | F04 | [Pagos de honorarios](features/004-fee-payments/spec.md) | F03 | Aprobado | Aprobado | Hecho |
-| F05 | [Egresos y matriz mensual](features/005-expenses/spec.md) | F02, F04 | Aprobado | Aprobado | Pendiente |
+| F05 | [Egresos y matriz mensual](features/005-expenses/spec.md) | F02, F04 | Aprobado | Aprobado | En progreso |
 | F06 | [Responsables y credenciales](features/006-credentials/spec.md) | F02 | Aprobado | Aprobado | Pendiente |
 | F07 | [Despliegue y endurecimiento](features/007-deployment/spec.md) | F00–F06 | Aprobado | Aprobado | Pendiente |
 

@@ -63,6 +63,11 @@ const MESSAGES = {
   CONTRACT_DATES_EXCLUDE_PAYMENTS: 'Con esas fechas quedarían días ya pagados fuera del contrato.',
   CONTRACT_BALANCE_EXCEEDED:
     'Con este pago se superaría el valor total del contrato. Si se acordó pagar más, aumenta primero el valor del contrato en Prestadores.',
+  FEES_CATEGORY_NOT_ALLOWED:
+    'Los honorarios se registran desde la sección Honorarios, no como egreso manual.',
+  INACTIVE_CATEGORY: 'Ese departamento está inactivo. Elige otro o actívalo en Configuración.',
+  CATEGORY_HAS_EXPENSES:
+    'Ese departamento tiene egresos registrados y no se puede borrar. Puedes desactivarlo.',
 } satisfies Record<ErrorCode, string>;
 
 const CLIENT_MESSAGES: Record<string, string> = {

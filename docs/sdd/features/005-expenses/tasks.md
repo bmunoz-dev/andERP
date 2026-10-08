@@ -5,13 +5,13 @@
 
 ## Bloque A — Datos
 
-- [ ] F05-T001 [TDD] Crear la migración `0010_week_of_month_fn`, con una prueba que compara la función SQL contra `weekOfMonth` de TypeScript para todos los días de 2024 a 2030.
+- [x] F05-T001 [TDD] Crear la migración `0010_week_of_month_fn`, con una prueba que compara la función SQL contra `weekOfMonth` de TypeScript para todos los días de 2024 a 2030.
       Verificación: CA-2
-- [ ] F05-T002 Definir `expenses` en Drizzle (la columna generada usa `week_of_month(payment_date)`). Generar `0011_expenses` y revisarla.
+- [x] F05-T002 Definir `expenses` en Drizzle (la columna generada usa `week_of_month(payment_date)`). Generar `0011_expenses` y revisarla.
       Depende de: F05-T001
-- [ ] F05-T003 [TDD] Escribir las pruebas de los triggers (egreso en la categoría FEES y borrado de una categoría con egresos) y después crear `0012_expenses_rules`.
+- [x] F05-T003 [TDD] Escribir las pruebas de los triggers (egreso en la categoría FEES y borrado de una categoría con egresos) y después crear `0012_expenses_rules`.
       Depende de: F05-T002 · Verificación: CA-3, CA-7
-- [ ] F05-T004 [TDD] Escribir las pruebas de las vistas y después crear `0013_expense_views`:
+- [x] F05-T004 [TDD] Escribir las pruebas de las vistas y después crear `0013_expense_views`:
       - no hay doble conteo (CA-9);
       - un pago de honorarios cae en el mes y la semana de su fecha de pago (CA-10);
       - el concepto generado es correcto;
@@ -20,20 +20,20 @@
 
 ## Bloque B — API
 
-- [ ] F05-T005 Crear los esquemas en `@anderp/shared/schemas/expenses.ts`.
-- [ ] F05-T006 [TDD] Crear el servicio y el controlador de egresos: validación de la categoría (FEES e inactiva), CRUD y auditoría.
+- [x] F05-T005 Crear los esquemas en `@anderp/shared/schemas/expenses.ts`.
+- [x] F05-T006 [TDD] Crear el servicio y el controlador de egresos: validación de la categoría (FEES e inactiva), CRUD y auditoría.
       Depende de: F05-T003, F05-T005 · Verificación: CA-1, CA-3–CA-6
-- [ ] F05-T007 Añadir la regla `CATEGORY_HAS_EXPENSES` al servicio de categorías de F02.
+- [x] F05-T007 Añadir la regla `CATEGORY_HAS_EXPENSES` al servicio de categorías de F02.
       Depende de: F05-T003 · Verificación: CA-7
-- [ ] F05-T008 [TDD] Crear las consultas de la matriz (categorías, celdas y `GROUPING SETS`) y del libro, y el controlador de reportes.
+- [x] F05-T008 [TDD] Crear las consultas de la matriz (categorías, celdas y `GROUPING SETS`) y del libro, y el controlador de reportes.
       Depende de: F05-T004 · Verificación: CA-11, CA-12
-- [ ] F05-T009 Añadir los códigos `FEES_CATEGORY_NOT_ALLOWED`, `INACTIVE_CATEGORY` y `CATEGORY_HAS_EXPENSES`, con sus mensajes en español.
+- [x] F05-T009 Añadir los códigos `FEES_CATEGORY_NOT_ALLOWED`, `INACTIVE_CATEGORY` y `CATEGORY_HAS_EXPENSES`, con sus mensajes en español.
 
 ## Bloque C — Pruebas de API
 
-- [ ] F05-T010 Pruebas de API de CA-1 a CA-12. Incluye un escenario completo: 3 categorías, egresos en las 4 semanas, 2 pagos de honorarios (uno pagado en el mes siguiente), una categoría inactiva con montos, y los totales verificados a mano.
+- [x] F05-T010 Pruebas de API de CA-1 a CA-12. Incluye un escenario completo: 3 categorías, egresos en las 4 semanas, 2 pagos de honorarios (uno pagado en el mes siguiente), una categoría inactiva con montos, y los totales verificados a mano.
       Depende de: F05-T006, F05-T008
-- [ ] F05-T011 Pruebas de aislamiento con `seedTwoOrgs()` en egresos, matriz y libro.
+- [x] F05-T011 Pruebas de aislamiento con `seedTwoOrgs()` en egresos, matriz y libro.
       Depende de: F05-T010 · Verificación: CA-13
 
 ## Bloque D — Web
