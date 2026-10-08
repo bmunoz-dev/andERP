@@ -14,9 +14,9 @@
 
 ## Bloque B — Web
 
-- [ ] F07-T004 [TDD] Crear la Pages Function `functions/api/[[path]].ts`, con pruebas unitarias del reenvío de cabeceras, cuerpo y `Set-Cookie`.
+- [x] F07-T004 [TDD] Crear la Pages Function `functions/api/[[path]].ts`, con pruebas unitarias del reenvío de cabeceras, cuerpo y `Set-Cookie`.
       Verificación: CA-10
-- [ ] F07-T005 Crear `public/_headers` con CSP y cabeceras de seguridad. Verificar que la app funciona sin errores de CSP en la consola.
+- [x] F07-T005 Crear `public/_headers` con CSP y cabeceras de seguridad. Verificar que la app funciona sin errores de CSP en la consola.
       Verificación: CA-11
 
 ## Bloque C — Infraestructura (manual y documentada)
