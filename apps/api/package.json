@@ -11,7 +11,8 @@
     "db:generate": "drizzle-kit generate",
     "db:generate:custom": "drizzle-kit generate --custom",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "tsx src/db/seed.ts"
+    "db:seed": "tsx src/db/seed.ts",
+    "credentials:rotate": "tsx src/modules/credentials/rotate-keys.ts"
   },
   "dependencies": {
     "@anderp/shared": "workspace:*",

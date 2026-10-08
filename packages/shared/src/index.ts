@@ -10,3 +10,5 @@ export * from './schemas/common';
 export * from './schemas/service-providers';
 export * from './schemas/fee-payments';
 export * from './schemas/expenses';
+export * from './schemas/responsible-persons';
+export * from './schemas/credentials';
