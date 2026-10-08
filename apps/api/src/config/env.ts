@@ -51,6 +51,17 @@ export const envSchema = z
     // F06 — cifrado de credenciales
     CREDENTIALS_KEYS: keyRing,
     CREDENTIALS_ACTIVE_KEY_VERSION: z.coerce.number().int().min(1).max(9999),
+
+    // F07 — secreto compartido con el proxy de la web. Vacío = sin proxy (desarrollo y pruebas).
+    PROXY_SECRET: z
+      .string()
+      .min(32)
+      .optional()
+      .or(z.literal('').transform(() => undefined)),
+  })
+  .refine((env) => env.NODE_ENV !== 'production' || env.PROXY_SECRET !== undefined, {
+    path: ['PROXY_SECRET'],
+    message: 'required in production',
   })
   .refine((env) => env.CREDENTIALS_KEYS.has(env.CREDENTIALS_ACTIVE_KEY_VERSION), {
     path: ['CREDENTIALS_KEYS'],
