@@ -61,11 +61,11 @@
 
 ## Bloque F — Web
 
-- [ ] F06-T014 [P] Crear la pantalla de responsables.
+- [x] F06-T014 [P] Crear la pantalla de responsables.
       Depende de: F06-T003
-- [ ] F06-T015 [TDD] Crear `RevealButton` (se oculta a los 30 segundos) y `CopyButton`, sin dejar la contraseña en la caché de consultas.
+- [x] F06-T015 [TDD] Crear `RevealButton` (se oculta a los 30 segundos) y `CopyButton`, sin dejar la contraseña en la caché de consultas.
       Depende de: F06-T008
-- [ ] F06-T016 Crear el listado y el formulario de credenciales (contraseña de solo escritura en edición).
+- [x] F06-T016 Crear el listado y el formulario de credenciales (contraseña de solo escritura en edición).
       Depende de: F06-T015 · Verificación: CA-14
 
 ## Cierre

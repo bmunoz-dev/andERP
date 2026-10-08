@@ -88,3 +88,4 @@ CREDENTIALS_ACTIVE_KEY_VERSION=1
 - **CA-8:** el servicio registra `Credential integrity check failed` con nivel `error` antes de responder `500`.
 - **Rotación:** recorre también las credenciales borradas. Si un registro no se puede descifrar, se detiene con error en lugar de saltarlo.
 - **Script:** `pnpm credentials:rotate` ejecuta `apps/api/src/modules/credentials/rotate-keys.ts`.
+- **Web:** `RevealButton` y `CopyButton` (`components/credentials/password-buttons.tsx`) llaman a reveal con `apiFetch` directo, sin `useQuery` ni `useMutation`, así la contraseña solo vive en el estado del botón. El tiempo visible es una prop (`visibleMs`, 30 s por defecto) para probarlo con timers reales: los simulados de Vitest no capturan el `setTimeout` del efecto en este entorno. Los formularios de responsables y credenciales viven en su ruta, porque no se reutilizan.
