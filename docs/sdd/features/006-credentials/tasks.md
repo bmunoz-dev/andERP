@@ -5,8 +5,8 @@
 
 ## Bloque A — Datos
 
-- [ ] F06-T001 Definir en Drizzle `responsible_persons` y `entity_credentials` con restricciones nombradas. Generar la migración y revisarla.
-- [ ] F06-T002 [TDD] Pruebas en SQL:
+- [x] F06-T001 Definir en Drizzle `responsible_persons` y `entity_credentials` con restricciones nombradas. Generar la migración y revisarla.
+- [x] F06-T002 [TDD] Pruebas en SQL:
       - CHECK de contacto (email o teléfono);
       - credencial duplicada, y credencial que se puede recrear tras un borrado;
       - la FK compuesta impide un responsable de otra organización.
