@@ -82,10 +82,7 @@ describe('Worker /api/* (F07 CA-10)', () => {
     [{ API_ORIGIN: env.API_ORIGIN }, 'PROXY_SECRET'],
   ])('responde 502 si la configuración está incompleta (%o)', async (config, variable) => {
     const fetchMock = upstream(new Response('{}'));
-    const res = await proxy(
-      new Request('https://anderp.workers.dev/api/v1/health'),
-      config,
-    );
+    const res = await proxy(new Request('https://anderp.workers.dev/api/v1/health'), config);
     expect(res.status).toBe(502);
     expect(await res.json()).toMatchObject({
       code: 'PROXY_MISCONFIGURED',
