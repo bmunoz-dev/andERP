@@ -29,11 +29,22 @@ Las contraseñas de la base de datos van en **hexadecimal** (solo letras y núme
    - Postgres **17**, la misma versión mayor que en local y en CI.
    Anota el precio en la sección "Costos" al final.
 2. **Desactiva la Data API**: *Project Settings → Data API* → desactivar. AndERP no la usa; así nada queda expuesto por PostgREST.
-3. Crea el rol de la API. En el *SQL Editor* no hay variables de psql, así que reemplaza la contraseña a mano en una copia de [`db/bootstrap.sql`](../../db/bootstrap.sql), ejecútala y **no guardes la consulta** en Supabase. Alternativa con psql (cadena "Direct" o "Session pooler" del usuario `postgres`):
+3. Crea el rol de la API en el *SQL Editor* (sin contraseña todavía, así no queda escrita en el historial de consultas):
 
-   ```bash
-   psql "<cadena del usuario postgres>" -v app_runtime_password='<APP_RUNTIME_PASSWORD>' -f db/bootstrap.sql
+   ```sql
+   do $$ begin
+     if not exists (select from pg_roles where rolname = 'app_runtime') then create role app_runtime login; end if;
+   end $$;
+   alter role app_runtime set search_path = anderp, extensions;
    ```
+
+   Después ponle la contraseña (hexadecimal, paso 0) en una consulta aparte que **no guardes**:
+
+   ```sql
+   alter role app_runtime with login password '<APP_RUNTIME_PASSWORD>';
+   ```
+
+   Alternativa con psql: `psql "<cadena del usuario postgres>" -v app_runtime_password='<APP_RUNTIME_PASSWORD>' -f db/bootstrap.sql`. En Supabase no se pueden declarar `NOSUPERUSER` y similares (el usuario `postgres` no es superusuario); un rol nuevo ya nace sin esos privilegios.
 
 4. Cadenas de conexión (*Connect → Session pooler*, puerto **5432**, IPv4). Copia el host y el `project-ref` que muestre Supabase (el host puede empezar por `aws-0-` o `aws-1-`); se escriben sin comillas ni corchetes:
    - **Migraciones** (dueño del esquema): `postgres://postgres.<project-ref>:<contraseña de postgres>@aws-0-sa-east-1.pooler.supabase.com:5432/postgres`
