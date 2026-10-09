@@ -7,8 +7,9 @@ SELECT 'CREATE ROLE app_runtime LOGIN'
 WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'app_runtime')
 \gexec
 
-ALTER ROLE app_runtime WITH LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION
-  PASSWORD :'app_runtime_password';
+-- Un rol nuevo nace sin SUPERUSER, CREATEDB, CREATEROLE ni REPLICATION. No se declaran aquí
+-- porque en Supabase el usuario `postgres` no es superusuario y no puede indicar esos atributos.
+ALTER ROLE app_runtime WITH LOGIN PASSWORD :'app_runtime_password';
 
 -- Las tablas viven en `anderp` y las extensiones en `extensions` (igual que en Supabase).
 -- `extensions` debe estar en el search_path para que los operadores de citext se resuelvan.
