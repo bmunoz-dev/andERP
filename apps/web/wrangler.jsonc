@@ -13,7 +13,7 @@
     "run_worker_first": ["/api/*"],
   },
   // La URL de la API no es secreta: viaja con el código. PROXY_SECRET es un secreto del panel
-  // (Settings → Variables and Secrets) y `wrangler deploy` no lo toca.
+  // (Settings → Runtime variables and secrets) y `wrangler deploy` no lo toca.
   "vars": { "API_ORIGIN": "https://anderp-api.onrender.com" },
   "keep_vars": true,
   "observability": { "enabled": true },

@@ -20,7 +20,7 @@ Firma los access tokens (duran 15 minutos). Las sesiones largas usan refresh tok
 
 Lo comparten el Worker de Cloudflare y la API (Render). Mientras los dos no coincidan, la API responde `403` a todo menos `/health`. Hazlo en un momento de poco uso:
 
-1. Cloudflare → Worker `anderp` → *Settings → Variables and Secrets* → edita `PROXY_SECRET` (se aplica al guardar).
+1. Cloudflare → Worker `anderp` → *Settings → Runtime variables and secrets* → edita `PROXY_SECRET` (se aplica al guardar).
 2. Render → cambia `PROXY_SECRET` y guarda (redespliega).
 3. Comprueba: iniciar sesión en la web funciona y `curl https://<servicio>.onrender.com/api/v1/auth/me` sin la cabecera responde `403`.
 
