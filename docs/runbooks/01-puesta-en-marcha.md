@@ -13,11 +13,13 @@ Navegador ─► Cloudflare Worker (web estática + proxy /api/*) ─► Render 
 En una terminal local (no los pegues en chats ni en tickets; guárdalos en un gestor de contraseñas):
 
 ```bash
-openssl rand -base64 32   # APP_RUNTIME_PASSWORD (contraseña del rol app_runtime)
-openssl rand -base64 48   # JWT_SECRET
-openssl rand -base64 48   # PROXY_SECRET
-openssl rand -base64 32   # llave 1 de CREDENTIALS_KEYS
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"      # APP_RUNTIME_PASSWORD
+node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"   # JWT_SECRET
+node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"   # PROXY_SECRET
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"   # llave 1 de CREDENTIALS_KEYS
 ```
+
+Las contraseñas de la base de datos van en **hexadecimal** (solo letras y números): van dentro de una URL, y caracteres como `/`, `+`, `=`, `@` o `#` la rompen (`DATABASE_URL: invalid_format`). La contraseña de `postgres` que crea Supabase también: si tiene esos caracteres, cámbiala (*Database Settings → Reset database password*) o codifícalos (`/` → `%2F`, `+` → `%2B`, `=` → `%3D`, `@` → `%40`, `#` → `%23`).
 
 ## 1. Supabase (F07-T006, T007)
 
@@ -33,7 +35,7 @@ openssl rand -base64 32   # llave 1 de CREDENTIALS_KEYS
    psql "<cadena del usuario postgres>" -v app_runtime_password='<APP_RUNTIME_PASSWORD>' -f db/bootstrap.sql
    ```
 
-4. Cadenas de conexión (*Connect → Session pooler*, puerto **5432**, IPv4):
+4. Cadenas de conexión (*Connect → Session pooler*, puerto **5432**, IPv4). Copia el host y el `project-ref` que muestre Supabase (el host puede empezar por `aws-0-` o `aws-1-`); se escriben sin comillas ni corchetes:
    - **Migraciones** (dueño del esquema): `postgres://postgres.<project-ref>:<contraseña de postgres>@aws-0-sa-east-1.pooler.supabase.com:5432/postgres`
    - **API** (`app_runtime`): `postgres://app_runtime.<project-ref>:<APP_RUNTIME_PASSWORD>@aws-0-sa-east-1.pooler.supabase.com:5432/postgres`
 
@@ -89,7 +91,7 @@ openssl rand -base64 32   # llave 1 de CREDENTIALS_KEYS
    | `CREDENTIALS_KEYS` | `{"1":"<llave 1>"}` |
    | `CREDENTIALS_ACTIVE_KEY_VERSION` | `1` |
    | `WEB_URL` | URL del Worker de Cloudflare (paso 3), p. ej. `https://anderp.<subdominio>.workers.dev` |
-   | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | del proveedor de correo (paso 4) |
+   | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | del proveedor de correo (paso 4). Son obligatorias para arrancar; mientras no haya proveedor: `localhost`, `1025`, `false`, vacío, vacío y `AndERP <no-reply@example.com>` (la app funciona, pero no envía correos) |
 
 3. *Settings → Deploy Hook*: copia la URL (es un secreto).
 4. Comprueba: `https://<servicio>.onrender.com/api/v1/health` → `{"status":"ok","db":"ok","version":"<commit>"}`, y cualquier otra ruta sin `X-Proxy-Secret` → `403`.
