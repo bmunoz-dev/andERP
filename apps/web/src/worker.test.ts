@@ -74,4 +74,30 @@ describe('Worker /api/* (F07 CA-10)', () => {
       'anderp_refresh=nuevo; HttpOnly; Secure; SameSite=Strict',
     ]);
   });
+
+  // Sin estas variables el Worker fallaba con un 1101 opaco; ahora dice qué falta (sin valores).
+  it.each([
+    [{ PROXY_SECRET: env.PROXY_SECRET }, 'API_ORIGIN'],
+    [{ API_ORIGIN: 'anderp-api.onrender.com', PROXY_SECRET: env.PROXY_SECRET }, 'API_ORIGIN'],
+    [{ API_ORIGIN: env.API_ORIGIN }, 'PROXY_SECRET'],
+  ])('responde 502 si la configuración está incompleta (%o)', async (config, variable) => {
+    const fetchMock = upstream(new Response('{}'));
+    const res = await proxy(
+      new Request('https://anderp.workers.dev/api/v1/health'),
+      config,
+    );
+    expect(res.status).toBe(502);
+    expect(await res.json()).toMatchObject({
+      code: 'PROXY_MISCONFIGURED',
+      detail: expect.stringContaining(variable),
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('responde 502 si no puede conectarse con la API', async () => {
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockRejectedValue(new TypeError('fetch failed')));
+    const res = await proxy(new Request('https://anderp.workers.dev/api/v1/health'), env);
+    expect(res.status).toBe(502);
+    expect(await res.json()).toMatchObject({ code: 'SERVICE_UNAVAILABLE' });
+  });
 });
