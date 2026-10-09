@@ -1,6 +1,7 @@
 // @vitest-environment node
+// La prueba vive fuera de functions/: Cloudflare publica como ruta cada archivo de esa carpeta.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { onRequest } from './[[path]]';
+import { onRequest } from '../functions/api/[[path]]';
 
 const env = { API_ORIGIN: 'https://anderp-api.onrender.com', PROXY_SECRET: 's'.repeat(40) };
 

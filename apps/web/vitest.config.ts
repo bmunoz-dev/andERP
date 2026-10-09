@@ -10,7 +10,7 @@ export default defineProject({
   test: {
     name: 'web',
     environment: 'jsdom',
-    include: ['src/**/*.test.{ts,tsx}', 'functions/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['./src/test/setup.ts'],
     // jsdom es lento cuando corre junto a las pruebas de la API (suite completa).
     testTimeout: 20_000,

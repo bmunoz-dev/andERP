@@ -96,15 +96,33 @@ openssl rand -base64 32   # llave 1 de CREDENTIALS_KEYS
 
 ## 3. Cloudflare Pages (F07-T009)
 
-1. *Workers & Pages → Create → Pages → Connect to Git* con el repo, rama de producción `main`.
-2. Build:
-   - **Root directory:** `apps/web` (ahí están `functions/` y `public/_headers`);
-   - **Build command:** `pnpm --filter @anderp/shared build && pnpm --filter @anderp/web build`;
-   - **Output directory:** `dist`;
-   - variables de build: `NODE_VERSION=24`, `PNPM_VERSION=11.22.0`.
-3. Variables de la Function (*Settings → Variables and Secrets*, entorno Production): `API_ORIGIN=https://<servicio>.onrender.com` (sin barra final) y `PROXY_SECRET` (como secreto, el mismo de Render).
-4. Actualiza `WEB_URL` en Render con la URL final de Pages.
-5. Comprueba: abrir la web, iniciar sesión, recargar y seguir con sesión (CA-12); en <https://securityheaders.com> la URL debe mostrar CSP, HSTS y el resto de cabeceras (CA-11).
+Requisito: la API de Render ya responde (paso 2). Sin ella la web carga, pero no puede iniciar sesión.
+
+1. *Workers & Pages → Create → Pages → Connect to Git*: autoriza la app de Cloudflare en GitHub **solo** para el repo `bmunoz-dev/andERP` y elígelo. Rama de producción: `main`.
+2. Configuración de build:
+   - **Framework preset:** `None`;
+   - **Root directory (advanced):** `apps/web`. Ahí están `functions/` (el proxy `/api/*`) y `public/_headers`;
+   - **Build command** (el lockfile de pnpm está en la raíz del monorepo, por eso se instala desde allí):
+
+     ```bash
+     cd ../.. && npx -y pnpm@11.22.0 install --frozen-lockfile && npx -y pnpm@11.22.0 --filter @anderp/shared build && npx -y pnpm@11.22.0 --filter @anderp/web build
+     ```
+
+   - **Build output directory:** `dist`;
+   - **Environment variables (build):** `NODE_VERSION=24` y `SKIP_DEPENDENCY_INSTALL=1` (la instalación la hace el comando de build).
+3. *Save and Deploy*. El primer build tarda unos minutos; si falla, el log está en *Deployments → (el despliegue) → View details*.
+4. Variables de la Function: *Settings → Variables and Secrets*, entorno **Production**:
+   - `API_ORIGIN` = `https://<servicio>.onrender.com` (texto, sin barra final);
+   - `PROXY_SECRET` = el mismo de Render (tipo **Secret**).
+
+   Las variables se aplican en el **siguiente** despliegue: *Deployments → último → Retry deployment*.
+5. Actualiza `WEB_URL` en Render con la URL final de Pages (p. ej. `https://anderp.pages.dev`); los enlaces de los correos usan esa URL.
+6. Comprueba:
+   - `https://<proyecto>.pages.dev/api/v1/health` responde `{"status":"ok",...}` (pasa por el proxy);
+   - iniciar sesión, recargar la página y seguir con sesión (CA-12);
+   - en <https://securityheaders.com> aparecen CSP, HSTS y el resto de cabeceras (CA-11).
+
+**Despliegues de vista previa.** Cada rama y PR genera una URL de vista previa. Si no le cargas variables al entorno *Preview*, esas vistas no llegan a la API; es lo esperado.
 
 **Dominio propio (opcional):** en Pages, *Custom domains → Set up a domain*; después cambia `WEB_URL` en Render y el remitente del correo.
 
