@@ -76,6 +76,8 @@ const MESSAGES = {
     'No se pudo descifrar la contraseña: el registro está dañado. Avisa al administrador.',
   CREDENTIAL_KEY_UNAVAILABLE:
     'La llave con la que se cifró esta contraseña ya no está configurada. Avisa al administrador.',
+  PROXY_MISCONFIGURED:
+    'La web no está conectada con el servidor (falta configuración en Cloudflare). Avisa al administrador.',
 } satisfies Record<ErrorCode, string>;
 
 const CLIENT_MESSAGES: Record<string, string> = {
