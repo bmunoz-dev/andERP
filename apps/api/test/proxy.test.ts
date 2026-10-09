@@ -1,7 +1,9 @@
 import { desc, eq } from 'drizzle-orm';
+import pino from 'pino';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DB, type Database } from '../src/db/database.module';
 import { auditLogs } from '../src/db/schema';
+import { REDACT_PATHS } from '../src/shared/logging/logger.module';
 import { createTestApp, type TestApp } from './setup/create-test-app';
 import { createMember, createOrganization, TEST_PASSWORD } from './setup/fixtures';
 import { resetDb } from './setup/reset-db';
@@ -44,6 +46,13 @@ describe('Proxy de la web', () => {
     await t.http.get('/api/v1/auth/me').set('X-Proxy-Secret', `${SECRET}x`).expect(403);
     await t.http.get('/api/v1/auth/me').set('X-Proxy-Secret', SECRET).expect(401);
     await t.http.get('/api/v1/health').expect(200);
+  });
+
+  it('CA-8 el secreto del proxy no aparece en los logs', () => {
+    const lines: string[] = [];
+    const logger = pino({ redact: REDACT_PATHS }, { write: (line: string) => lines.push(line) });
+    logger.info({ req: { headers: { 'x-proxy-secret': SECRET } } }, 'request completed');
+    expect(lines.join('\n')).not.toContain(SECRET);
   });
 
   it('CA-8 la IP del cliente llega a la auditoría', async () => {
