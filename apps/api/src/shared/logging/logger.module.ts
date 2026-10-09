@@ -10,6 +10,7 @@ import { ensureRequestId } from '../http/request-id';
 export const REDACT_PATHS = [
   'req.headers.authorization',
   'req.headers.cookie',
+  'req.headers["x-proxy-secret"]',
   'res.headers["set-cookie"]',
   '*.password',
   '*.newPassword',
