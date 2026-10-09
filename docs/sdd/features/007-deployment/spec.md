@@ -5,7 +5,7 @@
 
 ## Objetivo
 
-Poner AndERP en producción de forma segura y repetible: base de datos en Supabase, API en Render, web en Cloudflare Pages, despliegue automatizado y runbooks de operación.
+Poner AndERP en producción de forma segura y repetible: base de datos en Supabase, API en Render, web en Cloudflare Workers (archivos estáticos), despliegue automatizado y runbooks de operación.
 
 ## Historias
 
@@ -28,8 +28,8 @@ Poner AndERP en producción de forma segura y repetible: base de datos en Supaba
 - **CA-8.** La API solo acepta tráfico que venga del proxy de la web: toda petición sin la cabecera `X-Proxy-Secret` válida responde `403`, salvo `/health`. La IP del cliente se toma de `X-Client-IP`, que solo escribe el proxy, y la usan el throttler y la auditoría.
 - **CA-9.** La API envía las cabeceras de seguridad de `helmet`.
 
-**Web (Cloudflare Pages)**
-- **CA-10.** La web se publica desde `main`. Una **Pages Function** en `/api/*` reenvía a la API:
+**Web (Cloudflare Workers)**
+- **CA-10.** La web se publica desde `main`. Un **Worker** atiende `/api/*` y reenvía a la API; el resto lo sirven los archivos estáticos:
   - método, cuerpo, `Authorization`, `Cookie` y `Content-Type`;
   - agrega `X-Proxy-Secret` y `X-Client-IP` (tomada de `CF-Connecting-IP`);
   - devuelve la respuesta tal cual, incluido `Set-Cookie`.
@@ -49,7 +49,7 @@ Poner AndERP en producción de forma segura y repetible: base de datos en Supaba
   4. deploy hook de Render;
   5. espera a que `/api/v1/health` responda `200`.
 
-  Cloudflare Pages construye la web por su cuenta desde git.
+  Cloudflare (Workers Builds) construye y publica la web por su cuenta desde git.
 - **CA-14.** Una migración que falla detiene el pipeline **antes** de desplegar la API.
 
 **E2E y operación**

@@ -14,7 +14,7 @@
 
 ## Bloque B — Web
 
-- [x] F07-T004 [TDD] Crear la Pages Function `functions/api/[[path]].ts`, con pruebas unitarias del reenvío de cabeceras, cuerpo y `Set-Cookie`.
+- [x] F07-T004 [TDD] Crear el proxy de `/api/*` (Worker `worker/index.ts`; era una Pages Function), con pruebas unitarias del reenvío de cabeceras, cuerpo y `Set-Cookie`.
       Verificación: CA-10
 - [x] F07-T005 Crear `public/_headers` con CSP y cabeceras de seguridad. Verificar que la app funciona sin errores de CSP en la consola.
       Verificación: CA-11
@@ -27,7 +27,7 @@
       Depende de: F07-T006 · Verificación: CA-4
 - [ ] F07-T008 Crear el servicio web en Render (Docker, plan de pago, health check, secretos) y obtener el deploy hook.
       Depende de: F07-T003, F07-T007 · Verificación: CA-7
-- [ ] F07-T009 Crear el proyecto en Cloudflare Pages (build de `apps/web`, variables `API_ORIGIN` y `PROXY_SECRET`).
+- [ ] F07-T009 Crear el Worker en Cloudflare (Workers Builds desde git, build de `apps/web`, variables `API_ORIGIN` y `PROXY_SECRET`).
       Depende de: F07-T004, F07-T008
 - [ ] F07-T010 Configurar el proveedor SMTP y verificar que llega un correo real de recuperación de contraseña.
       Depende de: F07-T008

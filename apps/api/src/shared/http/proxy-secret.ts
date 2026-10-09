@@ -6,7 +6,7 @@ import { requestIdOf } from './request-id';
 const digest = (value: string) => createHash('sha256').update(value).digest();
 
 /**
- * F07 CA-8: en producción la API solo atiende al proxy de la web (Pages Function), que agrega
+ * F07 CA-8: en producción la API solo atiende al proxy de la web (Worker de Cloudflare), que agrega
  * `X-Proxy-Secret` y la IP real del navegador en `X-Client-IP`. Con el secreto válido esa IP pasa
  * a ser `req.ip`, la que usan el throttler y la auditoría. `/health` queda abierto para Render.
  * Sin `PROXY_SECRET` (desarrollo y pruebas) no hace nada.

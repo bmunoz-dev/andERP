@@ -1,5 +1,6 @@
 /**
- * F07 CA-10: Pages Function que reenvía `/api/*` a la API en Render. Así el navegador habla con un
+ * F07 CA-10: Worker que reenvía `/api/*` a la API en Render. El resto de rutas lo sirve Cloudflare
+ * con los archivos estáticos de `dist` sin pasar por aquí (`run_worker_first` en wrangler.jsonc). Así el navegador habla con un
  * solo origen (la cookie `SameSite=Strict` funciona y no hace falta CORS) y la API solo acepta
  * peticiones que traen `X-Proxy-Secret`. La IP real del navegador va en `X-Client-IP`.
  */
@@ -12,7 +13,7 @@ interface Env {
 // Solo estas cabeceras del navegador llegan a la API; el resto (Host, X-Proxy-Secret…) se descarta.
 const FORWARDED = ['authorization', 'cookie', 'content-type', 'accept', 'user-agent'];
 
-export async function onRequest({ request, env }: { request: Request; env: Env }) {
+export async function proxy(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const headers = new Headers();
   for (const name of FORWARDED) {
@@ -33,3 +34,5 @@ export async function onRequest({ request, env }: { request: Request; env: Env }
   // Mismo estado, cuerpo y cabeceras, incluido Set-Cookie.
   return new Response(response.body, response);
 }
+
+export default { fetch: proxy };

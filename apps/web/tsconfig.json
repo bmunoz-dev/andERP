@@ -12,5 +12,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "functions", "*.ts"]
+  "include": ["src", "worker", "*.ts"]
 }

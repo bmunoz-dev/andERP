@@ -3,7 +3,7 @@
 Se hace **una sola vez**. Al terminar, cada merge a `main` despliega solo (runbook 02).
 
 ```
-Navegador ─► Cloudflare Pages (web + /api/* proxy) ─► Render (API, Docker) ─► Supabase (Postgres, sa-east-1)
+Navegador ─► Cloudflare Worker (web estática + proxy /api/*) ─► Render (API, Docker) ─► Supabase (Postgres, sa-east-1)
 ```
 
 > Los nombres de menús de Supabase, Render y Cloudflare cambian con el tiempo. Si algo no coincide, busca la opción equivalente y corrige este documento.
@@ -88,43 +88,52 @@ openssl rand -base64 32   # llave 1 de CREDENTIALS_KEYS
    | `PROXY_SECRET` | del paso 0 |
    | `CREDENTIALS_KEYS` | `{"1":"<llave 1>"}` |
    | `CREDENTIALS_ACTIVE_KEY_VERSION` | `1` |
-   | `WEB_URL` | URL de Cloudflare Pages (paso 3), p. ej. `https://anderp.pages.dev` |
+   | `WEB_URL` | URL del Worker de Cloudflare (paso 3), p. ej. `https://anderp.<subdominio>.workers.dev` |
    | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | del proveedor de correo (paso 4) |
 
 3. *Settings → Deploy Hook*: copia la URL (es un secreto).
 4. Comprueba: `https://<servicio>.onrender.com/api/v1/health` → `{"status":"ok","db":"ok","version":"<commit>"}`, y cualquier otra ruta sin `X-Proxy-Secret` → `403`.
 
-## 3. Cloudflare Pages (F07-T009)
+## 3. Cloudflare Workers (F07-T009)
+
+La web se publica como **Worker con archivos estáticos** ([`apps/web/wrangler.jsonc`](../../apps/web/wrangler.jsonc)): Cloudflare sirve `dist` y el código del Worker ([`apps/web/worker/index.ts`](../../apps/web/worker/index.ts)) solo atiende `/api/*`, reenviando a Render.
 
 Requisito: la API de Render ya responde (paso 2). Sin ella la web carga, pero no puede iniciar sesión.
 
-1. *Workers & Pages → Create → Pages → Connect to Git*: autoriza la app de Cloudflare en GitHub **solo** para el repo `bmunoz-dev/andERP` y elígelo. Rama de producción: `main`.
-2. Configuración de build:
-   - **Framework preset:** `None`;
-   - **Root directory (advanced):** `apps/web`. Ahí están `functions/` (el proxy `/api/*`) y `public/_headers`;
-   - **Build command** (el lockfile de pnpm está en la raíz del monorepo, por eso se instala desde allí):
+1. *Workers & Pages → Create → Import a repository*: autoriza la app de Cloudflare en GitHub **solo** para `bmunoz-dev/andERP` y elígelo.
+2. Configuración:
 
-     ```bash
-     cd ../.. && npx -y pnpm@11.22.0 install --frozen-lockfile && npx -y pnpm@11.22.0 --filter @anderp/shared build && npx -y pnpm@11.22.0 --filter @anderp/web build
-     ```
+   | Campo | Valor |
+   |---|---|
+   | Project name | `anderp` (debe coincidir con `name` de `wrangler.jsonc`) |
+   | Build command | ver abajo |
+   | Deploy command | `npx wrangler deploy` |
+   | Non-production branch deploy command (si aparece) | `npx wrangler versions upload` |
+   | Path / Root directory | `apps/web` |
+   | API token | dejar que Cloudflare cree uno nuevo |
+   | Build variables | `NODE_VERSION` = `24` y `SKIP_DEPENDENCY_INSTALL` = `1` |
 
-   - **Build output directory:** `dist`;
-   - **Environment variables (build):** `NODE_VERSION=24` y `SKIP_DEPENDENCY_INSTALL=1` (la instalación la hace el comando de build).
-3. *Save and Deploy*. El primer build tarda unos minutos; si falla, el log está en *Deployments → (el despliegue) → View details*.
-4. Variables de la Function: *Settings → Variables and Secrets*, entorno **Production**:
-   - `API_ORIGIN` = `https://<servicio>.onrender.com` (texto, sin barra final);
+   Build command (el lockfile de pnpm está en la raíz del monorepo, por eso instala desde allí):
+
+   ```bash
+   cd ../.. && npx -y pnpm@11.22.0 install --frozen-lockfile && npx -y pnpm@11.22.0 --filter @anderp/shared build && npx -y pnpm@11.22.0 --filter @anderp/web build
+   ```
+
+3. *Deploy*. Si falla, el log está en el Worker → *Deployments* (o *Builds*) → el último → *View build*.
+4. Variables del Worker: *Settings → Variables and Secrets*:
+   - `API_ORIGIN` = `https://<servicio>.onrender.com` (tipo **Text**, sin barra final);
    - `PROXY_SECRET` = el mismo de Render (tipo **Secret**).
 
-   Las variables se aplican en el **siguiente** despliegue: *Deployments → último → Retry deployment*.
-5. Actualiza `WEB_URL` en Render con la URL final de Pages (p. ej. `https://anderp.pages.dev`); los enlaces de los correos usan esa URL.
+   `keep_vars: true` en `wrangler.jsonc` evita que el siguiente `wrangler deploy` las borre. Los secretos nunca se borran.
+5. Actualiza `WEB_URL` en Render con la URL del Worker (p. ej. `https://anderp.<tu-subdominio>.workers.dev`); los enlaces de los correos usan esa URL.
 6. Comprueba:
-   - `https://<proyecto>.pages.dev/api/v1/health` responde `{"status":"ok",...}` (pasa por el proxy);
+   - `https://<url-del-worker>/api/v1/health` responde `{"status":"ok",...}` (pasa por el proxy);
    - iniciar sesión, recargar la página y seguir con sesión (CA-12);
    - en <https://securityheaders.com> aparecen CSP, HSTS y el resto de cabeceras (CA-11).
 
-**Despliegues de vista previa.** Cada rama y PR genera una URL de vista previa. Si no le cargas variables al entorno *Preview*, esas vistas no llegan a la API; es lo esperado.
+Antes de cambiar `wrangler.jsonc`, valida en local sin publicar: `npx wrangler deploy --dry-run` (desde `apps/web`, con `dist` ya construido).
 
-**Dominio propio (opcional):** en Pages, *Custom domains → Set up a domain*; después cambia `WEB_URL` en Render y el remitente del correo.
+**Dominio propio (opcional):** en el Worker, *Settings → Domains & Routes → Add → Custom domain*; después cambia `WEB_URL` en Render y el remitente del correo.
 
 ## 4. Correo (F07-T010)
 
@@ -142,7 +151,7 @@ Requisito: la API de Render ya responde (paso 2). Sin ella la web carga, pero no
 
 ## 6. Verificación del hito M4 (F07-T016)
 
-- Flujo de humo completo en producción (`E2E_EMAIL`, `E2E_PASSWORD` y `BASE_URL` apuntando a Pages, con una organización de prueba): `pnpm test:e2e`.
+- Flujo de humo completo en producción (`E2E_EMAIL`, `E2E_PASSWORD` y `BASE_URL` apuntando al Worker, con una organización de prueba): `pnpm test:e2e`.
 - Sesión que se conserva al recargar, cabeceras en securityheaders.com y llave `anon` sin acceso.
 
 ## Costos
@@ -153,5 +162,5 @@ Anota aquí los planes y precios al contratar:
 |---|---|---|---|
 | Supabase | | | |
 | Render | | | |
-| Cloudflare Pages | Free | 0 | |
+| Cloudflare Workers | Free | 0 | |
 | Correo | | | |

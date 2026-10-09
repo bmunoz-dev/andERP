@@ -10,7 +10,7 @@ Cada merge a `main` ejecuta [`deploy.yml`](../../.github/workflows/deploy.yml):
 4. **Deploy hook** de Render: construye la imagen del último commit de `main`.
 5. **Espera** a que `/api/v1/health` responda con `version` igual al commit desplegado (hasta 15 minutos).
 
-Cloudflare Pages publica la web por su cuenta en cada push a `main`.
+Cloudflare (Workers Builds) publica la web por su cuenta en cada push a `main`.
 
 **Orden y compatibilidad.** Las migraciones corren **antes** de la API nueva, así que durante unos minutos la API anterior trabaja con el esquema nuevo. Las migraciones deben ser compatibles hacia atrás: agregar columnas o tablas sí; renombrar o borrar, en dos despliegues (primero se deja de usar, después se borra).
 
@@ -29,7 +29,7 @@ Las migraciones no se deshacen solas (Drizzle solo avanza):
 3. Último recurso, con pérdida de los datos posteriores al backup: [runbook 03](03-restaurar-backup.md).
 
 ### La web falla
-Cloudflare Pages → proyecto → *Deployments* → despliegue anterior → **Rollback to this deployment**. Después revierte el commit en git.
+Cloudflare → Worker `anderp` → *Deployments* → versión anterior → **Rollback** (o `npx wrangler rollback` desde `apps/web`). Después revierte el commit en git.
 
 ## Desplegar a mano (sin pipeline)
 

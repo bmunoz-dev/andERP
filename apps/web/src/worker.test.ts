@@ -1,7 +1,6 @@
 // @vitest-environment node
-// La prueba vive fuera de functions/: Cloudflare publica como ruta cada archivo de esa carpeta.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { onRequest } from '../functions/api/[[path]]';
+import { proxy } from '../worker';
 
 const env = { API_ORIGIN: 'https://anderp-api.onrender.com', PROXY_SECRET: 's'.repeat(40) };
 
@@ -15,10 +14,10 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('Pages Function /api/* (F07 CA-10)', () => {
+describe('Worker /api/* (F07 CA-10)', () => {
   it('reenvía método, ruta, query, cuerpo y cabeceras, y agrega el secreto y la IP', async () => {
     const fetchMock = upstream(new Response('{}', { status: 201 }));
-    const request = new Request('https://anderp.pages.dev/api/v1/expenses?x=1', {
+    const request = new Request('https://anderp.workers.dev/api/v1/expenses?x=1', {
       method: 'POST',
       body: '{"amount":"10.00"}',
       headers: {
@@ -28,11 +27,11 @@ describe('Pages Function /api/* (F07 CA-10)', () => {
         'CF-Connecting-IP': '203.0.113.7',
         'X-Proxy-Secret': 'falso',
         'X-Client-IP': '10.0.0.1',
-        Host: 'anderp.pages.dev',
+        Host: 'anderp.workers.dev',
       },
     });
 
-    const res = await onRequest({ request, env });
+    const res = await proxy(request, env);
 
     expect(res.status).toBe(201);
     const [url, init] = fetchMock.mock.calls[0]!;
@@ -51,7 +50,7 @@ describe('Pages Function /api/* (F07 CA-10)', () => {
 
   it('GET va sin cuerpo', async () => {
     const fetchMock = upstream(new Response('[]'));
-    await onRequest({ request: new Request('https://anderp.pages.dev/api/v1/credentials'), env });
+    await proxy(new Request('https://anderp.workers.dev/api/v1/credentials'), env);
     expect(fetchMock.mock.calls[0]![1]?.body).toBeNull();
   });
 
@@ -63,10 +62,10 @@ describe('Pages Function /api/* (F07 CA-10)', () => {
     headers.append('Set-Cookie', 'anderp_refresh=nuevo; HttpOnly; Secure; SameSite=Strict');
     upstream(new Response('{"accessToken":"t"}', { status: 200, headers }));
 
-    const res = await onRequest({
-      request: new Request('https://anderp.pages.dev/api/v1/auth/refresh', { method: 'POST' }),
+    const res = await proxy(
+      new Request('https://anderp.workers.dev/api/v1/auth/refresh', { method: 'POST' }),
       env,
-    });
+    );
 
     expect(res.status).toBe(200);
     expect(await res.text()).toBe('{"accessToken":"t"}');
