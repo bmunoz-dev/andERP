@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, isNull } from 'drizzle-orm';
 import { ENV, type Env } from '../../config/env';
 import type { DbExecutor } from '../../db/database.module';
-import { organizationMembers, users } from '../../db/schema';
+import { auditLogs, organizationMembers, users } from '../../db/schema';
 import { DomainError } from '../../shared/errors/domain-error';
 import { CLOCK, type Clock, OPAQUE_TOKENS, type OpaqueTokens } from '../auth/application/ports';
 import { createInvitationToken, INVITE_TTL_HOURS } from '../auth/infrastructure/invitations';
@@ -57,6 +57,26 @@ export class MemberOnboarding {
           ),
         );
       if (membership) throw new DomainError(ErrorCode.ALREADY_MEMBER, 409);
+
+      // F02 CA-20: sin contraseña, la última invitación gana. Las membresías pendientes en otras
+      // organizaciones se borran (nunca se usaron) y queda constancia en la auditoría de cada una.
+      if (!existing.passwordHash) {
+        const replaced = await tx
+          .delete(organizationMembers)
+          .where(eq(organizationMembers.userId, existing.id))
+          .returning({ organizationId: organizationMembers.organizationId });
+        if (replaced.length > 0) {
+          await tx.insert(auditLogs).values(
+            replaced.map(({ organizationId }) => ({
+              action: 'member.invitation_replaced',
+              entityType: 'user',
+              entityId: existing.id,
+              userId: member.actorId,
+              organizationId,
+            })),
+          );
+        }
+      }
     }
 
     const [user] = existing

@@ -55,6 +55,7 @@ Dejar AndERP configurado para operar:
 - **CA-17.** Toda escritura llena `created_by` y `updated_by`, y todo borrado llena `deleted_at` y `deleted_by`.
 - **CA-18.** La web tiene un layout con menú lateral: Egresos, Honorarios, Prestadores, Credenciales, Responsables y Configuración (Categorías y Usuarios). La sección "Plataforma" (Organizaciones y Catálogos) solo aparece para el super admin. Los módulos que aún no existen muestran "Próximamente".
 - **CA-19.** Hay pantallas para organizaciones, catálogos globales, categorías (con reordenamiento) y usuarios (invitar, reenviar invitación, activar y desactivar), además de la ruta pública `/activar` para definir la contraseña desde la invitación.
+- **CA-20.** Un usuario sin contraseña tiene como máximo **una invitación pendiente**: la última gana. Si se le invita a otra organización, se borran sus membresías pendientes en las demás (con `member.invitation_replaced` en la auditoría de cada una) y sus enlaces anteriores dejan de servir. Al aceptar, queda solo en la organización que lo invitó por última vez.
 
 ## Fuera de alcance
 

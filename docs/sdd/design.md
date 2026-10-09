@@ -24,6 +24,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-09-28 | `organization_members.is_active`: activar o desactivar a alguien es por organización. | `users.status` es global; desactivar en una organización no debe bloquear al usuario en otra (F02). |
 | 2026-10-06 | Un pago que haga superar el valor total del contrato se **rechaza** (`CONTRACT_BALANCE_EXCEEDED`), en vez de solo avisar. | Decisión del usuario: no se debe pagar más de lo acordado; las adiciones se registran aumentando el valor del contrato (F04). |
 | 2026-10-08 | La web se publica como **Cloudflare Worker con archivos estáticos** (no Pages). El Worker solo atiende `/api/*` (proxy con `X-Proxy-Secret`); el resto lo sirven los estáticos. | El panel de Cloudflare ya crea Workers por defecto (Workers Builds con `wrangler deploy`) y es su camino recomendado; el comportamiento es el mismo que con la Pages Function. |
+| 2026-10-09 | Invitar a un usuario sin contraseña a otra organización **reemplaza** su invitación pendiente: se borran sus otras membresías pendientes. | La membresía se crea al invitar y el login entra en la más antigua: aceptar la invitación de B dejaba al usuario en A (F02 CA-20). |
 
 ---
 
