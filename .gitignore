@@ -29,3 +29,10 @@ Thumbs.db
 
 # Claude
 .claude/settings.local.json
+
+# Playwright (e2e/)
+test-results/
+playwright-report/
+
+# Temporales del generador de rutas de TanStack Router
+.tanstack/

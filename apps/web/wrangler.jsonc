@@ -1,0 +1,18 @@
+// F07: la web se publica como Worker con archivos estáticos (Workers Builds ejecuta `wrangler deploy`).
+// El nombre debe coincidir con el del Worker creado en el panel de Cloudflare.
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "anderp",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    // Rutas de la SPA (/egresos, /honorarios/…) devuelven index.html.
+    "not_found_handling": "single-page-application",
+    // El código del Worker solo corre en /api/*; lo demás son archivos estáticos.
+    "run_worker_first": ["/api/*"],
+  },
+  // API_ORIGIN (variable) y PROXY_SECRET (secreto) se cargan en el panel; no se borran al desplegar.
+  "keep_vars": true,
+  "observability": { "enabled": true },
+}

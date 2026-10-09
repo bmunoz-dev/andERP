@@ -71,6 +71,17 @@ describe('loadEnv', () => {
     expect([...env.CREDENTIALS_KEYS.keys()]).toEqual([1, 2]);
   });
 
+  // F07 CA-8: en producción la API no arranca sin el secreto del proxy.
+  it('exige PROXY_SECRET en producción y con al menos 32 caracteres', () => {
+    expect(() => loadEnv({ ...valid, NODE_ENV: 'production' })).toThrow(/PROXY_SECRET/);
+    expect(() => loadEnv({ ...valid, PROXY_SECRET: 'corto' })).toThrow(/PROXY_SECRET/);
+    expect(loadEnv({ ...valid, PROXY_SECRET: '' }).PROXY_SECRET).toBeUndefined();
+    const secret = 's'.repeat(32);
+    expect(loadEnv({ ...valid, NODE_ENV: 'production', PROXY_SECRET: secret }).PROXY_SECRET).toBe(
+      secret,
+    );
+  });
+
   it('no incluye los valores en el mensaje de error', () => {
     try {
       loadEnv({ ...valid, DATABASE_URL: 'not-a-url-with-secret-password' });

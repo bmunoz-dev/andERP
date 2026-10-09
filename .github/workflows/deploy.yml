@@ -1,0 +1,67 @@
+name: Deploy
+
+# F07 CA-13 y CA-14: CI → aprobación → migraciones → deploy de la API → espera de /health.
+# Cloudflare Pages construye la web por su cuenta desde `main`.
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Migrar y desplegar
+    needs: ci
+    # Hasta que exista la infraestructura (runbook 01) no hay nada que desplegar.
+    if: vars.API_HEALTH_URL != ''
+    runs-on: ubuntu-latest
+    # Las reglas del environment piden aprobación manual antes de tocar producción.
+    environment: production
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Si una migración falla, el job se detiene aquí y la API no se despliega (CA-14).
+      - name: Migraciones
+        run: pnpm db:migrate
+        env:
+          DATABASE_URL_MIGRATIONS: ${{ secrets.DATABASE_URL_MIGRATIONS }}
+
+      - name: Deploy de la API en Render
+        run: curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL" > /dev/null
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+
+      # La instancia anterior sigue respondiendo 200 mientras se construye la nueva: se espera
+      # a que /health informe el commit de este despliegue.
+      - name: Esperar la nueva versión
+        run: |
+          for attempt in $(seq 1 60); do
+            version=$(curl -fsS "$API_HEALTH_URL" | jq -r '.version // empty' || true)
+            if [ "$version" = "$GITHUB_SHA" ]; then
+              echo "API en línea con $GITHUB_SHA"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "La API no respondió con $GITHUB_SHA en 15 minutos" >&2
+          exit 1
+        env:
+          API_HEALTH_URL: ${{ vars.API_HEALTH_URL }}

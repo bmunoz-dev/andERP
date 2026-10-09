@@ -23,6 +23,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-09-28 | El access token lleva la `family_id` de su sesión y el guard verifica en cada petición que siga activa. | Logout, cambio de contraseña y reutilización de tokens invalidan también los access tokens (F01). |
 | 2026-09-28 | `organization_members.is_active`: activar o desactivar a alguien es por organización. | `users.status` es global; desactivar en una organización no debe bloquear al usuario en otra (F02). |
 | 2026-10-06 | Un pago que haga superar el valor total del contrato se **rechaza** (`CONTRACT_BALANCE_EXCEEDED`), en vez de solo avisar. | Decisión del usuario: no se debe pagar más de lo acordado; las adiciones se registran aumentando el valor del contrato (F04). |
+| 2026-10-08 | La web se publica como **Cloudflare Worker con archivos estáticos** (no Pages). El Worker solo atiende `/api/*` (proxy con `X-Proxy-Secret`); el resto lo sirven los estáticos. | El panel de Cloudflare ya crea Workers por defecto (Workers Builds con `wrangler deploy`) y es su camino recomendado; el comportamiento es el mismo que con la Pages Function. |
 
 ---
 
@@ -544,7 +545,7 @@ La interfaz está en español y el formato de moneda es COP (`es-CO`).
 - **Entornos:** local con Postgres en Docker (`docker compose`) y producción en Supabase. Staging con un segundo proyecto de Supabase cuando haga falta.
 - **Rol de la base de datos:** la API se conecta con un rol propio con privilegios mínimos, distinto del rol dueño de las migraciones.
 - **Despliegue de la API:** contenedor Docker en Render (plan de pago, sin dormirse).
-- **Despliegue de la web:** sitio estático en Cloudflare Pages, con una Pages Function que reenvía `/api/*` a la API agregando `X-Proxy-Secret`. La web y la API comparten origen: la cookie `SameSite=Strict` funciona y no hace falta CORS. El detalle está en `features/007-deployment/plan.md`.
+- **Despliegue de la web:** Cloudflare Worker con archivos estáticos; el Worker reenvía `/api/*` a la API agregando `X-Proxy-Secret`. La web y la API comparten origen: la cookie `SameSite=Strict` funciona y no hace falta CORS. El detalle está en `features/007-deployment/plan.md`.
 - **Secretos:** `DATABASE_URL`, `JWT_SECRET`, `CREDENTIALS_KEY_V*` y la configuración de correo para la recuperación de contraseña, como variables de entorno del proveedor.
 
 ---

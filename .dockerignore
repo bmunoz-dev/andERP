@@ -1,0 +1,17 @@
+# Contexto de la imagen de la API (apps/api/Dockerfile): solo lo necesario para compilarla.
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+.git
+.github
+.claude
+.agents
+docs
+e2e
+apps/web
+apps/api/test
+apps/api/drizzle
+**/*.test.ts
+**/coverage
