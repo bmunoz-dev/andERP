@@ -52,5 +52,7 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 **Decisiones tomadas:** la skill `ponytail` se versiona en el repo (`.agents/`, `skills-lock.json` y una copia real en `.claude/skills/ponytail/`, sin enlace simbólico). No se protege `main`: es un proyecto personal.
 
+**Pendiente (multi-organización):** un usuario que ya tiene contraseña y es agregado a una segunda organización queda en las dos, pero el login siempre entra en la más antigua. Resolverlo requiere el selector de organización, fuera de la v1 (design.md §fuera de alcance).
+
 **Entorno:**
 - En el árbol `New folder\personal`, el trabajador de Vitest a veces termina al arrancar un archivo de la API con `0xC0000409`, antes de ejecutar pruebas. Cuando arranca, todo pasa. El CI en Linux no lo presenta.

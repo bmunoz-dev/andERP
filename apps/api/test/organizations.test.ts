@@ -3,7 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DB, type Database } from '../src/db/database.module';
-import { expenseCategories, organizationMembers, users } from '../src/db/schema';
+import { auditLogs, expenseCategories, organizationMembers, users } from '../src/db/schema';
 import { seed } from '../src/db/seed';
 import { Argon2PasswordHasher } from '../src/modules/auth/infrastructure/argon2-password-hasher';
 import { createTestApp, type TestApp } from './setup/create-test-app';
@@ -363,6 +363,43 @@ describe('Usuarios de la organización', () => {
       .post(`/members/${invited.userId}/resend-invite`)
       .expect(422);
     expect(res.body).toMatchObject({ code: 'INVITE_NOT_PENDING' });
+  });
+
+  it('CA-20 invitar a otra organización reemplaza la invitación pendiente', async () => {
+    const email = `nuevo-${randomUUID()}@empresa.co`;
+    const person = { email, firstName: 'Pedro', lastName: 'Luna' };
+    const invited = (await as(t, s.orgA.admin.token).post('/members', person).expect(201))
+      .body as Member;
+    const fromA = t.mailer.lastLinkTo(email).searchParams.get('token')!;
+    await as(t, s.orgB.admin.token).post('/members', person).expect(201);
+    const fromB = t.mailer.lastLinkTo(email).searchParams.get('token')!;
+
+    expect((await members(s.orgA.admin.token)).some((m) => m.userId === invited.userId)).toBe(
+      false,
+    );
+    const [audit] = await db
+      .select()
+      .from(auditLogs)
+      .where(
+        and(
+          eq(auditLogs.action, 'member.invitation_replaced'),
+          eq(auditLogs.organizationId, s.orgA.id),
+        ),
+      );
+    expect(audit?.entityId).toBe(invited.userId);
+
+    await t.http
+      .post('/api/v1/auth/password/reset')
+      .send({ token: fromA, newPassword: 'mi clave de invitado' })
+      .expect(422);
+    await t.http
+      .post('/api/v1/auth/password/reset')
+      .send({ token: fromB, newPassword: 'mi clave de invitado' })
+      .expect(204);
+    const me = await as(t, await login(t, email, 'mi clave de invitado'))
+      .get('/auth/me')
+      .expect(200);
+    expect(me.body).toMatchObject({ organization: { id: s.orgB.id } });
   });
 
   it('CA-14 desactivar revoca sus sesiones y le impide entrar; reactivar lo devuelve', async () => {
