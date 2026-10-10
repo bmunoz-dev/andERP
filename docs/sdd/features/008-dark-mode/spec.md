@@ -1,6 +1,6 @@
 # F08 — Modo oscuro · Spec
 
-- **Estado:** Borrador (pendiente de aprobación)
+- **Estado:** Aprobado
 - **Diseño:** `design.md` §8
 
 ## Objetivo

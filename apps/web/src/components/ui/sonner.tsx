@@ -6,12 +6,14 @@ import {
   TriangleAlertIcon,
 } from 'lucide-react';
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
+import { useThemeChoice } from '@/lib/theme';
 
-// AndERP: sin next-themes (la app aún no tiene modo oscuro); tema claro fijo.
+// AndERP: sin next-themes; el tema sale de lib/theme (F08). sonner entiende 'system'.
 const Toaster = ({ ...props }: ToasterProps) => {
+  const theme = useThemeChoice();
   return (
     <Sonner
-      theme="light"
+      theme={theme}
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,

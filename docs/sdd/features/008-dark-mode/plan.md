@@ -1,0 +1,25 @@
+# F08 — Modo oscuro · Plan
+
+- **Estado:** Aprobado
+- **Spec:** [spec.md](spec.md)
+
+## Enfoque
+
+shadcn/ui ya define la paleta oscura (bloque `.dark` en `index.css`) y la variante `dark` de Tailwind; solo falta decidir cuándo poner la clase `.dark` en `<html>`. Sin dependencias nuevas: `next-themes` se quitó en F00 y para tres opciones basta un módulo propio.
+
+## Módulo `lib/theme.ts`
+
+- `ThemeChoice = 'light' | 'dark' | 'system'`; se guarda en `localStorage` (`anderp-theme`). "Sistema" es no guardar nada. Cada acceso al almacenamiento va en `try/catch` (CA-3).
+- `initTheme()`: aplica el tema y escucha `prefers-color-scheme` para el modo Sistema (CA-1). Se llama en `main.tsx` antes de `createRoot`, así no hay parpadeo y no hace falta un script en línea que la CSP bloquearía (CA-4).
+- `setThemeChoice()` guarda, aplica y avisa a los suscriptores; `useThemeChoice()` es un `useSyncExternalStore`.
+- Aplicar = `classList.toggle('dark')` y `style.colorScheme` en `<html>` (los controles nativos, como el calendario de `<input type="date">` y las barras de scroll, también cambian).
+
+## Interfaz
+
+- `UserMenu`: submenú **Tema** con `DropdownMenuRadioGroup` (Claro / Oscuro / Sistema) (CA-2).
+- `Toaster` (sonner): `theme={useThemeChoice()}`; sonner entiende `'system'` (CA-5).
+- Pantallas sin sesión: no necesitan nada, el tema vive en `<html>` (CA-5).
+
+## Contraste (CA-6)
+
+Fuera de `components/ui`, el único color fijo es `text-white` sobre el botón destructivo de `confirm-dialog`, válido en ambos temas. Se revisa a mano en el navegador (con autorización) la matriz, la cuadrícula de honorarios y las insignias.
