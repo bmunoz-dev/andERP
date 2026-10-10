@@ -20,7 +20,7 @@ const contract = (overrides: Record<string, unknown> = {}) =>
     endDate: '2026-08-31',
     workAgreement: 'Asesoría',
     paymentFrequency: 'weekly',
-    totalAmount: '1000000.00',
+    monthlyAmount: '1000000.00',
     ...overrides,
   });
 

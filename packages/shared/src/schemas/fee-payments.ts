@@ -45,5 +45,8 @@ export const contractOptionSchema = z.object({
   serviceProvider: z.object({ id: z.uuid(), name: z.string() }),
   startDate: z.string(),
   endDate: z.string().nullable(),
+  /** F10 CA-6: monto mensual de referencia y lo ya pagado en el mes del periodo consultado. */
+  monthlyAmount: z.string(),
+  paidInMonth: z.string(),
 });
 export type ContractOption = z.infer<typeof contractOptionSchema>;

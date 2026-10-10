@@ -134,6 +134,13 @@
       "when": 1791601560378,
       "tag": "0018_provider_deactivation_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791647670091,
+      "tag": "0019_monthly_contract_amount",
+      "breakpoints": true
     }
   ]
 }

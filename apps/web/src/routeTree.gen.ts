@@ -8,189 +8,186 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as AppRouteImport } from './routes/_app'
-import { Route as ActivarRouteImport } from './routes/activar'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as OlvideContrasenaRouteImport } from './routes/olvide-contrasena'
-import { Route as RestablecerRouteImport } from './routes/restablecer'
-import { Route as AppIndexRouteImport } from './routes/_app/index'
-import { Route as AppCredencialesRouteImport } from './routes/_app/credenciales'
-import { Route as AppEgresosRouteImport } from './routes/_app/egresos'
-import { Route as AppPlataformaRouteRouteImport } from './routes/_app/plataforma/route'
-import { Route as AppResponsablesRouteImport } from './routes/_app/responsables'
-import { Route as AppConfiguracionCategoriasRouteImport } from './routes/_app/configuracion/categorias'
-import { Route as AppConfiguracionUsuariosRouteImport } from './routes/_app/configuracion/usuarios'
-import { Route as AppHonorariosIndexRouteImport } from './routes/_app/honorarios/index'
-import { Route as AppHonorariosIdRouteImport } from './routes/_app/honorarios/$id'
-import { Route as AppHonorariosNuevoRouteImport } from './routes/_app/honorarios/nuevo'
-import { Route as AppPlataformaCatalogosRouteImport } from './routes/_app/plataforma/catalogos'
-import { Route as AppPlataformaOrganizacionesRouteImport } from './routes/_app/plataforma/organizaciones'
-import { Route as AppPrestadoresIndexRouteImport } from './routes/_app/prestadores/index'
-import { Route as AppPrestadoresIdRouteImport } from './routes/_app/prestadores/$id'
+import { Route as rootRouteImport } from './routes/__root';
+import { Route as AppRouteImport } from './routes/_app';
+import { Route as ActivarRouteImport } from './routes/activar';
+import { Route as LoginRouteImport } from './routes/login';
+import { Route as OlvideContrasenaRouteImport } from './routes/olvide-contrasena';
+import { Route as RestablecerRouteImport } from './routes/restablecer';
+import { Route as AppIndexRouteImport } from './routes/_app/index';
+import { Route as AppCredencialesRouteImport } from './routes/_app/credenciales';
+import { Route as AppEgresosRouteImport } from './routes/_app/egresos';
+import { Route as AppPlataformaRouteRouteImport } from './routes/_app/plataforma/route';
+import { Route as AppResponsablesRouteImport } from './routes/_app/responsables';
+import { Route as AppConfiguracionCategoriasRouteImport } from './routes/_app/configuracion/categorias';
+import { Route as AppConfiguracionUsuariosRouteImport } from './routes/_app/configuracion/usuarios';
+import { Route as AppHonorariosIndexRouteImport } from './routes/_app/honorarios/index';
+import { Route as AppHonorariosIdRouteImport } from './routes/_app/honorarios/$id';
+import { Route as AppHonorariosNuevoRouteImport } from './routes/_app/honorarios/nuevo';
+import { Route as AppPlataformaCatalogosRouteImport } from './routes/_app/plataforma/catalogos';
+import { Route as AppPlataformaOrganizacionesRouteImport } from './routes/_app/plataforma/organizaciones';
+import { Route as AppPrestadoresIndexRouteImport } from './routes/_app/prestadores/index';
+import { Route as AppPrestadoresIdRouteImport } from './routes/_app/prestadores/$id';
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ActivarRoute = ActivarRouteImport.update({
   id: '/activar',
   path: '/activar',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const OlvideContrasenaRoute = OlvideContrasenaRouteImport.update({
   id: '/olvide-contrasena',
   path: '/olvide-contrasena',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const RestablecerRoute = RestablecerRouteImport.update({
   id: '/restablecer',
   path: '/restablecer',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppCredencialesRoute = AppCredencialesRouteImport.update({
   id: '/credenciales',
   path: '/credenciales',
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppEgresosRoute = AppEgresosRouteImport.update({
   id: '/egresos',
   path: '/egresos',
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppPlataformaRouteRoute = AppPlataformaRouteRouteImport.update({
   id: '/plataforma',
   path: '/plataforma',
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppResponsablesRoute = AppResponsablesRouteImport.update({
   id: '/responsables',
   path: '/responsables',
   getParentRoute: () => AppRoute,
-} as any)
-const AppConfiguracionCategoriasRoute =
-  AppConfiguracionCategoriasRouteImport.update({
-    id: '/configuracion/categorias',
-    path: '/configuracion/categorias',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppConfiguracionUsuariosRoute =
-  AppConfiguracionUsuariosRouteImport.update({
-    id: '/configuracion/usuarios',
-    path: '/configuracion/usuarios',
-    getParentRoute: () => AppRoute,
-  } as any)
+} as any);
+const AppConfiguracionCategoriasRoute = AppConfiguracionCategoriasRouteImport.update({
+  id: '/configuracion/categorias',
+  path: '/configuracion/categorias',
+  getParentRoute: () => AppRoute,
+} as any);
+const AppConfiguracionUsuariosRoute = AppConfiguracionUsuariosRouteImport.update({
+  id: '/configuracion/usuarios',
+  path: '/configuracion/usuarios',
+  getParentRoute: () => AppRoute,
+} as any);
 const AppHonorariosIndexRoute = AppHonorariosIndexRouteImport.update({
   id: '/honorarios/',
   path: '/honorarios/',
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppHonorariosIdRoute = AppHonorariosIdRouteImport.update({
   id: '/honorarios/$id',
   path: '/honorarios/$id',
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppHonorariosNuevoRoute = AppHonorariosNuevoRouteImport.update({
   id: '/honorarios/nuevo',
   path: '/honorarios/nuevo',
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppPlataformaCatalogosRoute = AppPlataformaCatalogosRouteImport.update({
   id: '/catalogos',
   path: '/catalogos',
   getParentRoute: () => AppPlataformaRouteRoute,
-} as any)
-const AppPlataformaOrganizacionesRoute =
-  AppPlataformaOrganizacionesRouteImport.update({
-    id: '/organizaciones',
-    path: '/organizaciones',
-    getParentRoute: () => AppPlataformaRouteRoute,
-  } as any)
+} as any);
+const AppPlataformaOrganizacionesRoute = AppPlataformaOrganizacionesRouteImport.update({
+  id: '/organizaciones',
+  path: '/organizaciones',
+  getParentRoute: () => AppPlataformaRouteRoute,
+} as any);
 const AppPrestadoresIndexRoute = AppPrestadoresIndexRouteImport.update({
   id: '/prestadores/',
   path: '/prestadores/',
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 const AppPrestadoresIdRoute = AppPrestadoresIdRouteImport.update({
   id: '/prestadores/$id',
   path: '/prestadores/$id',
   getParentRoute: () => AppRoute,
-} as any)
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof AppIndexRoute
-  '/activar': typeof ActivarRoute
-  '/login': typeof LoginRoute
-  '/olvide-contrasena': typeof OlvideContrasenaRoute
-  '/restablecer': typeof RestablecerRoute
-  '/plataforma': typeof AppPlataformaRouteRouteWithChildren
-  '/credenciales': typeof AppCredencialesRoute
-  '/egresos': typeof AppEgresosRoute
-  '/responsables': typeof AppResponsablesRoute
-  '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
-  '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
-  '/honorarios/$id': typeof AppHonorariosIdRoute
-  '/honorarios/nuevo': typeof AppHonorariosNuevoRoute
-  '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
-  '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
-  '/prestadores/$id': typeof AppPrestadoresIdRoute
-  '/honorarios/': typeof AppHonorariosIndexRoute
-  '/prestadores/': typeof AppPrestadoresIndexRoute
+  '/': typeof AppIndexRoute;
+  '/activar': typeof ActivarRoute;
+  '/login': typeof LoginRoute;
+  '/olvide-contrasena': typeof OlvideContrasenaRoute;
+  '/restablecer': typeof RestablecerRoute;
+  '/plataforma': typeof AppPlataformaRouteRouteWithChildren;
+  '/credenciales': typeof AppCredencialesRoute;
+  '/egresos': typeof AppEgresosRoute;
+  '/responsables': typeof AppResponsablesRoute;
+  '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute;
+  '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute;
+  '/honorarios/$id': typeof AppHonorariosIdRoute;
+  '/honorarios/nuevo': typeof AppHonorariosNuevoRoute;
+  '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute;
+  '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute;
+  '/prestadores/$id': typeof AppPrestadoresIdRoute;
+  '/honorarios/': typeof AppHonorariosIndexRoute;
+  '/prestadores/': typeof AppPrestadoresIndexRoute;
 }
 export interface FileRoutesByTo {
-  '/activar': typeof ActivarRoute
-  '/login': typeof LoginRoute
-  '/olvide-contrasena': typeof OlvideContrasenaRoute
-  '/restablecer': typeof RestablecerRoute
-  '/plataforma': typeof AppPlataformaRouteRouteWithChildren
-  '/credenciales': typeof AppCredencialesRoute
-  '/egresos': typeof AppEgresosRoute
-  '/responsables': typeof AppResponsablesRoute
-  '/': typeof AppIndexRoute
-  '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
-  '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
-  '/honorarios/$id': typeof AppHonorariosIdRoute
-  '/honorarios/nuevo': typeof AppHonorariosNuevoRoute
-  '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
-  '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
-  '/prestadores/$id': typeof AppPrestadoresIdRoute
-  '/honorarios': typeof AppHonorariosIndexRoute
-  '/prestadores': typeof AppPrestadoresIndexRoute
+  '/activar': typeof ActivarRoute;
+  '/login': typeof LoginRoute;
+  '/olvide-contrasena': typeof OlvideContrasenaRoute;
+  '/restablecer': typeof RestablecerRoute;
+  '/plataforma': typeof AppPlataformaRouteRouteWithChildren;
+  '/credenciales': typeof AppCredencialesRoute;
+  '/egresos': typeof AppEgresosRoute;
+  '/responsables': typeof AppResponsablesRoute;
+  '/': typeof AppIndexRoute;
+  '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute;
+  '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute;
+  '/honorarios/$id': typeof AppHonorariosIdRoute;
+  '/honorarios/nuevo': typeof AppHonorariosNuevoRoute;
+  '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute;
+  '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute;
+  '/prestadores/$id': typeof AppPrestadoresIdRoute;
+  '/honorarios': typeof AppHonorariosIndexRoute;
+  '/prestadores': typeof AppPrestadoresIndexRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/_app': typeof AppRouteWithChildren
-  '/activar': typeof ActivarRoute
-  '/login': typeof LoginRoute
-  '/olvide-contrasena': typeof OlvideContrasenaRoute
-  '/restablecer': typeof RestablecerRoute
-  '/_app/plataforma': typeof AppPlataformaRouteRouteWithChildren
-  '/_app/credenciales': typeof AppCredencialesRoute
-  '/_app/egresos': typeof AppEgresosRoute
-  '/_app/responsables': typeof AppResponsablesRoute
-  '/_app/': typeof AppIndexRoute
-  '/_app/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
-  '/_app/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
-  '/_app/honorarios/$id': typeof AppHonorariosIdRoute
-  '/_app/honorarios/nuevo': typeof AppHonorariosNuevoRoute
-  '/_app/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
-  '/_app/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
-  '/_app/prestadores/$id': typeof AppPrestadoresIdRoute
-  '/_app/honorarios/': typeof AppHonorariosIndexRoute
-  '/_app/prestadores/': typeof AppPrestadoresIndexRoute
+  __root__: typeof rootRouteImport;
+  '/_app': typeof AppRouteWithChildren;
+  '/activar': typeof ActivarRoute;
+  '/login': typeof LoginRoute;
+  '/olvide-contrasena': typeof OlvideContrasenaRoute;
+  '/restablecer': typeof RestablecerRoute;
+  '/_app/plataforma': typeof AppPlataformaRouteRouteWithChildren;
+  '/_app/credenciales': typeof AppCredencialesRoute;
+  '/_app/egresos': typeof AppEgresosRoute;
+  '/_app/responsables': typeof AppResponsablesRoute;
+  '/_app/': typeof AppIndexRoute;
+  '/_app/configuracion/categorias': typeof AppConfiguracionCategoriasRoute;
+  '/_app/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute;
+  '/_app/honorarios/$id': typeof AppHonorariosIdRoute;
+  '/_app/honorarios/nuevo': typeof AppHonorariosNuevoRoute;
+  '/_app/plataforma/catalogos': typeof AppPlataformaCatalogosRoute;
+  '/_app/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute;
+  '/_app/prestadores/$id': typeof AppPrestadoresIdRoute;
+  '/_app/honorarios/': typeof AppHonorariosIndexRoute;
+  '/_app/prestadores/': typeof AppPrestadoresIndexRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
+  fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
     | '/'
     | '/activar'
@@ -209,8 +206,8 @@ export interface FileRouteTypes {
     | '/plataforma/organizaciones'
     | '/prestadores/$id'
     | '/honorarios/'
-    | '/prestadores/'
-  fileRoutesByTo: FileRoutesByTo
+    | '/prestadores/';
+  fileRoutesByTo: FileRoutesByTo;
   to:
     | '/activar'
     | '/login'
@@ -229,7 +226,7 @@ export interface FileRouteTypes {
     | '/plataforma/organizaciones'
     | '/prestadores/$id'
     | '/honorarios'
-    | '/prestadores'
+    | '/prestadores';
   id:
     | '__root__'
     | '/_app'
@@ -250,181 +247,182 @@ export interface FileRouteTypes {
     | '/_app/plataforma/organizaciones'
     | '/_app/prestadores/$id'
     | '/_app/honorarios/'
-    | '/_app/prestadores/'
-  fileRoutesById: FileRoutesById
+    | '/_app/prestadores/';
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  AppRoute: typeof AppRouteWithChildren
-  ActivarRoute: typeof ActivarRoute
-  LoginRoute: typeof LoginRoute
-  OlvideContrasenaRoute: typeof OlvideContrasenaRoute
-  RestablecerRoute: typeof RestablecerRoute
+  AppRoute: typeof AppRouteWithChildren;
+  ActivarRoute: typeof ActivarRoute;
+  LoginRoute: typeof LoginRoute;
+  OlvideContrasenaRoute: typeof OlvideContrasenaRoute;
+  RestablecerRoute: typeof RestablecerRoute;
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/_app': {
-      id: '/_app'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AppRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/_app';
+      path: '';
+      fullPath: '/';
+      preLoaderRoute: typeof AppRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/activar': {
-      id: '/activar'
-      path: '/activar'
-      fullPath: '/activar'
-      preLoaderRoute: typeof ActivarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/activar';
+      path: '/activar';
+      fullPath: '/activar';
+      preLoaderRoute: typeof ActivarRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/login';
+      path: '/login';
+      fullPath: '/login';
+      preLoaderRoute: typeof LoginRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/olvide-contrasena': {
-      id: '/olvide-contrasena'
-      path: '/olvide-contrasena'
-      fullPath: '/olvide-contrasena'
-      preLoaderRoute: typeof OlvideContrasenaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/olvide-contrasena';
+      path: '/olvide-contrasena';
+      fullPath: '/olvide-contrasena';
+      preLoaderRoute: typeof OlvideContrasenaRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/restablecer': {
-      id: '/restablecer'
-      path: '/restablecer'
-      fullPath: '/restablecer'
-      preLoaderRoute: typeof RestablecerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/restablecer';
+      path: '/restablecer';
+      fullPath: '/restablecer';
+      preLoaderRoute: typeof RestablecerRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/_app/': {
-      id: '/_app/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
+      id: '/_app/';
+      path: '/';
+      fullPath: '/';
+      preLoaderRoute: typeof AppIndexRouteImport;
+      parentRoute: typeof AppRoute;
+    };
     '/_app/credenciales': {
-      id: '/_app/credenciales'
-      path: '/credenciales'
-      fullPath: '/credenciales'
-      preLoaderRoute: typeof AppCredencialesRouteImport
-      parentRoute: typeof AppRoute
-    }
+      id: '/_app/credenciales';
+      path: '/credenciales';
+      fullPath: '/credenciales';
+      preLoaderRoute: typeof AppCredencialesRouteImport;
+      parentRoute: typeof AppRoute;
+    };
     '/_app/egresos': {
-      id: '/_app/egresos'
-      path: '/egresos'
-      fullPath: '/egresos'
-      preLoaderRoute: typeof AppEgresosRouteImport
-      parentRoute: typeof AppRoute
-    }
+      id: '/_app/egresos';
+      path: '/egresos';
+      fullPath: '/egresos';
+      preLoaderRoute: typeof AppEgresosRouteImport;
+      parentRoute: typeof AppRoute;
+    };
     '/_app/plataforma': {
-      id: '/_app/plataforma'
-      path: '/plataforma'
-      fullPath: '/plataforma'
-      preLoaderRoute: typeof AppPlataformaRouteRouteImport
-      parentRoute: typeof AppRoute
-    }
+      id: '/_app/plataforma';
+      path: '/plataforma';
+      fullPath: '/plataforma';
+      preLoaderRoute: typeof AppPlataformaRouteRouteImport;
+      parentRoute: typeof AppRoute;
+    };
     '/_app/responsables': {
-      id: '/_app/responsables'
-      path: '/responsables'
-      fullPath: '/responsables'
-      preLoaderRoute: typeof AppResponsablesRouteImport
-      parentRoute: typeof AppRoute
-    }
+      id: '/_app/responsables';
+      path: '/responsables';
+      fullPath: '/responsables';
+      preLoaderRoute: typeof AppResponsablesRouteImport;
+      parentRoute: typeof AppRoute;
+    };
     '/_app/configuracion/categorias': {
-      id: '/_app/configuracion/categorias'
-      path: '/configuracion/categorias'
-      fullPath: '/configuracion/categorias'
-      preLoaderRoute: typeof AppConfiguracionCategoriasRouteImport
-      parentRoute: typeof AppRoute
-    }
+      id: '/_app/configuracion/categorias';
+      path: '/configuracion/categorias';
+      fullPath: '/configuracion/categorias';
+      preLoaderRoute: typeof AppConfiguracionCategoriasRouteImport;
+      parentRoute: typeof AppRoute;
+    };
     '/_app/configuracion/usuarios': {
-      id: '/_app/configuracion/usuarios'
-      path: '/configuracion/usuarios'
-      fullPath: '/configuracion/usuarios'
-      preLoaderRoute: typeof AppConfiguracionUsuariosRouteImport
-      parentRoute: typeof AppRoute
-    }
+      id: '/_app/configuracion/usuarios';
+      path: '/configuracion/usuarios';
+      fullPath: '/configuracion/usuarios';
+      preLoaderRoute: typeof AppConfiguracionUsuariosRouteImport;
+      parentRoute: typeof AppRoute;
+    };
     '/_app/honorarios/': {
-      id: '/_app/honorarios/'
-      path: '/honorarios'
-      fullPath: '/honorarios/'
-      preLoaderRoute: typeof AppHonorariosIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
+      id: '/_app/honorarios/';
+      path: '/honorarios';
+      fullPath: '/honorarios/';
+      preLoaderRoute: typeof AppHonorariosIndexRouteImport;
+      parentRoute: typeof AppRoute;
+    };
     '/_app/honorarios/$id': {
-      id: '/_app/honorarios/$id'
-      path: '/honorarios/$id'
-      fullPath: '/honorarios/$id'
-      preLoaderRoute: typeof AppHonorariosIdRouteImport
-      parentRoute: typeof AppRoute
-    }
+      id: '/_app/honorarios/$id';
+      path: '/honorarios/$id';
+      fullPath: '/honorarios/$id';
+      preLoaderRoute: typeof AppHonorariosIdRouteImport;
+      parentRoute: typeof AppRoute;
+    };
     '/_app/honorarios/nuevo': {
-      id: '/_app/honorarios/nuevo'
-      path: '/honorarios/nuevo'
-      fullPath: '/honorarios/nuevo'
-      preLoaderRoute: typeof AppHonorariosNuevoRouteImport
-      parentRoute: typeof AppRoute
-    }
+      id: '/_app/honorarios/nuevo';
+      path: '/honorarios/nuevo';
+      fullPath: '/honorarios/nuevo';
+      preLoaderRoute: typeof AppHonorariosNuevoRouteImport;
+      parentRoute: typeof AppRoute;
+    };
     '/_app/plataforma/catalogos': {
-      id: '/_app/plataforma/catalogos'
-      path: '/catalogos'
-      fullPath: '/plataforma/catalogos'
-      preLoaderRoute: typeof AppPlataformaCatalogosRouteImport
-      parentRoute: typeof AppPlataformaRouteRoute
-    }
+      id: '/_app/plataforma/catalogos';
+      path: '/catalogos';
+      fullPath: '/plataforma/catalogos';
+      preLoaderRoute: typeof AppPlataformaCatalogosRouteImport;
+      parentRoute: typeof AppPlataformaRouteRoute;
+    };
     '/_app/plataforma/organizaciones': {
-      id: '/_app/plataforma/organizaciones'
-      path: '/organizaciones'
-      fullPath: '/plataforma/organizaciones'
-      preLoaderRoute: typeof AppPlataformaOrganizacionesRouteImport
-      parentRoute: typeof AppPlataformaRouteRoute
-    }
+      id: '/_app/plataforma/organizaciones';
+      path: '/organizaciones';
+      fullPath: '/plataforma/organizaciones';
+      preLoaderRoute: typeof AppPlataformaOrganizacionesRouteImport;
+      parentRoute: typeof AppPlataformaRouteRoute;
+    };
     '/_app/prestadores/': {
-      id: '/_app/prestadores/'
-      path: '/prestadores'
-      fullPath: '/prestadores/'
-      preLoaderRoute: typeof AppPrestadoresIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
+      id: '/_app/prestadores/';
+      path: '/prestadores';
+      fullPath: '/prestadores/';
+      preLoaderRoute: typeof AppPrestadoresIndexRouteImport;
+      parentRoute: typeof AppRoute;
+    };
     '/_app/prestadores/$id': {
-      id: '/_app/prestadores/$id'
-      path: '/prestadores/$id'
-      fullPath: '/prestadores/$id'
-      preLoaderRoute: typeof AppPrestadoresIdRouteImport
-      parentRoute: typeof AppRoute
-    }
+      id: '/_app/prestadores/$id';
+      path: '/prestadores/$id';
+      fullPath: '/prestadores/$id';
+      preLoaderRoute: typeof AppPrestadoresIdRouteImport;
+      parentRoute: typeof AppRoute;
+    };
   }
 }
 
 interface AppPlataformaRouteRouteChildren {
-  AppPlataformaCatalogosRoute: typeof AppPlataformaCatalogosRoute
-  AppPlataformaOrganizacionesRoute: typeof AppPlataformaOrganizacionesRoute
+  AppPlataformaCatalogosRoute: typeof AppPlataformaCatalogosRoute;
+  AppPlataformaOrganizacionesRoute: typeof AppPlataformaOrganizacionesRoute;
 }
 
 const AppPlataformaRouteRouteChildren: AppPlataformaRouteRouteChildren = {
   AppPlataformaCatalogosRoute: AppPlataformaCatalogosRoute,
   AppPlataformaOrganizacionesRoute: AppPlataformaOrganizacionesRoute,
-}
+};
 
-const AppPlataformaRouteRouteWithChildren =
-  AppPlataformaRouteRoute._addFileChildren(AppPlataformaRouteRouteChildren)
+const AppPlataformaRouteRouteWithChildren = AppPlataformaRouteRoute._addFileChildren(
+  AppPlataformaRouteRouteChildren,
+);
 
 interface AppRouteChildren {
-  AppPlataformaRouteRoute: typeof AppPlataformaRouteRouteWithChildren
-  AppCredencialesRoute: typeof AppCredencialesRoute
-  AppEgresosRoute: typeof AppEgresosRoute
-  AppResponsablesRoute: typeof AppResponsablesRoute
-  AppIndexRoute: typeof AppIndexRoute
-  AppConfiguracionCategoriasRoute: typeof AppConfiguracionCategoriasRoute
-  AppConfiguracionUsuariosRoute: typeof AppConfiguracionUsuariosRoute
-  AppHonorariosIdRoute: typeof AppHonorariosIdRoute
-  AppHonorariosNuevoRoute: typeof AppHonorariosNuevoRoute
-  AppPrestadoresIdRoute: typeof AppPrestadoresIdRoute
-  AppHonorariosIndexRoute: typeof AppHonorariosIndexRoute
-  AppPrestadoresIndexRoute: typeof AppPrestadoresIndexRoute
+  AppPlataformaRouteRoute: typeof AppPlataformaRouteRouteWithChildren;
+  AppCredencialesRoute: typeof AppCredencialesRoute;
+  AppEgresosRoute: typeof AppEgresosRoute;
+  AppResponsablesRoute: typeof AppResponsablesRoute;
+  AppIndexRoute: typeof AppIndexRoute;
+  AppConfiguracionCategoriasRoute: typeof AppConfiguracionCategoriasRoute;
+  AppConfiguracionUsuariosRoute: typeof AppConfiguracionUsuariosRoute;
+  AppHonorariosIdRoute: typeof AppHonorariosIdRoute;
+  AppHonorariosNuevoRoute: typeof AppHonorariosNuevoRoute;
+  AppPrestadoresIdRoute: typeof AppPrestadoresIdRoute;
+  AppHonorariosIndexRoute: typeof AppHonorariosIndexRoute;
+  AppPrestadoresIndexRoute: typeof AppPrestadoresIndexRoute;
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -440,9 +438,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppPrestadoresIdRoute: AppPrestadoresIdRoute,
   AppHonorariosIndexRoute: AppHonorariosIndexRoute,
   AppPrestadoresIndexRoute: AppPrestadoresIndexRoute,
-}
+};
 
-const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren);
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
@@ -450,7 +448,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OlvideContrasenaRoute: OlvideContrasenaRoute,
   RestablecerRoute: RestablecerRoute,
-}
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();

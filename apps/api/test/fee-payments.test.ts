@@ -1,4 +1,10 @@
-import type { Contract, ContractOption, FeePayment, ServiceProvider } from '@anderp/shared';
+import {
+  type Contract,
+  type ContractOption,
+  type FeePayment,
+  type ServiceProvider,
+  todayIn,
+} from '@anderp/shared';
 import { and, eq } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DB, type Database } from '../src/db/database.module';
@@ -37,7 +43,7 @@ async function newContract(overrides: Record<string, unknown> = {}): Promise<Con
         endDate: '2026-12-31',
         workAgreement: 'Asesoría',
         paymentFrequency: 'weekly',
-        totalAmount: '1000000.00',
+        monthlyAmount: '1000000.00',
         ...overrides,
       })
       .expect(201)
@@ -140,63 +146,76 @@ describe('Registro', () => {
   });
 });
 
-describe('Saldo del contrato', () => {
-  const contractsOf = async () =>
-    (await api().get(`/service-providers/${contract.serviceProviderId}/contracts`).expect(200))
-      .body as Contract[];
+describe('Monto mensual de referencia (F10)', () => {
+  /** Contratos vigentes en la semana 4 de agosto, con lo pagado en agosto. */
+  const augustOptions = async (excludePayment?: string) =>
+    (
+      await api()
+        .get(
+          `/contracts?overlaps=2026-08-22..2026-08-31${excludePayment ? `&excludePayment=${excludePayment}` : ''}`,
+        )
+        .expect(200)
+    ).body as ContractOption[];
 
-  it('CA-9 y CA-10 rechaza el pago que supera el valor del contrato y no guarda nada', async () => {
+  it('CA-4 un pago que supera el monto mensual se registra', async () => {
     await api()
-      .post('/fee-payments', payment({ days: [day('2026-08-24', '900000.00')] }))
+      .post('/fee-payments', payment({ days: [day('2026-08-24', '1500000.00')] }))
       .expect(201);
-    expect((await contractsOf())[0]).toMatchObject({
-      paidAmount: '900000.00',
-      balance: '100000.00',
+  });
+
+  it('CA-2, CA-3 y CA-6 lo pagado se cuenta por mes trabajado y sin el pago que se edita', async () => {
+    // Semana 4 de agosto pagada el 2 de septiembre: cuenta para agosto.
+    const week4 = (await api().post('/fee-payments', payment()).expect(201)).body as FeePayment;
+    await api()
+      .post('/fee-payments', payment({ weekOfMonth: 1, days: [day('2026-08-03', '100000.00')] }))
+      .expect(201);
+    await api()
+      .post(
+        '/fee-payments',
+        payment({ periodMonth: 9, weekOfMonth: 1, days: [day('2026-09-01', '70000.00')] }),
+      )
+      .expect(201);
+
+    const [august] = await augustOptions();
+    expect(august).toMatchObject({ monthlyAmount: '1000000.00', paidInMonth: '350000.50' });
+    const [withoutWeek4] = await augustOptions(week4.id);
+    expect(withoutWeek4?.paidInMonth).toBe('100000.00');
+
+    const september = (await api().get('/contracts?overlaps=2026-09-01..2026-09-07').expect(200))
+      .body as ContractOption[];
+    expect(september[0]?.paidInMonth).toBe('70000.00');
+  });
+
+  it('CA-5 el contrato vigente trae lo pagado en el mes actual', async () => {
+    const today = todayIn();
+    const firstDay = `${today.slice(0, 8)}01`;
+    const current = await newContract({ startDate: firstDay, endDate: null });
+    await api()
+      .post('/fee-payments', {
+        contractId: current.id,
+        periodYear: Number(today.slice(0, 4)),
+        periodMonth: Number(today.slice(5, 7)),
+        weekOfMonth: 1,
+        paymentDate: today,
+        notes: null,
+        days: [day(firstDay, '80000.00')],
+      })
+      .expect(201);
+    const provider = (
+      await api().get(`/service-providers/${current.serviceProviderId}`).expect(200)
+    ).body as ServiceProvider;
+    expect(provider.activeContract).toMatchObject({
+      monthlyAmount: '1000000.00',
+      paidThisMonth: '80000.00',
     });
-
-    const res = await api()
-      .post('/fee-payments', payment({ weekOfMonth: 1, days: [day('2026-08-03', '100000.01')] }))
-      .expect(422);
-    expect(res.body).toMatchObject({ code: 'CONTRACT_BALANCE_EXCEEDED' });
-    expect((await contractsOf())[0]).toMatchObject({ paidAmount: '900000.00' });
-    const august = (await api().get('/fee-payments?periodYear=2026&periodMonth=8').expect(200))
-      .body as FeePayment[];
-    expect(august).toHaveLength(1);
   });
 
-  it('CA-9 editar un pago tampoco puede superar el valor del contrato', async () => {
-    const created = (await api().post('/fee-payments', payment()).expect(201)).body as FeePayment;
-    const res = await api()
-      .put(`/fee-payments/${created.id}`, payment({ days: [day('2026-08-24', '1000000.01')] }))
-      .expect(422);
-    expect(res.body).toMatchObject({ code: 'CONTRACT_BALANCE_EXCEEDED' });
-    expect(
-      ((await api().get(`/fee-payments/${created.id}`).expect(200)).body as FeePayment).total,
-    ).toBe('250000.50');
-  });
-
-  it('CA-9 dos pagos simultáneos no pueden superar el valor entre ambos', async () => {
-    const [a, b] = await Promise.all([
-      api().post(
-        '/fee-payments',
-        payment({ weekOfMonth: 1, days: [day('2026-08-03', '600000.00')] }),
-      ),
-      api().post(
-        '/fee-payments',
-        payment({ weekOfMonth: 2, days: [day('2026-08-10', '600000.00')] }),
-      ),
-    ]);
-    expect([a.status, b.status].sort()).toEqual([201, 422]);
-    expect((await contractsOf())[0]).toMatchObject({ paidAmount: '600000.00' });
-  });
-
-  it('CA-9 el valor del contrato no baja de lo ya pagado', async () => {
+  it('CA-8 otra organización no ve los contratos ni lo pagado', async () => {
     await api().post('/fee-payments', payment()).expect(201);
-    const res = await api()
-      .patch(`/contracts/${contract.id}`, { totalAmount: '250000.49' })
-      .expect(422);
-    expect(res.body).toMatchObject({ code: 'CONTRACT_BALANCE_EXCEEDED' });
-    await api().patch(`/contracts/${contract.id}`, { totalAmount: '250000.50' }).expect(200);
+    const other = (
+      await as(t, s.orgB.admin.token).get('/contracts?overlaps=2026-08-22..2026-08-31').expect(200)
+    ).body as ContractOption[];
+    expect(other).toEqual([]);
   });
 });
 
@@ -239,7 +258,10 @@ describe('Edición y borrado', () => {
     const contracts = (
       await api().get(`/service-providers/${contract.serviceProviderId}/contracts`).expect(200)
     ).body as Contract[];
-    expect(contracts[0]).toMatchObject({ paidAmount: '0.00', balance: '1000000.00' });
+    expect(contracts[0]).toMatchObject({ monthlyAmount: '1000000.00' });
+    const [august] = (await api().get('/contracts?overlaps=2026-08-22..2026-08-31').expect(200))
+      .body as ContractOption[];
+    expect(august?.paidInMonth).toBe('0.00');
 
     const rows = await db
       .select()

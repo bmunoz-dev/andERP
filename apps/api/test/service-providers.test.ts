@@ -65,7 +65,7 @@ function contractInput(overrides: Record<string, unknown> = {}) {
     endDate: addDays(today(), 30),
     workAgreement: 'Asesoría contable semanal',
     paymentFrequency: 'weekly',
-    totalAmount: '4500000.00',
+    monthlyAmount: '4500000.00',
     ...overrides,
   };
 }
@@ -200,7 +200,7 @@ describe('Prestadores', () => {
     expect(byName.map((p) => p.id)).toEqual([active.id]);
     expect(byName[0]?.activeContract).toMatchObject({
       status: 'active',
-      totalAmount: '4500000.00',
+      monthlyAmount: '4500000.00',
     });
 
     const byDocument = (
@@ -249,7 +249,7 @@ describe('Contratos', () => {
       serviceProviderId: provider.id,
       endDate: null,
       paymentFrequency: 'monthly',
-      totalAmount: '4500000.00',
+      monthlyAmount: '4500000.00',
       status: 'active',
     });
 
@@ -261,9 +261,9 @@ describe('Contratos', () => {
       .expect(422);
     expect(range.body).toMatchObject({ code: 'INVALID_DATE_RANGE' });
 
-    for (const totalAmount of ['0.00', '-10.00', '1500000', 1500000]) {
+    for (const monthlyAmount of ['0.00', '-10.00', '1500000', 1500000]) {
       const res = await api()
-        .post(`/service-providers/${provider.id}/contracts`, contractInput({ totalAmount }))
+        .post(`/service-providers/${provider.id}/contracts`, contractInput({ monthlyAmount }))
         .expect(422);
       expect(res.body).toMatchObject({ code: 'VALIDATION_ERROR' });
     }
@@ -314,13 +314,13 @@ describe('Contratos', () => {
     const updated = (
       await api()
         .patch(`/contracts/${second.id}`, {
-          totalAmount: '5000000.00',
+          monthlyAmount: '5000000.00',
           paymentFrequency: 'biweekly',
         })
         .expect(200)
     ).body as Contract;
     expect(updated).toMatchObject({
-      totalAmount: '5000000.00',
+      monthlyAmount: '5000000.00',
       paymentFrequency: 'biweekly',
       endDate: '2025-12-31',
     });
@@ -334,8 +334,8 @@ describe('Contratos', () => {
 
   it('CA-10 crear, editar y borrar contratos queda en la auditoría con antes y después', async () => {
     const provider = await createProvider();
-    const contract = await createContract(provider.id, { totalAmount: '1000000.00' });
-    await api().patch(`/contracts/${contract.id}`, { totalAmount: '2000000.00' }).expect(200);
+    const contract = await createContract(provider.id, { monthlyAmount: '1000000.00' });
+    await api().patch(`/contracts/${contract.id}`, { monthlyAmount: '2000000.00' }).expect(200);
     await api().delete(`/contracts/${contract.id}`).expect(204);
 
     const rows = await db
@@ -353,7 +353,7 @@ describe('Contratos', () => {
     expect(update).toMatchObject({
       userId: s.orgA.admin.id,
       organizationId: s.orgA.id,
-      changes: { before: { totalAmount: '1000000.00' }, after: { totalAmount: '2000000.00' } },
+      changes: { before: { monthlyAmount: '1000000.00' }, after: { monthlyAmount: '2000000.00' } },
     });
   });
 });
@@ -372,11 +372,11 @@ describe('CA-11 aislamiento entre organizaciones', () => {
     await b.delete(`/service-providers/${provider.id}`).expect(404);
     await b.get(`/service-providers/${provider.id}/contracts`).expect(404);
     await b.post(`/service-providers/${provider.id}/contracts`, contractInput()).expect(404);
-    await b.patch(`/contracts/${contract.id}`, { totalAmount: '1.00' }).expect(404);
+    await b.patch(`/contracts/${contract.id}`, { monthlyAmount: '1.00' }).expect(404);
     await b.delete(`/contracts/${contract.id}`).expect(404);
 
     const intact = (await api().get(`/service-providers/${provider.id}`).expect(200))
       .body as ServiceProvider;
-    expect(intact.activeContract?.totalAmount).toBe('4500000.00');
+    expect(intact.activeContract?.monthlyAmount).toBe('4500000.00');
   });
 });

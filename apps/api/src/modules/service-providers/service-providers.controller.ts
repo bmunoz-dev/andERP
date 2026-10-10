@@ -99,9 +99,15 @@ export class ServiceProvidersController {
 export class ContractsController {
   constructor(private readonly contracts: ContractsService) {}
 
-  /** `?overlaps=YYYY-MM-DD..YYYY-MM-DD`: contratos vigentes en algún día de ese rango (F04 CA-17). */
+  /**
+   * `?overlaps=YYYY-MM-DD..YYYY-MM-DD`: contratos vigentes en algún día de ese rango (F04 CA-17).
+   * `&excludePayment=<id>`: al editar un pago, lo pagado en el mes no lo incluye (F10 CA-6).
+   */
   @Get()
-  overlapping(@Query('overlaps') overlaps?: string): Promise<ContractOption[]> {
+  overlapping(
+    @Query('overlaps') overlaps?: string,
+    @Query('excludePayment', new ParseUUIDPipe({ optional: true })) excludePayment?: string,
+  ): Promise<ContractOption[]> {
     const [start = '', end = ''] = (overlaps ?? '').split('..');
     if (!isIsoDate(start) || !isIsoDate(end) || end < start) {
       throw new DomainError(
@@ -110,7 +116,7 @@ export class ContractsController {
         'overlaps must be YYYY-MM-DD..YYYY-MM-DD',
       );
     }
-    return this.contracts.overlapping(start, end);
+    return this.contracts.overlapping(start, end, excludePayment);
   }
 
   @Patch(':id')

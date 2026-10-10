@@ -26,7 +26,7 @@ const contractForm = z
     // Vacío = contrato sin fecha de fin.
     endDate: z.union([z.literal(''), isoDateSchema]),
     paymentFrequency: paymentFrequencySchema,
-    totalAmount: positiveMoneySchema
+    monthlyAmount: positiveMoneySchema
       .nullable()
       .refine((v) => v !== null, 'Ingresa un valor válido'),
     workAgreement: z.string().trim().min(1, 'Describe el acuerdo de trabajo').max(5000),
@@ -64,7 +64,7 @@ export function ContractFormDialog({
       startDate: contract?.startDate ?? '',
       endDate: contract?.endDate ?? '',
       paymentFrequency: contract?.paymentFrequency ?? 'weekly',
-      totalAmount: contract?.totalAmount ?? null,
+      monthlyAmount: contract?.monthlyAmount ?? null,
       workAgreement: contract?.workAgreement ?? '',
     },
   });
@@ -76,7 +76,7 @@ export function ContractFormDialog({
         startDate: values.startDate,
         endDate: values.endDate === '' ? null : values.endDate,
         paymentFrequency: values.paymentFrequency,
-        totalAmount: values.totalAmount,
+        monthlyAmount: values.monthlyAmount,
         workAgreement: values.workAgreement,
       };
       return contract ? updateContract(contract.id, body) : createContract(providerId, body);
@@ -140,10 +140,10 @@ export function ContractFormDialog({
           )}
         />
         <div className="grid gap-2">
-          <Label htmlFor={amountId}>Valor total del contrato</Label>
+          <Label htmlFor={amountId}>Monto mensual</Label>
           <Controller
             control={form.control}
-            name="totalAmount"
+            name="monthlyAmount"
             render={({ field }) => (
               <MoneyInput
                 id={amountId}
@@ -151,12 +151,12 @@ export function ContractFormDialog({
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
-                aria-invalid={errors.totalAmount ? true : undefined}
+                aria-invalid={errors.monthlyAmount ? true : undefined}
               />
             )}
           />
-          {errors.totalAmount && (
-            <p className="text-sm text-destructive">{errors.totalAmount.message}</p>
+          {errors.monthlyAmount && (
+            <p className="text-sm text-destructive">{errors.monthlyAmount.message}</p>
           )}
         </div>
       </div>

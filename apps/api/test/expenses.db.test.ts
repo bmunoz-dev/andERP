@@ -77,7 +77,7 @@ describe('F05 en la base de datos', () => {
       await sql`insert into service_providers (id, organization_id, name, document_type_id, document_number)
         values (${provider}, ${org}, 'Ana Pérez', ${docType}, '123456')`;
       await sql`insert into provider_contracts
-        (id, organization_id, service_provider_id, start_date, work_agreement, payment_frequency, total_amount)
+        (id, organization_id, service_provider_id, start_date, work_agreement, payment_frequency, monthly_amount)
         values (${contract}, ${org}, ${provider}, '2026-01-01', 'x', 'weekly', '9000000.00')`;
       // Semana 4 de agosto, pagada el 2 de septiembre.
       await sql`insert into fee_payments (id, organization_id, contract_id, period_year, period_month, week_of_month, payment_date)

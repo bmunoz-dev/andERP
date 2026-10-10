@@ -18,7 +18,7 @@ describe('F09 en la base de datos', () => {
 
   const contract = (sql: postgres.Sql, providerId: string, start: string, end: string | null) =>
     sql`insert into provider_contracts
-      (id, organization_id, service_provider_id, start_date, end_date, work_agreement, payment_frequency, total_amount)
+      (id, organization_id, service_provider_id, start_date, end_date, work_agreement, payment_frequency, monthly_amount)
       values (${randomUUID()}, ${org}, ${providerId}, ${start}, ${end}, 'Asesoría', 'weekly', '1000000.00')`;
 
   const setActive = (sql: postgres.Sql, providerId: string, isActive: boolean) =>
