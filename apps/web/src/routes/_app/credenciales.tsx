@@ -109,7 +109,7 @@ function CredentialsPage() {
             <Pencil />
           </Button>
           <Button
-            variant="ghost"
+            variant="destructive-ghost"
             size="icon"
             aria-label="Eliminar credencial"
             onClick={() => {

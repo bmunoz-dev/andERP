@@ -159,7 +159,7 @@ function CategoriesPage() {
               {category.isActive ? 'Desactivar' : 'Activar'}
             </Button>
             <Button
-              variant="ghost"
+              variant="destructive-ghost"
               size="icon"
               aria-label={`Eliminar ${category.name}`}
               onClick={() => {

@@ -15,6 +15,9 @@ const buttonVariants = cva(
           'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
+        // AndERP (F08): acciones de borrar en filas y paneles; el rojo relleno queda para confirmar.
+        'destructive-ghost':
+          'text-destructive hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
