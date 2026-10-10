@@ -49,7 +49,15 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 ## Bloqueos y notas
 
-**Siguiente paso:** F07 (despliegue), en la rama `feat/007-deployment`. Primero las tareas de código (T001–T005, T011, T013, T014); las de cuentas externas (Supabase, Render, Cloudflare, SMTP) las ejecuta el usuario con la guía de los runbooks.
+**Siguiente paso:** cerrar los riesgos abiertos de F07 (abajo) y después F08 (modo oscuro; spec en borrador, sin aprobar).
+
+**Pendiente de F07 (pospuesto por el usuario el 2026-10-09):**
+1. Secretos del environment `production` en GitHub (ya creado, con aprobación de `bmunoz-dev` y solo `main`): `DATABASE_URL_MIGRATIONS` y `RENDER_DEPLOY_HOOK_URL`, con `gh secret set … --env production`. Después crear la variable de repositorio `API_HEALTH_URL=https://anderp-api.onrender.com/api/v1/health`, que activa el despliegue del pipeline.
+2. Render (`anderp-api`): **Auto-Deploy off**, Health Check Path `/api/v1/health` y plan de pago (hoy es free y se duerme).
+3. Rotar `PROXY_SECRET` (el valor actual quedó escrito en un chat): Render y secreto del Worker en Cloudflare a la vez.
+4. Resto de F07: T012 (migración rota a propósito), T013 (primera corrida de Playwright, requiere autorización del navegador), T015 (ensayo de restauración) y T016 (verificación del hito M4).
+
+**Riesgo mientras tanto:** con Auto-Deploy activo y el pipeline sin secretos, Render despliega cada merge a `main` **sin migrar**. No mergear PRs con migraciones hasta cerrar los puntos 1 y 2.
 
 **Decisiones tomadas:** la skill `ponytail` se versiona en el repo (`.agents/`, `skills-lock.json` y una copia real en `.claude/skills/ponytail/`, sin enlace simbólico). No se protege `main`: es un proyecto personal.
 
