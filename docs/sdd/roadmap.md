@@ -13,7 +13,7 @@
 | F06 | [Responsables y credenciales](features/006-credentials/spec.md) | F02 | Aprobado | Aprobado | Hecho |
 | F07 | [Despliegue y endurecimiento](features/007-deployment/spec.md) | F00–F06 | Aprobado | Aprobado | En progreso |
 | F08 | [Modo oscuro](features/008-dark-mode/spec.md) | F00 | Aprobado | Aprobado | Hecho |
-| F09 | [Desactivar prestadores](features/009-provider-deactivation/spec.md) | F03, F04 | Aprobado | Aprobado | En progreso |
+| F09 | [Desactivar prestadores](features/009-provider-deactivation/spec.md) | F03, F04 | Aprobado | Aprobado | Hecho |
 
 F06 solo depende de F02, así que se puede desarrollar en paralelo con F03–F05.
 
@@ -57,6 +57,8 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 2. Render (`anderp-api`): **Auto-Deploy off**, Health Check Path `/api/v1/health` y plan de pago (hoy es free y se duerme).
 3. Rotar `PROXY_SECRET` (el valor actual quedó escrito en un chat): Render y secreto del Worker en Cloudflare a la vez.
 4. Resto de F07: T012 (migración rota a propósito), T013 (primera corrida de Playwright, requiere autorización del navegador), T015 (ensayo de restauración) y T016 (verificación del hito M4).
+
+5. Cloudflare Workers Builds falla en las ramas de PR (vistas previas); `main` despliega bien. Revisar el comando de despliegue de ramas no productivas (`npx wrangler versions upload`) en la configuración del Worker.
 
 **Riesgo mientras tanto:** con Auto-Deploy activo y el pipeline sin secretos, Render despliega cada merge a `main` **sin migrar**. No mergear PRs con migraciones hasta cerrar los puntos 1 y 2.
 
