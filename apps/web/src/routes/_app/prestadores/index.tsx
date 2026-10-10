@@ -22,13 +22,16 @@ const columns: ColumnDef<ServiceProvider>[] = [
     accessorKey: 'name',
     header: 'Prestador',
     cell: ({ row }) => (
-      <Link
-        to="/prestadores/$id"
-        params={{ id: row.original.id }}
-        className="font-medium underline-offset-4 hover:underline"
-      >
-        {row.original.name}
-      </Link>
+      <span className="flex items-center gap-2">
+        <Link
+          to="/prestadores/$id"
+          params={{ id: row.original.id }}
+          className="font-medium underline-offset-4 hover:underline"
+        >
+          {row.original.name}
+        </Link>
+        {!row.original.isActive && <Badge variant="secondary">Inactivo</Badge>}
+      </span>
     ),
   },
   {
