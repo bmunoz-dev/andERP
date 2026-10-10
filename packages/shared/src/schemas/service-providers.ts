@@ -38,7 +38,10 @@ export const createServiceProviderSchema = z.object({
 });
 export type CreateServiceProvider = z.infer<typeof createServiceProviderSchema>;
 
-export const updateServiceProviderSchema = createServiceProviderSchema.partial();
+/** F09: `isActive: false` impide contratos nuevos (lo exige también la base de datos). */
+export const updateServiceProviderSchema = createServiceProviderSchema
+  .partial()
+  .extend({ isActive: z.boolean().optional() });
 export type UpdateServiceProvider = z.infer<typeof updateServiceProviderSchema>;
 
 // ── Contratos ─────────────────────────────────────────────────────────────────────────────
@@ -93,6 +96,7 @@ export const serviceProviderSchema = z.object({
   bank: z.object({ id: z.uuid(), name: z.string() }).nullable(),
   accountType: z.object({ id: z.uuid(), name: z.string() }).nullable(),
   accountNumber: z.string().nullable(),
+  isActive: z.boolean(),
   /** Contrato vigente hoy (en Bogotá), si lo hay. */
   activeContract: contractSchema.nullable(),
 });

@@ -78,6 +78,10 @@ const MESSAGES = {
     'La llave con la que se cifró esta contraseña ya no está configurada. Avisa al administrador.',
   PROXY_MISCONFIGURED:
     'La web no está conectada con el servidor (falta configuración en Cloudflare). Avisa al administrador.',
+  PROVIDER_INACTIVE:
+    'Este prestador está inactivo y no puede recibir contratos nuevos. Actívalo primero.',
+  PROVIDER_HAS_ACTIVE_CONTRACT:
+    'El prestador tiene un contrato vigente o futuro. Ponle una fecha de fin ya cumplida antes de desactivarlo.',
 } satisfies Record<ErrorCode, string>;
 
 const CLIENT_MESSAGES: Record<string, string> = {

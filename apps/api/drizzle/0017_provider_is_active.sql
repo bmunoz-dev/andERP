@@ -1,0 +1,1 @@
+ALTER TABLE "anderp"."service_providers" ADD COLUMN "is_active" boolean DEFAULT true NOT NULL;

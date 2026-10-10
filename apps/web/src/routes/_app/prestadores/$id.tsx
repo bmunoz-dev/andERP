@@ -2,7 +2,7 @@ import { type Contract, formatCOP, PAYMENT_FREQUENCY_LABELS } from '@anderp/shar
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import type { ColumnDef } from '@tanstack/react-table';
-import { ArrowLeft, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Pencil, Plus, Power, PowerOff, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -11,6 +11,7 @@ import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
 import { ContractFormDialog } from '@/components/providers/contract-form-dialog';
 import { ProviderFormDialog } from '@/components/providers/provider-form-dialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { errorMessage } from '@/lib/error-messages.es';
@@ -21,6 +22,7 @@ import {
   getProvider,
   listContracts,
   providerKeys,
+  updateProvider,
 } from '@/lib/providers-api';
 
 export const Route = createFileRoute('/_app/prestadores/$id')({
@@ -40,6 +42,7 @@ function ProviderDetailPage() {
   });
   const [editingProvider, setEditingProvider] = useState(false);
   const [deletingProvider, setDeletingProvider] = useState(false);
+  const [deactivating, setDeactivating] = useState(false);
   const [editingContract, setEditingContract] = useState<ContractEditing>(null);
   const [deletingContract, setDeletingContract] = useState<Contract | null>(null);
 
@@ -52,6 +55,16 @@ function ProviderDetailPage() {
       toast.success('Prestador eliminado');
       await refresh();
       await navigate({ to: '/prestadores' });
+    },
+    onError,
+  });
+
+  // F09: un prestador inactivo no recibe contratos nuevos; los triggers aplican las reglas.
+  const setActive = useMutation({
+    mutationFn: (isActive: boolean) => updateProvider(id, { isActive }),
+    onSuccess: (saved) => {
+      toast.success(saved.isActive ? 'Prestador activado' : 'Prestador desactivado');
+      return refresh();
     },
     onError,
   });
@@ -161,7 +174,12 @@ function ProviderDetailPage() {
         </Link>
       </Button>
       <PageHeader
-        title={p?.name ?? 'Prestador'}
+        title={
+          <span className="flex flex-wrap items-center gap-2">
+            {p?.name ?? 'Prestador'}
+            {p && !p.isActive && <Badge variant="secondary">Inactivo</Badge>}
+          </span>
+        }
         {...(p ? { description: `${p.documentType.code} ${p.documentNumber}` } : {})}
         actions={
           p && (
@@ -174,6 +192,17 @@ function ProviderDetailPage() {
               >
                 <Pencil />
                 Editar
+              </Button>
+              <Button
+                variant="outline"
+                disabled={setActive.isPending}
+                onClick={() => {
+                  if (p.isActive) setDeactivating(true);
+                  else setActive.mutate(true);
+                }}
+              >
+                {p.isActive ? <PowerOff /> : <Power />}
+                {p.isActive ? 'Desactivar' : 'Activar'}
               </Button>
               <Button
                 variant="outline"
@@ -211,15 +240,23 @@ function ProviderDetailPage() {
 
       <div className="mb-4 flex items-center justify-between gap-4">
         <h2 className="text-lg font-semibold">Contratos</h2>
-        <Button
-          onClick={() => {
-            setEditingContract({ contract: null });
-          }}
-        >
-          <Plus />
-          Nuevo contrato
-        </Button>
+        {p?.isActive !== false && (
+          <Button
+            onClick={() => {
+              setEditingContract({ contract: null });
+            }}
+          >
+            <Plus />
+            Nuevo contrato
+          </Button>
+        )}
       </div>
+      {p && !p.isActive && (
+        <p className="mb-4 text-sm text-muted-foreground">
+          Prestador inactivo: no se le pueden crear contratos nuevos. Sus contratos y pagos se
+          conservan, y se pueden registrar pagos atrasados. Actívalo para crear un contrato.
+        </p>
+      )}
       <DataTable
         columns={columns}
         data={contracts.data}
@@ -257,6 +294,17 @@ function ProviderDetailPage() {
         onConfirm={() => {
           removeProvider.mutate();
           setDeletingProvider(false);
+        }}
+      />
+      <ConfirmDialog
+        open={deactivating}
+        onOpenChange={setDeactivating}
+        title={`¿Desactivar a ${p?.name ?? 'este prestador'}?`}
+        description="No se le podrán crear contratos nuevos. Su historial se conserva y se puede volver a activar."
+        confirmLabel="Desactivar"
+        onConfirm={() => {
+          setActive.mutate(false);
+          setDeactivating(false);
         }}
       />
       <ConfirmDialog

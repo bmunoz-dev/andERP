@@ -60,6 +60,9 @@ export const ErrorCode = {
   CREDENTIAL_KEY_UNAVAILABLE: 'CREDENTIAL_KEY_UNAVAILABLE',
   // F07 — despliegue
   PROXY_MISCONFIGURED: 'PROXY_MISCONFIGURED',
+  // F09 — desactivar prestadores
+  PROVIDER_INACTIVE: 'PROVIDER_INACTIVE',
+  PROVIDER_HAS_ACTIVE_CONTRACT: 'PROVIDER_HAS_ACTIVE_CONTRACT',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
