@@ -8,7 +8,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { buttonVariants } from '@/components/ui/button';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -40,7 +39,9 @@ export function ConfirmDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction
-            className={destructive ? buttonVariants({ variant: 'destructive' }) : undefined}
+            // La variante va por prop: AlertDialogAction ya aplica la suya y, con `className`,
+            // Radix concatena ambas clases sin resolver el conflicto de color.
+            variant={destructive ? 'destructive' : 'default'}
             onClick={onConfirm}
           >
             {confirmLabel}
