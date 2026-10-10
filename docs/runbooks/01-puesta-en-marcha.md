@@ -133,7 +133,7 @@ Requisito: la API de Render ya responde (paso 2). Sin ella la web carga, pero no
    ```
 
 3. *Deploy*. Si falla, el log está en el Worker → *Deployments* (o *Builds*) → el último → *View build*.
-4. Secreto del Worker: *Settings → Runtime variables and secrets* (no las de *Build*) → **Add** → tipo **Secret**, nombre `PROXY_SECRET`, el mismo valor de Render → **Save** (se aplica al guardar). `API_ORIGIN` no se carga en el panel: está en `vars` de `wrangler.jsonc` (es la URL pública de la API); si el servicio de Render cambia de nombre, se cambia ahí. Si falta algo, `/api/v1/health` responde `502 PROXY_MISCONFIGURED` con el nombre de la variable.
+4. Secreto del Worker: *Settings → Runtime variables and secrets* (no las de *Build*) → **Add** → tipo **Secret**, nombre `PROXY_SECRET`, el mismo valor de Render → **Save** (se aplica al guardar). `API_ORIGIN` no se carga en el panel: está en `vars` de `wrangler.jsonc` (es la URL pública de la API); si el servicio de Render cambia de nombre, se cambia ahí. Si falta algo, `/api/v1/health` responde `502 PROXY_MISCONFIGURED` con el nombre de la variable. **No crees, edites ni borres `API_ORIGIN` en el panel:** cualquier cambio de variables en el panel publica una versión nueva del Worker que reemplaza la de git (un valor mal escrito da `502 SERVICE_UNAVAILABLE`; borrarla deja el Worker sin ella). Si pasa, *Deployments/Builds* → último build de `main` → **Retry**.
 5. Actualiza `WEB_URL` en Render con la URL del Worker (p. ej. `https://anderp.<tu-subdominio>.workers.dev`); los enlaces de los correos usan esa URL.
 6. Comprueba:
    - `https://<url-del-worker>/api/v1/health` responde `{"status":"ok",...}` (pasa por el proxy);

@@ -52,15 +52,15 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 **Siguiente paso:** cerrar los riesgos abiertos de F07 (abajo).
 
-**Pendiente de F07 (pospuesto por el usuario el 2026-10-09):**
-1. Secretos del environment `production` en GitHub (ya creado, con aprobación de `bmunoz-dev` y solo `main`): `DATABASE_URL_MIGRATIONS` y `RENDER_DEPLOY_HOOK_URL`, con `gh secret set … --env production`. Después crear la variable de repositorio `API_HEALTH_URL=https://anderp-api.onrender.com/api/v1/health`, que activa el despliegue del pipeline.
-2. Render (`anderp-api`): **Auto-Deploy off**, Health Check Path `/api/v1/health` y plan de pago (hoy es free y se duerme).
-3. Rotar `PROXY_SECRET` (el valor actual quedó escrito en un chat): Render y secreto del Worker en Cloudflare a la vez.
-4. Resto de F07: T012 (migración rota a propósito), T013 (primera corrida de Playwright, requiere autorización del navegador), T015 (ensayo de restauración) y T016 (verificación del hito M4).
+**Estado de producción (2026-10-10):**
+- Hecho: pipeline activo (environment `production` con secretos, `API_HEALTH_URL`, Auto-Deploy de Render apagado), correo con Brevo, `PROXY_SECRET` rotado como Secret del Worker, `app_runtime` como único usuario de la API.
+- **Decisión del usuario:** por ahora no se contratan planes de pago. Supabase y Render siguen en Free. Riesgos aceptados: Supabase Free **no tiene backups** y pausa el proyecto tras una semana sin uso; Render Free se duerme (~50 s al despertar).
 
-5. Cloudflare Workers Builds falla en las ramas de PR (vistas previas); `main` despliega bien. Revisar el comando de despliegue de ramas no productivas (`npx wrangler versions upload`) en la configuración del Worker.
-
-**Riesgo mientras tanto:** con Auto-Deploy activo y el pipeline sin secretos, Render despliega cada merge a `main` **sin migrar**. No mergear PRs con migraciones hasta cerrar los puntos 1 y 2.
+**Pendiente de F07:**
+1. Respaldo diario gratuito con GitHub Actions (`pg_dump` cifrado) mientras no haya plan Pro. Propuesto, sin aprobar.
+2. Cloudflare Workers Builds falla en las ramas de PR (vistas previas); `main` despliega bien.
+3. Avisos de Supabase `function_search_path_mutable` en los triggers (migración pequeña).
+4. T012 (migración rota a propósito), T013 (primera corrida de Playwright, requiere autorización del navegador), T015 (ensayo de restauración) y T016 (hito M4).
 
 **Decisiones tomadas:** la skill `ponytail` se versiona en el repo (`.agents/`, `skills-lock.json` y una copia real en `.claude/skills/ponytail/`, sin enlace simbólico). No se protege `main`: es un proyecto personal.
 
