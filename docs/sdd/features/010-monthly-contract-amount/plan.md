@@ -1,6 +1,6 @@
 # F10 — Monto mensual de referencia en los contratos · Plan
 
-- **Estado:** Borrador (pendiente de aprobación)
+- **Estado:** Aprobado
 - **Spec:** [spec.md](spec.md)
 
 ## Datos (una migración escrita a mano)

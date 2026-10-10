@@ -1,6 +1,6 @@
 # F10 — Monto mensual de referencia en los contratos · Spec
 
-- **Estado:** Borrador (pendiente de aprobación)
+- **Estado:** Aprobado
 - **Diseño:** `design.md` §5.5, §5.7
 - **Modifica:** F03 (contratos) y F04 (CA-9 y CA-10)
 
