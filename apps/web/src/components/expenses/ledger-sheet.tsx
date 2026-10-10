@@ -93,7 +93,7 @@ export function LedgerSheet({
                       Editar
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="destructive-ghost"
                       size="sm"
                       onClick={() => {
                         setDeleting(entry);

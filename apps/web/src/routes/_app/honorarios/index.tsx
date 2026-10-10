@@ -76,7 +76,7 @@ function FeePaymentsPage() {
             </Link>
           </Button>
           <Button
-            variant="ghost"
+            variant="destructive-ghost"
             size="icon"
             aria-label="Eliminar pago"
             onClick={() => {

@@ -70,7 +70,7 @@ function ResponsiblesPage() {
             <Pencil />
           </Button>
           <Button
-            variant="ghost"
+            variant="destructive-ghost"
             size="icon"
             aria-label="Eliminar responsable"
             onClick={() => {

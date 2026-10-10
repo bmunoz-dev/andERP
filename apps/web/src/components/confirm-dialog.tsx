@@ -39,9 +39,9 @@ export function ConfirmDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction
-            className={
-              destructive ? 'bg-destructive text-white hover:bg-destructive/90' : undefined
-            }
+            // La variante va por prop: AlertDialogAction ya aplica la suya y, con `className`,
+            // Radix concatena ambas clases sin resolver el conflicto de color.
+            variant={destructive ? 'destructive' : 'default'}
             onClick={onConfirm}
           >
             {confirmLabel}

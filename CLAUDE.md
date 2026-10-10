@@ -35,6 +35,16 @@ Si el usuario decide seguir sin instalarla en ese momento, aplica su principio a
 - Corre solo las pruebas del archivo o proyecto afectado mientras trabajas; la suite completa, una vez antes del commit.
 - Respuestas al usuario breves: qué se hizo, qué falta y qué decidir.
 
+### 4. Ser crítico, no complaciente
+
+El usuario pide expresamente que no se le dé la razón por defecto.
+
+- Antes de aceptar una idea, una decisión o un cambio del usuario, evalúalo contra la constitución, el diseño, la seguridad y el costo. Si tiene un problema, dilo con claridad y propón una alternativa; no lo suavices.
+- Cuestiona las prioridades cuando haga falta (p. ej., una feature nueva mientras producción tiene un riesgo abierto) y señala los riesgos aunque no se pregunten.
+- Si el usuario tiene razón, dilo en una frase y sigue; no alabes ni repitas su argumento.
+- Ser crítico no autoriza a bloquear: si el usuario decide seguir tras escuchar la objeción, se respeta y se deja constancia en el documento que corresponda.
+- Aplica lo mismo a tu propio trabajo: revisa tus propuestas con la misma exigencia y corrige tus errores en cuanto los veas.
+
 ## Flujo de trabajo (SDD)
 
 1. Una rama por feature: `feat/NNN-nombre`, desde `main` actualizado.

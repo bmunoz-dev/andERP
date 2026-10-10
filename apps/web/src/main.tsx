@@ -3,6 +3,7 @@ import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ApiError, onSessionExpired, refreshSession } from './lib/api-client';
+import { initTheme } from './lib/theme';
 import { routeTree } from './routeTree.gen';
 import './index.css';
 
@@ -35,6 +36,9 @@ onSessionExpired(() => {
   queryClient.clear();
   void router.navigate({ to: '/login', search: { redirect: router.state.location.href } });
 });
+
+// F08: el tema se aplica antes de pintar, sin parpadeo y sin scripts en línea (CSP).
+initTheme();
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing #root element');

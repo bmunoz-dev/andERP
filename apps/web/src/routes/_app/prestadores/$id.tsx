@@ -128,7 +128,7 @@ function ProviderDetailPage() {
             <Pencil />
           </Button>
           <Button
-            variant="ghost"
+            variant="destructive-ghost"
             size="icon"
             aria-label="Eliminar contrato"
             onClick={() => {
@@ -177,6 +177,7 @@ function ProviderDetailPage() {
               </Button>
               <Button
                 variant="outline"
+                className="text-destructive hover:text-destructive"
                 onClick={() => {
                   setDeletingProvider(true);
                 }}
