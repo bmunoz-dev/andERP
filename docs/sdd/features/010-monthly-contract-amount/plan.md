@@ -27,3 +27,10 @@ Producción tiene 0 contratos: no hay datos que convertir. En local, los contrat
 ## Despliegue
 
 Primera feature con migración por el pipeline (F07): CI → aprobación → migración → deploy. El renombre rompe la API anterior durante los 2 o 3 minutos entre la migración y el despliegue. Con 0 contratos en producción no hay impacto. Con datos reales se haría en dos pasos (columna nueva y luego borrar la vieja).
+
+## Notas de implementación
+
+- **Snapshot de Drizzle.** La migración 0019 es escrita a mano, así que su snapshot se ajustó a mano: columna `monthly_amount`, su CHECK y la vista `v_contract_month_totals` en lugar de `v_contract_balances` (Drizzle también guarda las vistas `.existing()`). `drizzle-kit generate` confirma "No schema changes".
+- **`paidThisMonth`** se calcula para todos los contratos con un `LEFT JOIN` al mes actual (no solo el vigente): es la misma consulta y evita dos formas de contrato.
+- **`fee-payments.service`**: `lockContract` pasó a `assertContract` sin `FOR UPDATE`; el bloqueo de fila solo existía para el tope de F04.
+- **Pruebas:** la prueba en SQL (T001) se escribió antes de la migración, pero solo se pudo correr al final (Docker estaba cerrado). En la web (T004) la prueba se escribió después del código; para compensar se comprobó que falla si se quita el aviso.
