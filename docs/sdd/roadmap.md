@@ -12,7 +12,7 @@
 | F05 | [Egresos y matriz mensual](features/005-expenses/spec.md) | F02, F04 | Aprobado | Aprobado | Hecho |
 | F06 | [Responsables y credenciales](features/006-credentials/spec.md) | F02 | Aprobado | Aprobado | Hecho |
 | F07 | [Despliegue y endurecimiento](features/007-deployment/spec.md) | F00–F06 | Aprobado | Aprobado | En progreso |
-| F08 | [Modo oscuro](features/008-dark-mode/spec.md) | F00 | Aprobado | Aprobado | En progreso |
+| F08 | [Modo oscuro](features/008-dark-mode/spec.md) | F00 | Aprobado | Aprobado | Hecho |
 
 F06 solo depende de F02, así que se puede desarrollar en paralelo con F03–F05.
 
@@ -49,7 +49,7 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 ## Bloqueos y notas
 
-**Siguiente paso:** F08 (modo oscuro) en `feat/008-dark-mode`; después, cerrar los riesgos abiertos de F07 (abajo). F08 es solo web: no trae migraciones.
+**Siguiente paso:** cerrar los riesgos abiertos de F07 (abajo).
 
 **Pendiente de F07 (pospuesto por el usuario el 2026-10-09):**
 1. Secretos del environment `production` en GitHub (ya creado, con aprobación de `bmunoz-dev` y solo `main`): `DATABASE_URL_MIGRATIONS` y `RENDER_DEPLOY_HOOK_URL`, con `gh secret set … --env production`. Después crear la variable de repositorio `API_HEALTH_URL=https://anderp-api.onrender.com/api/v1/health`, que activa el despliegue del pipeline.
