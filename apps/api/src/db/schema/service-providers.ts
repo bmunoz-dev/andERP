@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  boolean,
   check,
   date,
   foreignKey,
@@ -30,6 +31,8 @@ export const serviceProviders = anderp.table(
     bankId: uuid().references(() => banks.id),
     accountTypeId: uuid().references(() => accountTypes.id),
     accountNumber: varchar({ length: 30 }),
+    /** F09: un prestador inactivo no recibe contratos nuevos. */
+    isActive: boolean().notNull().default(true),
     ...auditColumns,
   },
   (t) => [

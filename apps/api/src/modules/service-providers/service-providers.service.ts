@@ -103,6 +103,7 @@ export class ServiceProvidersService {
         accountTypeId: accountTypes.id,
         accountTypeName: accountTypes.name,
         accountNumber: serviceProviders.accountNumber,
+        isActive: serviceProviders.isActive,
       })
       .from(serviceProviders)
       .innerJoin(documentTypes, eq(documentTypes.id, serviceProviders.documentTypeId))
@@ -141,6 +142,7 @@ export class ServiceProvidersService {
           ? { id: r.accountTypeId, name: r.accountTypeName }
           : null,
       accountNumber: r.accountNumber,
+      isActive: r.isActive,
       activeContract: activeByProvider.get(r.id) ?? null,
     }));
   }
@@ -216,6 +218,8 @@ export class ServiceProvidersService {
             ? { documentNumber: changes.documentNumber }
             : {}),
           ...(changes.description !== undefined ? { description: changes.description } : {}),
+          // F09: las reglas de desactivación las aplica el trigger `service_providers_guard_deactivation`.
+          ...(changes.isActive !== undefined ? { isActive: changes.isActive } : {}),
           ...bankAccount,
         }),
       )

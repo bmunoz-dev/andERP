@@ -26,6 +26,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-08 | La web se publica como **Cloudflare Worker con archivos estáticos** (no Pages). El Worker solo atiende `/api/*` (proxy con `X-Proxy-Secret`); el resto lo sirven los estáticos. | El panel de Cloudflare ya crea Workers por defecto (Workers Builds con `wrangler deploy`) y es su camino recomendado; el comportamiento es el mismo que con la Pages Function. |
 | 2026-10-09 | Invitar a un usuario sin contraseña a otra organización **reemplaza** su invitación pendiente: se borran sus otras membresías pendientes. | La membresía se crea al invitar y el login entra en la más antigua: aceptar la invitación de B dejaba al usuario en A (F02 CA-20). |
 | 2026-10-09 | La web tiene tema **claro, oscuro o del sistema** (F08). La preferencia se guarda en el navegador, no en la cuenta. | Comodidad visual sin tocar la API ni la base de datos; la paleta oscura ya venía con shadcn/ui. |
+| 2026-10-09 | `service_providers.is_active` (F09): un prestador inactivo no recibe contratos nuevos y no se puede desactivar con un contrato vigente o futuro. | Un prestador con pagos no se puede borrar; desactivarlo lo retira sin perder historial ni bloquear pagos atrasados. |
 
 ---
 
@@ -278,6 +279,7 @@ PK `(user_id, organization_id)`.
 | bank_id | uuid FK → banks NULL | |
 | account_type_id | uuid FK → account_types NULL | |
 | account_number | varchar(30) NULL | |
+| is_active | boolean NOT NULL DEFAULT true | F09: inactivo = sin contratos nuevos |
 | audit | | |
 
 - `UNIQUE (organization_id, document_type_id, document_number) WHERE deleted_at IS NULL`.
