@@ -94,12 +94,13 @@ export const feePaymentTotals = anderp
   })
   .existing();
 
-export const contractBalances = anderp
-  .view('v_contract_balances', {
-    contractId: uuid().notNull(),
+/** F10: lo pagado por contrato y mes trabajado (migración `monthly_contract_amount`). */
+export const contractMonthTotals = anderp
+  .view('v_contract_month_totals', {
     organizationId: uuid().notNull(),
-    totalAmount: numeric({ precision: 14, scale: 2 }).notNull(),
+    contractId: uuid().notNull(),
+    periodYear: smallint().notNull(),
+    periodMonth: smallint().notNull(),
     paidAmount: numeric({ precision: 14, scale: 2 }).notNull(),
-    balance: numeric({ precision: 14, scale: 2 }).notNull(),
   })
   .existing();

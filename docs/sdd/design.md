@@ -27,6 +27,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-09 | Invitar a un usuario sin contraseña a otra organización **reemplaza** su invitación pendiente: se borran sus otras membresías pendientes. | La membresía se crea al invitar y el login entra en la más antigua: aceptar la invitación de B dejaba al usuario en A (F02 CA-20). |
 | 2026-10-09 | La web tiene tema **claro, oscuro o del sistema** (F08). La preferencia se guarda en el navegador, no en la cuenta. | Comodidad visual sin tocar la API ni la base de datos; la paleta oscura ya venía con shadcn/ui. |
 | 2026-10-09 | `service_providers.is_active` (F09): un prestador inactivo no recibe contratos nuevos y no se puede desactivar con un contrato vigente o futuro. | Un prestador con pagos no se puede borrar; desactivarlo lo retira sin perder historial ni bloquear pagos atrasados. |
+| 2026-10-10 | El contrato guarda un **monto mensual de referencia** (`monthly_amount`), no un valor total. Lo pagado se agrupa por mes trabajado (`v_contract_month_totals`) y **no se bloquea** ningún pago (F10). **Reemplaza** la decisión del 2026-10-06 (`CONTRACT_BALANCE_EXCEEDED`). | Los prestadores se pactan por mes y el usuario decide cuánto pagar cada mes; un tope total agotaba el contrato en el primer mes. |
 
 ---
 
@@ -295,7 +296,7 @@ PK `(user_id, organization_id)`.
 | end_date | date NULL | NULL = sin fecha de fin |
 | work_agreement | text NOT NULL | acuerdo de trabajo |
 | payment_frequency | payment_frequency NOT NULL | informativo en la v1 |
-| total_amount | numeric(14,2) NOT NULL | `CHECK (total_amount > 0)` |
+| monthly_amount | numeric(14,2) NOT NULL | Monto mensual de referencia (F10). `CHECK (monthly_amount > 0)` |
 | audit | | |
 
 - `CHECK (end_date IS NULL OR end_date >= start_date)`.
@@ -336,7 +337,7 @@ PK `(user_id, organization_id)`.
 **Reglas de dominio (backend):**
 - Un pago de honorarios tiene al menos un día.
 - Al editar un pago, sus días se reemplazan dentro de una transacción.
-- La suma de lo pagado **nunca** puede superar `total_amount` del contrato: se rechaza con `CONTRACT_BALANCE_EXCEEDED`. Para pagar más, primero se aumenta el valor del contrato (una adición). El valor del contrato tampoco puede bajar de lo ya pagado.
+- Lo pagado por mes trabajado se compara con `monthly_amount` solo como referencia: la web avisa si se supera, pero no se bloquea (F10).
 - Los festivos de Colombia se calculan en `packages/shared`; no hay tabla de festivos.
 
 ### 5.6 Egresos
@@ -361,7 +362,7 @@ PK `(user_id, organization_id)`.
 
 **`v_fee_payment_totals`**: por cada `fee_payments` no borrado: `fee_payment_id`, `organization_id`, `contract_id`, `total_amount = SUM(fee_payment_days.amount)`.
 
-**`v_contract_balances`**: por contrato: `contract_id`, `total_amount`, `paid_amount` (suma de pagos no borrados) y `balance = total_amount − paid_amount`.
+**`v_contract_month_totals`** (F10, reemplaza a `v_contract_balances`): por contrato y mes trabajado: `organization_id`, `contract_id`, `period_year`, `period_month`, `paid_amount` (suma de pagos no borrados).
 
 **`v_expense_ledger`**: libro unificado, `UNION ALL` de:
 

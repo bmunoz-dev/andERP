@@ -8,11 +8,11 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, desc, eq, gte, isNull, lte, or } from 'drizzle-orm';
 import { DB, type Database } from '../../db/database.module';
-import { contractBalances, providerContracts, serviceProviders } from '../../db/schema';
+import { contractMonthTotals, providerContracts, serviceProviders } from '../../db/schema';
 import { OrgScope } from '../../shared/db/org-scope';
 import { DomainError } from '../../shared/errors/domain-error';
 import { AUDIT_LOGGER, type AuditLogger } from '../audit/audit.service';
-import { balanceJoin, contractColumns } from './contract-queries';
+import { contractColumns, monthTotalsJoin, paidInMonthSql } from './contract-queries';
 import { ServiceProvidersService } from './service-providers.service';
 
 const notFound = () => new DomainError(ErrorCode.NOT_FOUND, 404);
@@ -24,7 +24,7 @@ function auditable(c: Contract) {
     endDate: c.endDate,
     workAgreement: c.workAgreement,
     paymentFrequency: c.paymentFrequency,
-    totalAmount: c.totalAmount,
+    monthlyAmount: c.monthlyAmount,
   };
 }
 
@@ -47,7 +47,7 @@ export class ContractsService {
     return this.db
       .select(contractColumns(this.providers.today()))
       .from(providerContracts)
-      .innerJoin(contractBalances, balanceJoin)
+      .leftJoin(contractMonthTotals, monthTotalsJoin(this.providers.today()))
       .where(
         and(
           this.scope.where(providerContracts),
@@ -57,14 +57,23 @@ export class ContractsService {
       .orderBy(desc(providerContracts.startDate));
   }
 
-  /** Contratos vigentes en algún día del rango (F04 CA-17): a quién se le puede pagar esa semana. */
-  overlapping(start: string, end: string): Promise<ContractOption[]> {
+  /**
+   * Contratos vigentes en algún día del rango (F04 CA-17): a quién se le puede pagar esa semana.
+   * Con lo ya pagado en el mes de `start` (F10 CA-6), sin contar `excludePayment` si llega.
+   */
+  overlapping(start: string, end: string, excludePayment?: string): Promise<ContractOption[]> {
     return this.db
       .select({
         id: providerContracts.id,
         serviceProvider: { id: serviceProviders.id, name: serviceProviders.name },
         startDate: providerContracts.startDate,
         endDate: providerContracts.endDate,
+        monthlyAmount: providerContracts.monthlyAmount,
+        paidInMonth: paidInMonthSql(
+          Number(start.slice(0, 4)),
+          Number(start.slice(5, 7)),
+          excludePayment,
+        ),
       })
       .from(providerContracts)
       .innerJoin(
@@ -88,7 +97,7 @@ export class ContractsService {
     const [row] = await this.db
       .select(contractColumns(this.providers.today()))
       .from(providerContracts)
-      .innerJoin(contractBalances, balanceJoin)
+      .leftJoin(contractMonthTotals, monthTotalsJoin(this.providers.today()))
       .where(and(this.scope.where(providerContracts), eq(providerContracts.id, id)));
     if (!row) throw notFound();
     return row;
@@ -107,7 +116,7 @@ export class ContractsService {
           endDate: input.endDate ?? null,
           workAgreement: input.workAgreement,
           paymentFrequency: input.paymentFrequency,
-          totalAmount: input.totalAmount,
+          monthlyAmount: input.monthlyAmount,
         }),
       )
       .returning({ id: providerContracts.id });
@@ -140,7 +149,7 @@ export class ContractsService {
           ...(changes.paymentFrequency !== undefined
             ? { paymentFrequency: changes.paymentFrequency }
             : {}),
-          ...(changes.totalAmount !== undefined ? { totalAmount: changes.totalAmount } : {}),
+          ...(changes.monthlyAmount !== undefined ? { monthlyAmount: changes.monthlyAmount } : {}),
         }),
       )
       .where(and(this.scope.where(providerContracts), eq(providerContracts.id, id)));

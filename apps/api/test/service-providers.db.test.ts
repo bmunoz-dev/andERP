@@ -26,7 +26,7 @@ describe('service_providers y provider_contracts en la base de datos', () => {
   ): Promise<string> {
     const id = randomUUID();
     await sql`insert into provider_contracts
-      (id, organization_id, service_provider_id, start_date, end_date, work_agreement, payment_frequency, total_amount)
+      (id, organization_id, service_provider_id, start_date, end_date, work_agreement, payment_frequency, monthly_amount)
       values (${id}, ${orgA}, ${providerId}, ${start}, ${end}, 'Asesoría', 'weekly', '1000000.00')`;
     return id;
   }
@@ -97,9 +97,9 @@ describe('service_providers y provider_contracts en la base de datos', () => {
         const providerId = await provider(sql);
         await expect(
           sql`insert into provider_contracts
-            (organization_id, service_provider_id, id, start_date, work_agreement, payment_frequency, total_amount)
+            (organization_id, service_provider_id, id, start_date, work_agreement, payment_frequency, monthly_amount)
             values (${orgA}, ${providerId}, ${randomUUID()}, '2026-01-01', 'x', 'weekly', 0)`,
-        ).rejects.toThrow(/provider_contracts_total_amount_ck/);
+        ).rejects.toThrow(/provider_contracts_monthly_amount_ck/);
         await expect(contract(sql, providerId, '2026-02-01', '2026-01-31')).rejects.toThrow(
           /provider_contracts_date_range_ck/,
         );

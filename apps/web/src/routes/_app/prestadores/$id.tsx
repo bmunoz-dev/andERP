@@ -94,22 +94,13 @@ function ProviderDetailPage() {
     },
     {
       id: 'amount',
-      header: 'Valor total',
-      cell: ({ row }) => formatCOP(row.original.totalAmount),
+      header: 'Monto mensual',
+      cell: ({ row }) => formatCOP(row.original.monthlyAmount),
     },
     {
       id: 'paid',
-      header: 'Pagado',
-      cell: ({ row }) => formatCOP(row.original.paidAmount),
-    },
-    {
-      id: 'balance',
-      header: 'Saldo',
-      cell: ({ row }) => (
-        <span className={row.original.balance.startsWith('-') ? 'text-destructive' : undefined}>
-          {formatCOP(row.original.balance)}
-        </span>
-      ),
+      header: 'Pagado este mes',
+      cell: ({ row }) => formatCOP(row.original.paidThisMonth),
     },
     {
       id: 'status',

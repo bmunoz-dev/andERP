@@ -65,7 +65,7 @@ export class FeePaymentsService {
     assertValidDays(input, input.days);
 
     const payment = await this.db.transaction(async (tx) => {
-      await this.lockContract(tx, input.contractId);
+      await this.assertContract(tx, input.contractId);
       const [row] = await tx
         .insert(feePayments)
         .values(
@@ -107,7 +107,7 @@ export class FeePaymentsService {
     assertValidDays(input, input.days);
 
     const after = await this.db.transaction(async (tx) => {
-      await this.lockContract(tx, before.contractId);
+      await this.assertContract(tx, before.contractId);
       await tx
         .update(feePayments)
         .set(this.scope.forUpdate({ paymentDate: input.paymentDate, notes: input.notes ?? null }))
@@ -140,17 +140,12 @@ export class FeePaymentsService {
     });
   }
 
-  /**
-   * Bloquea la fila del contrato hasta el fin de la transacción (404 si no es de la organización).
-   * Así dos pagos simultáneos del mismo contrato se serializan, y el trigger diferido
-   * `fee_payment_days_check_balance` ve lo pagado por el otro: juntos no superan el total (CA-9).
-   */
-  private async lockContract(tx: DbExecutor, contractId: string): Promise<void> {
+  /** 404 si el contrato no es de la organización. (F10 quitó el tope: ya no se bloquea la fila.) */
+  private async assertContract(tx: DbExecutor, contractId: string): Promise<void> {
     const [contract] = await tx
       .select({ id: providerContracts.id })
       .from(providerContracts)
-      .where(and(this.scope.where(providerContracts), eq(providerContracts.id, contractId)))
-      .for('update');
+      .where(and(this.scope.where(providerContracts), eq(providerContracts.id, contractId)));
     if (!contract) throw notFound();
   }
 

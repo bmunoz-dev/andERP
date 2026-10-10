@@ -12,7 +12,8 @@ export const feePaymentKeys = {
   all: ['fee-payments'] as const,
   list: (filters: FeePaymentFilters) => ['fee-payments', 'list', filters] as const,
   detail: (id: string) => ['fee-payments', 'detail', id] as const,
-  contracts: (start: string, end: string) => ['contracts', 'overlaps', start, end] as const,
+  contracts: (start: string, end: string, excludePayment?: string) =>
+    ['contracts', 'overlaps', start, end, excludePayment ?? null] as const,
 };
 
 export function listFeePayments(filters: FeePaymentFilters): Promise<FeePayment[]> {
@@ -35,8 +36,11 @@ export const updateFeePayment = (id: string, body: SaveFeePayment) =>
 export const deleteFeePayment = (id: string) =>
   apiFetch<undefined>(`/fee-payments/${id}`, { method: 'DELETE' });
 
-export const listOverlappingContracts = (start: string, end: string) =>
-  apiFetch<ContractOption[]>(`/contracts?overlaps=${start}..${end}`);
+/** F10 CA-6: con `excludePayment`, lo pagado en el mes no cuenta el pago que se está editando. */
+export const listOverlappingContracts = (start: string, end: string, excludePayment?: string) =>
+  apiFetch<ContractOption[]>(
+    `/contracts?overlaps=${start}..${end}${excludePayment ? `&excludePayment=${excludePayment}` : ''}`,
+  );
 
 export const MONTHS = [
   'enero',

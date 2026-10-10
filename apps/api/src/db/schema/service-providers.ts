@@ -62,7 +62,8 @@ export const providerContracts = anderp.table(
     endDate: date({ mode: 'string' }),
     workAgreement: text().notNull(),
     paymentFrequency: paymentFrequency().notNull(),
-    totalAmount: numeric({ precision: 14, scale: 2 }).notNull(),
+    /** F10: monto mensual de referencia; no limita lo que se paga. */
+    monthlyAmount: numeric({ precision: 14, scale: 2 }).notNull(),
     ...auditColumns,
   },
   (t) => [
@@ -73,7 +74,7 @@ export const providerContracts = anderp.table(
       columns: [t.organizationId, t.serviceProviderId],
       foreignColumns: [serviceProviders.organizationId, serviceProviders.id],
     }),
-    check('provider_contracts_total_amount_ck', sql`${t.totalAmount} > 0`),
+    check('provider_contracts_monthly_amount_ck', sql`${t.monthlyAmount} > 0`),
     check(
       'provider_contracts_date_range_ck',
       sql`${t.endDate} is null or ${t.endDate} >= ${t.startDate}`,

@@ -62,8 +62,9 @@ const columns: ColumnDef<ServiceProvider>[] = [
         <div className="flex items-center gap-2">
           <Badge>Vigente</Badge>
           <span className="text-sm">
-            {formatCOP(contract.totalAmount)} ·{' '}
-            {PAYMENT_FREQUENCY_LABELS[contract.paymentFrequency]}
+            {formatCOP(contract.monthlyAmount)}/mes ·{' '}
+            {PAYMENT_FREQUENCY_LABELS[contract.paymentFrequency]} · pagado este mes{' '}
+            {formatCOP(contract.paidThisMonth)}
           </span>
         </div>
       );

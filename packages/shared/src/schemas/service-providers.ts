@@ -64,7 +64,8 @@ export const createContractSchema = z.object({
   endDate: isoDateSchema.nullable().optional(),
   workAgreement: z.string().trim().min(1, 'Describe el acuerdo de trabajo').max(5000),
   paymentFrequency: paymentFrequencySchema,
-  totalAmount: positiveMoneySchema,
+  /** F10: monto mensual de referencia; no limita lo que se paga. */
+  monthlyAmount: positiveMoneySchema,
 });
 export type CreateContract = z.infer<typeof createContractSchema>;
 
@@ -78,12 +79,10 @@ export const contractSchema = z.object({
   endDate: z.string().nullable(),
   workAgreement: z.string(),
   paymentFrequency: paymentFrequencySchema,
-  totalAmount: z.string(),
+  monthlyAmount: z.string(),
   status: contractStatusSchema,
-  /** Suma de los pagos de honorarios del contrato (F04 CA-10). */
-  paidAmount: z.string(),
-  /** totalAmount - paidAmount. Negativo si se pagó de más. */
-  balance: z.string(),
+  /** F10 CA-5: lo pagado en el mes trabajado actual (Bogotá). Puede superar `monthlyAmount`. */
+  paidThisMonth: z.string(),
 });
 export type Contract = z.infer<typeof contractSchema>;
 

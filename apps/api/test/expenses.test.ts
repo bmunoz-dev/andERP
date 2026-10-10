@@ -56,7 +56,7 @@ async function createFeePayment(): Promise<FeePayment> {
         endDate: '2026-12-31',
         workAgreement: 'Asesoría',
         paymentFrequency: 'weekly',
-        totalAmount: '1000000.00',
+        monthlyAmount: '1000000.00',
       })
       .expect(201)
   ).body as Contract;

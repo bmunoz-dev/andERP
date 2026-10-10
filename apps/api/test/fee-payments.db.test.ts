@@ -15,7 +15,7 @@ describe('fee_payments en la base de datos', () => {
     await sql`insert into service_providers (id, organization_id, name, document_type_id, document_number)
       values (${provider}, ${org}, 'Ana', ${docType}, ${provider.slice(0, 12)})`;
     await sql`insert into provider_contracts
-      (id, organization_id, service_provider_id, start_date, end_date, work_agreement, payment_frequency, total_amount)
+      (id, organization_id, service_provider_id, start_date, end_date, work_agreement, payment_frequency, monthly_amount)
       values (${id}, ${org}, ${provider}, ${start}, ${end}, 'x', 'weekly', '1000.00')`;
     return id;
   }
@@ -114,7 +114,7 @@ describe('fee_payments en la base de datos', () => {
       await expect(
         sql`update provider_contracts set start_date = '2026-06-11' where id = ${c}`,
       ).rejects.toThrow('CONTRACT_DATES_EXCLUDE_PAYMENTS');
-      await sql`update provider_contracts set end_date = '2026-06-15', total_amount = '2000.00' where id = ${c}`;
+      await sql`update provider_contracts set end_date = '2026-06-15', monthly_amount = '2000.00' where id = ${c}`;
 
       // Con el pago borrado, el contrato ya se puede borrar.
       await sql`update fee_payments set deleted_at = now() where id = ${p.id}`;
@@ -122,57 +122,16 @@ describe('fee_payments en la base de datos', () => {
     });
   });
 
-  it('CA-9 y CA-10 las vistas suman los pagos vigentes y calculan el saldo', async () => {
+  // F10 reemplazó el saldo y el tope del contrato (CA-9 y CA-10 de F04): ver monthly-amount.db.test.ts.
+  it('v_fee_payment_totals suma los días de cada pago', async () => {
     await withRuntimeSql(async (sql) => {
       const c = await contract(sql, '2026-07-01', null);
-      const [empty] = await sql<{ paid_amount: string; balance: string }[]>`
-        select paid_amount::text, balance::text from v_contract_balances where contract_id = ${c}`;
-      expect(empty).toEqual({ paid_amount: '0.00', balance: '1000.00' });
-
       const p1 = await payment(sql, c, 2026, 7, 1);
       await day(sql, p1.id, '2026-07-01', '400.00');
       await day(sql, p1.id, '2026-07-02', '350.50');
-      const p2 = await payment(sql, c, 2026, 7, 2);
-      await day(sql, p2.id, '2026-07-08', '249.50');
-
       const [total] = await sql<{ total_amount: string }[]>`
         select total_amount::text from v_fee_payment_totals where fee_payment_id = ${p1.id}`;
       expect(total?.total_amount).toBe('750.50');
-
-      const [full] = await sql<{ paid_amount: string; balance: string }[]>`
-        select paid_amount::text, balance::text from v_contract_balances where contract_id = ${c}`;
-      expect(full).toEqual({ paid_amount: '1000.00', balance: '0.00' });
-
-      await sql`update fee_payments set deleted_at = now() where id = ${p2.id}`;
-      const [after] = await sql<{ balance: string }[]>`
-        select balance::text from v_contract_balances where contract_id = ${c}`;
-      expect(after?.balance).toBe('249.50');
-    });
-  });
-
-  it('CA-9 lo pagado nunca supera el valor del contrato (trigger diferido)', async () => {
-    await withRuntimeSql(async (sql) => {
-      const c = await contract(sql, '2026-10-01', null);
-      const p = await payment(sql, c, 2026, 10, 1);
-      await day(sql, p.id, '2026-10-01', '1000.00');
-      await expect(day(sql, p.id, '2026-10-02', '0.01')).rejects.toThrow(
-        'CONTRACT_BALANCE_EXCEEDED',
-      );
-      await expect(
-        sql`update fee_payment_days set amount = '1000.01' where fee_payment_id = ${p.id}`,
-      ).rejects.toThrow('CONTRACT_BALANCE_EXCEEDED');
-    });
-  });
-
-  it('CA-9 el valor del contrato no baja de lo ya pagado', async () => {
-    await withRuntimeSql(async (sql) => {
-      const c = await contract(sql, '2026-11-01', null);
-      const p = await payment(sql, c, 2026, 11, 1);
-      await day(sql, p.id, '2026-11-02', '600.00');
-      await expect(
-        sql`update provider_contracts set total_amount = '599.99' where id = ${c}`,
-      ).rejects.toThrow('CONTRACT_BALANCE_EXCEEDED');
-      await sql`update provider_contracts set total_amount = '600.00' where id = ${c}`;
     });
   });
 });

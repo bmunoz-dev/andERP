@@ -1,4 +1,11 @@
-import { type FeePayment, todayIn, weekOfMonth, weekRange } from '@anderp/shared';
+import {
+  type FeePayment,
+  formatCOP,
+  sumMoney,
+  todayIn,
+  weekOfMonth,
+  weekRange,
+} from '@anderp/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -54,12 +61,24 @@ export function FeePaymentForm({
   const range = validYear ? weekRange(year, month, week) : null;
 
   const contracts = useQuery({
-    queryKey: feePaymentKeys.contracts(range?.start ?? '', range?.end ?? ''),
-    queryFn: () => listOverlappingContracts(range?.start ?? '', range?.end ?? ''),
+    queryKey: feePaymentKeys.contracts(range?.start ?? '', range?.end ?? '', payment?.id),
+    queryFn: () => listOverlappingContracts(range?.start ?? '', range?.end ?? '', payment?.id),
     enabled: range !== null,
   });
   const contract = contracts.data?.find((c) => c.id === contractId);
   const noContracts = !editing && contracts.data?.length === 0;
+
+  // F10 CA-9: lo pagado en el mes trabajado, contando este pago. Solo una vista previa: la API
+  // suma en SQL. Superar el monto mensual avisa, no bloquea.
+  const thisPayment = range
+    ? Object.entries(days).flatMap(([workDate, d]) =>
+        d.amount && workDate >= range.start && workDate <= range.end ? [d.amount] : [],
+      )
+    : [];
+  const paidInMonth = contract ? sumMoney([contract.paidInMonth, ...thisPayment]) : null;
+  const overBy =
+    contract && paidInMonth ? sumMoney([paidInMonth, `-${contract.monthlyAmount}`]) : null;
+  const exceeds = overBy !== null && !overBy.startsWith('-') && overBy !== '0.00';
 
   const save = useMutation({
     mutationFn: () => {
@@ -175,6 +194,23 @@ export function FeePaymentForm({
           El contrato y la semana de un pago no se cambian. Para corregirlos, elimina el pago y
           créalo de nuevo.
         </p>
+      )}
+
+      {contract && paidInMonth && (
+        <div className="-mt-2 grid gap-2 text-sm" data-testid="month-summary">
+          <p>
+            Pagado en {MONTHS[month - 1]}: <strong>{formatCOP(paidInMonth)}</strong> de{' '}
+            {formatCOP(contract.monthlyAmount)} (monto mensual del contrato)
+          </p>
+          {exceeds && overBy && (
+            <Alert className="border-amber-500/50 text-amber-700 dark:text-amber-400">
+              <AlertDescription className="text-inherit">
+                Supera el monto mensual en {formatCOP(overBy)}. Puedes registrarlo igual si así se
+                acordó.
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
       )}
 
       {range && contract && (
