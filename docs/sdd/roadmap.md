@@ -12,6 +12,7 @@
 | F05 | [Egresos y matriz mensual](features/005-expenses/spec.md) | F02, F04 | Aprobado | Aprobado | Hecho |
 | F06 | [Responsables y credenciales](features/006-credentials/spec.md) | F02 | Aprobado | Aprobado | Hecho |
 | F07 | [Despliegue y endurecimiento](features/007-deployment/spec.md) | F00–F06 | Aprobado | Aprobado | En progreso |
+| F08 | [Modo oscuro](features/008-dark-mode/spec.md) | F00 | Borrador | — | Pendiente |
 
 F06 solo depende de F02, así que se puede desarrollar en paralelo con F03–F05.
 
