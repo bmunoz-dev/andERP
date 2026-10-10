@@ -11,4 +11,4 @@
       Depende de: F10-T002 · Verificación: CA-1–CA-8
 - [x] F10-T004 [TDD] Web: resumen y aviso en el formulario de pago; ficha, listado y formulario de contrato.
       Depende de: F10-T003 · Verificación: CA-9, CA-10
-- [ ] F10-T005 Verificación manual del usuario y `roadmap.md`. (`design.md` y F04 se actualizaron al aprobar la spec.)
+- [x] F10-T005 Verificación manual del usuario y `roadmap.md`. (`design.md` y F04 se actualizaron al aprobar la spec.)
