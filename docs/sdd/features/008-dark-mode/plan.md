@@ -23,3 +23,7 @@ shadcn/ui ya define la paleta oscura (bloque `.dark` en `index.css`) y la varian
 ## Contraste (CA-6)
 
 Fuera de `components/ui`, el único color fijo es `text-white` sobre el botón destructivo de `confirm-dialog`, válido en ambos temas. Se revisa a mano en el navegador (con autorización) la matriz, la cuadrícula de honorarios y las insignias.
+
+## Notas de implementación
+
+- **Botones rojos (CA-6).** En oscuro, `--destructive` es un rojo claro pensado para *texto* rojo sobre fondo oscuro (6.2:1). Los botones le ponían texto blanco encima: 2.9:1 en la confirmación de borrado y 4.35:1 en la variante de shadcn (`dark:bg-destructive/60`), ambos bajo AA. Se agregó `--destructive-solid` (red-700, igual en ambos temas; blanco encima 6.4:1) para el fondo de la variante `destructive`, y `ConfirmDialog` usa `buttonVariants({ variant: 'destructive' })` en lugar de repetir clases. El texto rojo (`text-destructive`) no cambia.
