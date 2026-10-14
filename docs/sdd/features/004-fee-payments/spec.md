@@ -1,11 +1,13 @@
 # F04 — Pagos de honorarios · Spec
 
 - **Estado:** Aprobado
-- **Diseño:** `design.md` §2 (decisiones 4, 8, 9 y 11), §5.5 (`fee_payments`, `fee_payment_days`), §5.7 (`v_fee_payment_totals`, `v_contract_balances`)
+- **Diseño:** `design.md` §2 (decisiones 4, 8, 9 y 11), §5.5 (`fee_payments`, `fee_payment_days`), §5.7 (`v_fee_payment_totals`, `v_contract_month_totals`; antes `v_contract_balances`)
+
+> **Modificado por [F10](../010-monthly-contract-amount/spec.md) (2026-10-10):** el contrato ya no tiene valor total ni saldo, sino un monto mensual de referencia (`monthly_amount`). Lo pagado se agrupa por mes trabajado (`v_contract_month_totals`) y no se bloquea ningún pago. Las partes de este documento sobre saldo, `v_contract_balances` y `CONTRACT_BALANCE_EXCEEDED` quedan como historial y están marcadas con *(Reemplazado por F10)*.
 
 ## Objetivo
 
-Registrar el pago semanal de honorarios de un contrato, con un valor por cada fecha trabajada dentro de la semana (formato B), y controlar el saldo del contrato.
+Registrar el pago semanal de honorarios de un contrato, con un valor por cada fecha trabajada dentro de la semana (formato B). Lo pagado se compara con el monto mensual de referencia del contrato (F10; antes se controlaba el saldo del contrato).
 
 ## Historias
 
@@ -53,7 +55,7 @@ Registrar el pago semanal de honorarios de un contrato, con un valor por cada fe
     3. una cuadrícula con **una columna por cada fecha del rango** (día de la semana + `dd/mm`, marca de festivo, `MoneyInput`); los días fuera del contrato quedan deshabilitados; un día vacío no se envía;
     4. fecha de pago y notas;
     5. el total se muestra en vivo.
-  - Si hay advertencia de saldo, se muestra un aviso.
+  - Si hay advertencia de saldo, se muestra un aviso. *(Reemplazado por F10: "Pagado en {mes}: $X de $Y" y aviso en ámbar si se supera; ver F10 CA-9.)*
 
 ## Fuera de alcance
 

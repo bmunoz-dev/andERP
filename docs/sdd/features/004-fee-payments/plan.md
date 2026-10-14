@@ -3,6 +3,8 @@
 - **Estado:** Aprobado
 - **Spec:** [spec.md](spec.md)
 
+> **Modificado por [F10](../010-monthly-contract-amount/spec.md) (2026-10-10):** el contrato ya no tiene valor total ni saldo, sino un monto mensual de referencia (`monthly_amount`). Lo pagado se agrupa por mes trabajado (`v_contract_month_totals`) y no se bloquea ningún pago. Las partes de este documento sobre saldo, `v_contract_balances` y `CONTRACT_BALANCE_EXCEEDED` quedan como historial y están marcadas con *(Reemplazado por F10)*.
+
 ## Migraciones
 
 1. **`0007_fee_payments` (generada y revisada a mano):**
@@ -24,7 +26,7 @@
      - si cambian las fechas y algún día pagado queda fuera → `CONTRACT_DATES_EXCLUDE_PAYMENTS`.
 3. **`0009_fee_payment_views` (custom):**
    - `v_fee_payment_totals`: pagos no borrados, con `SUM(days.amount)` (`COALESCE` a 0).
-   - `v_contract_balances`: contratos no borrados, con `paid_amount = COALESCE(SUM(v_fee_payment_totals.total_amount), 0)` y `balance = total_amount - paid_amount`.
+   - *(Reemplazado por F10)* `v_contract_balances`: contratos no borrados, con `paid_amount = COALESCE(SUM(v_fee_payment_totals.total_amount), 0)` y `balance = total_amount - paid_amount`.
    - Ambas vistas con `security_invoker = true` y `GRANT SELECT` a `app_runtime`.
 
 ## Módulo `fee-payments` (hexagonal)
@@ -60,7 +62,7 @@ modules/fee-payments/
 1. carga el contrato;
 2. construye el agregado;
 3. lo persiste (cabecera + `DELETE` e `INSERT` de los días);
-4. lee `v_contract_balances` dentro de la misma transacción;
+4. lee `v_contract_balances` dentro de la misma transacción; *(Reemplazado por F10)*
 5. registra la auditoría;
 6. devuelve el pago y sus `warnings`.
 
@@ -68,7 +70,7 @@ modules/fee-payments/
 - **Errores de triggers:** vuelven como `P0001` y el mapper los traduce al mismo `code` que el dominio. La API responde igual lo detecte quien lo detecte.
 - **Ampliaciones de F03:**
   - `contracts.service` valida `CONTRACT_HAS_PAYMENTS` y `CONTRACT_DATES_EXCLUDE_PAYMENTS` antes de escribir (el trigger queda como respaldo);
-  - la consulta de contratos agrega `paidAmount` y `balance` desde `v_contract_balances`;
+  - la consulta de contratos agrega `paidAmount` y `balance` desde `v_contract_balances`; *(Reemplazado por F10)*
   - nuevo endpoint `GET /contracts?overlaps=`.
 - **`@anderp/shared/money.ts`:** se agrega `sumMoney(values: Money[]): Money` con centavos en `BigInt`, para el total en vivo de la web.
 
@@ -86,7 +88,7 @@ modules/fee-payments/
 - `honorarios/nuevo.tsx` y `honorarios/$id.tsx`: comparten el componente `FeePaymentForm`.
 - `WeekGrid`: recibe `periodStart`/`periodEnd` (calculados en el cliente con `weekRange`) y el rango del contrato. Muestra entre 7 y 10 columnas con desplazamiento horizontal en móvil.
 - El total en vivo usa `sumMoney`.
-- El aviso de saldo usa un `Alert` de shadcn.
+- El aviso de saldo usa un `Alert` de shadcn. *(Reemplazado por F10: ahora avisa si lo pagado en el mes supera el monto mensual.)*
 
 ## Notas de implementación
 
@@ -96,7 +98,7 @@ modules/fee-payments/
   - las reglas que necesitan datos de otras tablas (día dentro del contrato, periodo inmutable, contrato con pagos, fechas que excluyen días pagados) viven solo en triggers, que devuelven el mismo `code` que la API.
 - **F03 no duplica las reglas `CONTRACT_HAS_PAYMENTS` ni `CONTRACT_DATES_EXCLUDE_PAYMENTS` en el servicio:** las aplica el trigger `provider_contracts_protect_payments` y el mapper las traduce a 422.
 - **PUT recibe el cuerpo completo** (el mismo esquema que el alta). Si el contrato o el periodo difieren, responde `FEE_PAYMENT_PERIOD_IMMUTABLE` antes de tocar nada.
-- **Saldo (cambio del 2026-10-06, CA-9):** un pago que haga superar el valor del contrato se **rechaza** con `CONTRACT_BALANCE_EXCEEDED`; antes solo se avisaba. Cómo se garantiza:
+- *(Reemplazado por F10: la migración `0019_monthly_contract_amount` borró los dos triggers y la vista.)* **Saldo (cambio del 2026-10-06, CA-9):** un pago que haga superar el valor del contrato se **rechaza** con `CONTRACT_BALANCE_EXCEEDED`; antes solo se avisaba. Cómo se garantiza:
   - el trigger diferido `fee_payment_days_check_balance` revisa el saldo al confirmar la transacción, cuando ya están todos los días;
   - el guardado bloquea la fila del contrato (`SELECT … FOR UPDATE`), así dos pagos simultáneos se serializan y el segundo ve lo pagado por el primero;
   - el trigger `provider_contracts_check_total` impide bajar el valor del contrato por debajo de lo ya pagado.
@@ -107,4 +109,4 @@ modules/fee-payments/
 - **Web — festivos:** cada día de la cuadrícula tiene una casilla "Festivo", marcada por defecto si `isColombianHoliday`. El usuario puede cambiarla (CA-8) y se guarda tal como queda.
 - **Web — edición:** al editar un pago, año, mes, semana y prestador quedan deshabilitados; el formulario explica que para cambiarlos hay que borrar el pago y crearlo de nuevo.
 - **Web — pruebas:** `testTimeout` de 20 s en la web, porque jsdom se vuelve lento cuando corre junto a las pruebas de la API.
-- **Verificación manual (T023):** la hizo el usuario en su navegador, incluido el rechazo de un pago que supera el valor del contrato, y confirmó que funciona.
+- **Verificación manual (T023):** la hizo el usuario en su navegador, incluido el rechazo de un pago que supera el valor del contrato, y confirmó que funciona. (Ese rechazo ya no existe desde F10.)
