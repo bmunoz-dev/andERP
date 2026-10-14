@@ -49,4 +49,5 @@ Las pruebas de auditoría de cada módulo y la de concurrencia del CA-9 de F11 s
 
 ## Notas de implementación
 
-(Se completan durante la implementación.)
+- **T001:** la falla de la auditoría se simula con un trigger de prueba (`anderp.test_fail_audit`, `BEFORE INSERT` en `audit_logs`) que lanza `XX000` solo para la acción indicada, en lugar del `CHECK` que proponía este plan: el mapeador de errores convierte una violación de `CHECK` en `422`, y lo que se quiere probar es un fallo real (`500`). La función se crea en `beforeAll` y el trigger se quita en `afterEach`.
+- **T001:** la verificación de "reenviar la invitación" cuenta las filas de `password_resets` del usuario: si el reenvío no se confirmó, sigue habiendo un solo token y sin usar.

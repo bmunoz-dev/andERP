@@ -5,7 +5,7 @@
 
 ## Bloque A — Base
 
-- [ ] F12-T001 [TDD] Escribir `test/audit-atomicity.test.ts` con un caso por operación del CA-2 y verlo fallar. Agregar el parámetro `db?: DbExecutor` a `AuditLogger.log` y a `AuditService`.
+- [x] F12-T001 [TDD] Escribir `test/audit-atomicity.test.ts` con un caso por operación del CA-2 y verlo fallar. Agregar el parámetro `db?: DbExecutor` a `AuditLogger.log` y a `AuditService`.
       Archivos: `apps/api/test/audit-atomicity.test.ts`, `apps/api/src/modules/audit/audit.service.ts`
       Verificación: CA-1
 
