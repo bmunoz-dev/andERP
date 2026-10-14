@@ -1,6 +1,6 @@
 # F12 — Auditoría atómica · Spec
 
-- **Estado:** En revisión
+- **Estado:** Aprobado
 - **Diseño:** `design.md` §5.9 (auditoría)
 - **Depende de:** F01 (servicio de auditoría) y los módulos que auditan cambios (F02–F06, F11)
 

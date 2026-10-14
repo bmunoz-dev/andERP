@@ -1,6 +1,6 @@
 # F12 — Auditoría atómica · Plan
 
-- **Estado:** En revisión
+- **Estado:** Aprobado
 - **Spec:** [spec.md](spec.md)
 
 ## Interfaz
