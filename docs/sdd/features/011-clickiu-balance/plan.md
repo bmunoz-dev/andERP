@@ -18,7 +18,7 @@
      1. `PERFORM pg_advisory_xact_lock(hashtextextended(NEW.organization_id::text, 0))`;
      2. si `balance < 0` en `v_clickiu_balance` para esa organización → `RAISE 'CLICKIU_INSUFFICIENT_BALANCE'`.
 
-     Corre en cada cambio, aunque no pueda bajar el saldo (cambio de estado o borrado de una venta): es una suma indexada y evita una regla que decida cuándo revisar. El bloqueo se toma antes de leer, y en `READ COMMITTED` la lectura siguiente ya ve lo confirmado por la otra transacción: así dos ventas simultáneas se validan en serie (CA-9). La API no usa `REPEATABLE READ`; si algún día lo hiciera, esta regla tendría que revisarse.
+     Corre en cada cambio, aunque no pueda bajar el saldo (cambio de estado o borrado de una venta): es una suma indexada y evita una regla que decida cuándo revisar. El bloqueo se toma antes de leer, y en `READ COMMITTED` la lectura siguiente ya ve lo confirmado por la otra transacción: así dos ventas simultáneas se validan en serie (CA-9). La API no usa `REPEATABLE READ`, y desde la migración 0023 la regla lo rechaza con `25000`: en ese nivel la lectura no vería lo confirmado por la otra transacción. `SERIALIZABLE` es segura porque Postgres aborta una de las dos con `40001`.
 
    - Las dos funciones con `SET search_path = ''` y nombres calificados (`anderp.…`), para no sumar avisos `function_search_path_mutable` de Supabase (pendiente 3 de F07).
    - `GRANT SELECT` de la vista a `app_runtime` si los privilegios por defecto no la cubren (se verifica en T001, que corre con ese rol).

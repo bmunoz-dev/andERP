@@ -162,6 +162,13 @@
       "when": 1791981054068,
       "tag": "0022_clickiu_lock_namespace",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791997159389,
+      "tag": "0023_clickiu_isolation_guard",
+      "breakpoints": true
     }
   ]
 }
