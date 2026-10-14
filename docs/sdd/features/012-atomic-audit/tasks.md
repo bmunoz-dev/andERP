@@ -11,7 +11,7 @@
 
 ## Bloque B — Servicios
 
-- [ ] F12-T002 `clickiu` y `expenses`: create, update y remove en una transacción con su auditoría.
+- [x] F12-T002 `clickiu` y `expenses`: create, update y remove en una transacción con su auditoría.
       Depende de: F12-T001 · Verificación: CA-1, CA-2, CA-5
 - [ ] F12-T003 `fee-payments` y `contracts`: igual que T002.
       Depende de: F12-T001 · Verificación: CA-1, CA-2, CA-5
