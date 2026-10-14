@@ -166,10 +166,13 @@ export class ClickiuService {
   async remove(id: string): Promise<void> {
     await this.db.transaction(async (tx) => {
       const before = await this.get(id, tx);
-      await tx
+      // Si otro borrado confirmó primero, la fila ya no cumple el WHERE: 404 y sin auditoría.
+      const [row] = await tx
         .update(m)
         .set(this.scope.forSoftDelete())
-        .where(and(this.scope.where(m), eq(m.id, id)));
+        .where(and(this.scope.where(m), eq(m.id, id)))
+        .returning({ id: m.id });
+      if (!row) throw notFound();
       await this.audit.log(
         {
           action: 'clickiu_movement.delete',
