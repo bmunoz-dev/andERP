@@ -64,7 +64,7 @@ export class FeePaymentsService {
   async create(input: SaveFeePayment): Promise<FeePayment> {
     assertValidDays(input, input.days);
 
-    const payment = await this.db.transaction(async (tx) => {
+    return this.db.transaction(async (tx) => {
       await this.assertContract(tx, input.contractId);
       const [row] = await tx
         .insert(feePayments)
@@ -81,32 +81,34 @@ export class FeePaymentsService {
         .returning({ id: feePayments.id });
       if (!row) throw new Error('Insert returned no rows');
       await this.insertDays(tx, row.id, input);
-      return this.get(row.id, tx);
+      const payment = await this.get(row.id, tx);
+      await this.audit.log(
+        {
+          action: 'fee_payment.create',
+          entityType: 'fee_payment',
+          entityId: payment.id,
+          changes: { after: auditable(payment) },
+        },
+        tx,
+      );
+      return payment;
     });
-
-    await this.audit.log({
-      action: 'fee_payment.create',
-      entityType: 'fee_payment',
-      entityId: payment.id,
-      changes: { after: auditable(payment) },
-    });
-    return payment;
   }
 
   /** Reemplaza fecha de pago, notas y días. Contrato y periodo no cambian (CA-11). */
   async update(id: string, input: SaveFeePayment): Promise<FeePayment> {
-    const before = await this.get(id);
-    if (
-      input.contractId !== before.contractId ||
-      input.periodYear !== before.periodYear ||
-      input.periodMonth !== before.periodMonth ||
-      input.weekOfMonth !== before.weekOfMonth
-    ) {
-      throw new DomainError(ErrorCode.FEE_PAYMENT_PERIOD_IMMUTABLE, 422);
-    }
-    assertValidDays(input, input.days);
+    return this.db.transaction(async (tx) => {
+      const before = await this.get(id, tx);
+      if (
+        input.contractId !== before.contractId ||
+        input.periodYear !== before.periodYear ||
+        input.periodMonth !== before.periodMonth ||
+        input.weekOfMonth !== before.weekOfMonth
+      ) {
+        throw new DomainError(ErrorCode.FEE_PAYMENT_PERIOD_IMMUTABLE, 422);
+      }
+      assertValidDays(input, input.days);
 
-    const after = await this.db.transaction(async (tx) => {
       await this.assertContract(tx, before.contractId);
       await tx
         .update(feePayments)
@@ -114,29 +116,36 @@ export class FeePaymentsService {
         .where(and(this.scope.where(feePayments), eq(feePayments.id, id)));
       await tx.delete(feePaymentDays).where(eq(feePaymentDays.feePaymentId, id));
       await this.insertDays(tx, id, input);
-      return this.get(id, tx);
+      const after = await this.get(id, tx);
+      await this.audit.log(
+        {
+          action: 'fee_payment.update',
+          entityType: 'fee_payment',
+          entityId: id,
+          changes: { before: auditable(before), after: auditable(after) },
+        },
+        tx,
+      );
+      return after;
     });
-
-    await this.audit.log({
-      action: 'fee_payment.update',
-      entityType: 'fee_payment',
-      entityId: id,
-      changes: { before: auditable(before), after: auditable(after) },
-    });
-    return after;
   }
 
   async remove(id: string): Promise<void> {
-    const before = await this.get(id);
-    await this.db
-      .update(feePayments)
-      .set(this.scope.forSoftDelete())
-      .where(and(this.scope.where(feePayments), eq(feePayments.id, id)));
-    await this.audit.log({
-      action: 'fee_payment.delete',
-      entityType: 'fee_payment',
-      entityId: id,
-      changes: { before: auditable(before) },
+    await this.db.transaction(async (tx) => {
+      const before = await this.get(id, tx);
+      await tx
+        .update(feePayments)
+        .set(this.scope.forSoftDelete())
+        .where(and(this.scope.where(feePayments), eq(feePayments.id, id)));
+      await this.audit.log(
+        {
+          action: 'fee_payment.delete',
+          entityType: 'fee_payment',
+          entityId: id,
+          changes: { before: auditable(before) },
+        },
+        tx,
+      );
     });
   }
 

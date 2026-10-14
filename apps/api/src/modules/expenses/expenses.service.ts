@@ -1,7 +1,7 @@
 import { ErrorCode, type Expense, type SaveExpense, type UpdateExpense } from '@anderp/shared';
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
-import { DB, type Database } from '../../db/database.module';
+import { DB, type Database, type DbExecutor } from '../../db/database.module';
 import { expenseCategories, expenses } from '../../db/schema';
 import { OrgScope } from '../../shared/db/org-scope';
 import { DomainError } from '../../shared/errors/domain-error';
@@ -33,8 +33,8 @@ export class ExpensesService {
     private readonly scope: OrgScope,
   ) {}
 
-  async get(id: string): Promise<Expense> {
-    const [row] = await this.db
+  async get(id: string, db: DbExecutor = this.db): Promise<Expense> {
+    const [row] = await db
       .select(columns)
       .from(expenses)
       .where(and(this.scope.where(expenses), eq(expenses.id, id)));
@@ -44,67 +44,84 @@ export class ExpensesService {
 
   async create(input: SaveExpense): Promise<Expense> {
     await this.assertCategoryActive(input.categoryId);
-    const [row] = await this.db
-      .insert(expenses)
-      .values(
-        this.scope.forInsert({
-          categoryId: input.categoryId,
-          concept: input.concept,
-          invoiceNumber: input.invoiceNumber ?? null,
-          paymentDate: input.paymentDate,
-          amount: input.amount,
-        }),
-      )
-      .returning(columns);
-    if (!row) throw new Error('Insert returned no rows');
-    await this.audit.log({
-      action: 'expense.create',
-      entityType: 'expense',
-      entityId: row.id,
-      changes: { after: auditable(row) },
+    return this.db.transaction(async (tx) => {
+      const [row] = await tx
+        .insert(expenses)
+        .values(
+          this.scope.forInsert({
+            categoryId: input.categoryId,
+            concept: input.concept,
+            invoiceNumber: input.invoiceNumber ?? null,
+            paymentDate: input.paymentDate,
+            amount: input.amount,
+          }),
+        )
+        .returning(columns);
+      if (!row) throw new Error('Insert returned no rows');
+      await this.audit.log(
+        {
+          action: 'expense.create',
+          entityType: 'expense',
+          entityId: row.id,
+          changes: { after: auditable(row) },
+        },
+        tx,
+      );
+      return row;
     });
-    return row;
   }
 
   async update(id: string, changes: UpdateExpense): Promise<Expense> {
-    const before = await this.get(id);
-    if (changes.categoryId !== undefined && changes.categoryId !== before.categoryId) {
-      await this.assertCategoryActive(changes.categoryId);
-    }
-    const [after] = await this.db
-      .update(expenses)
-      .set(
-        this.scope.forUpdate({
-          ...(changes.categoryId !== undefined ? { categoryId: changes.categoryId } : {}),
-          ...(changes.concept !== undefined ? { concept: changes.concept } : {}),
-          ...(changes.invoiceNumber !== undefined ? { invoiceNumber: changes.invoiceNumber } : {}),
-          ...(changes.paymentDate !== undefined ? { paymentDate: changes.paymentDate } : {}),
-          ...(changes.amount !== undefined ? { amount: changes.amount } : {}),
-        }),
-      )
-      .where(and(this.scope.where(expenses), eq(expenses.id, id)))
-      .returning(columns);
-    if (!after) throw notFound();
-    await this.audit.log({
-      action: 'expense.update',
-      entityType: 'expense',
-      entityId: id,
-      changes: { before: auditable(before), after: auditable(after) },
+    return this.db.transaction(async (tx) => {
+      const before = await this.get(id, tx);
+      if (changes.categoryId !== undefined && changes.categoryId !== before.categoryId) {
+        await this.assertCategoryActive(changes.categoryId);
+      }
+      const [after] = await tx
+        .update(expenses)
+        .set(
+          this.scope.forUpdate({
+            ...(changes.categoryId !== undefined ? { categoryId: changes.categoryId } : {}),
+            ...(changes.concept !== undefined ? { concept: changes.concept } : {}),
+            ...(changes.invoiceNumber !== undefined
+              ? { invoiceNumber: changes.invoiceNumber }
+              : {}),
+            ...(changes.paymentDate !== undefined ? { paymentDate: changes.paymentDate } : {}),
+            ...(changes.amount !== undefined ? { amount: changes.amount } : {}),
+          }),
+        )
+        .where(and(this.scope.where(expenses), eq(expenses.id, id)))
+        .returning(columns);
+      if (!after) throw notFound();
+      await this.audit.log(
+        {
+          action: 'expense.update',
+          entityType: 'expense',
+          entityId: id,
+          changes: { before: auditable(before), after: auditable(after) },
+        },
+        tx,
+      );
+      return after;
     });
-    return after;
   }
 
   async remove(id: string): Promise<void> {
-    const before = await this.get(id);
-    await this.db
-      .update(expenses)
-      .set(this.scope.forSoftDelete())
-      .where(and(this.scope.where(expenses), eq(expenses.id, id)));
-    await this.audit.log({
-      action: 'expense.delete',
-      entityType: 'expense',
-      entityId: id,
-      changes: { before: auditable(before) },
+    await this.db.transaction(async (tx) => {
+      const before = await this.get(id, tx);
+      await tx
+        .update(expenses)
+        .set(this.scope.forSoftDelete())
+        .where(and(this.scope.where(expenses), eq(expenses.id, id)));
+      await this.audit.log(
+        {
+          action: 'expense.delete',
+          entityType: 'expense',
+          entityId: id,
+          changes: { before: auditable(before) },
+        },
+        tx,
+      );
     });
   }
 

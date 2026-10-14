@@ -1,6 +1,6 @@
 import { Global, Inject, Injectable, Module } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
-import { DB, type Database } from '../../db/database.module';
+import { DB, type Database, type DbExecutor } from '../../db/database.module';
 import { auditLogs } from '../../db/schema';
 import type { RequestContext } from '../../shared/context/request-context';
 
@@ -18,7 +18,8 @@ export interface AuditEntry {
 
 /** Puerto que usan los casos de uso; las pruebas unitarias lo reemplazan por un doble. */
 export interface AuditLogger {
-  log(entry: AuditEntry): Promise<void>;
+  /** Con `db` (la transacción en curso), el registro se confirma junto con el cambio (F12). */
+  log(entry: AuditEntry, db?: DbExecutor): Promise<void>;
 }
 
 export const AUDIT_LOGGER = Symbol('AUDIT_LOGGER');
@@ -34,9 +35,9 @@ export class AuditService implements AuditLogger {
     private readonly cls: ClsService<RequestContext>,
   ) {}
 
-  async log(entry: AuditEntry): Promise<void> {
+  async log(entry: AuditEntry, db: DbExecutor = this.db): Promise<void> {
     const actor = this.cls.isActive() ? this.cls.get('actor') : undefined;
-    await this.db.insert(auditLogs).values({
+    await db.insert(auditLogs).values({
       action: entry.action,
       entityType: entry.entityType ?? null,
       entityId: entry.entityId ?? null,

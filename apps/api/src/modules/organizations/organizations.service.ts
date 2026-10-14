@@ -6,7 +6,7 @@ import {
 } from '@anderp/shared';
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
-import { DB, type Database } from '../../db/database.module';
+import { DB, type Database, type DbExecutor } from '../../db/database.module';
 import { expenseCategories, organizationMembers, organizations, users } from '../../db/schema';
 import { OrgScope } from '../../shared/db/org-scope';
 import { DomainError } from '../../shared/errors/domain-error';
@@ -62,8 +62,8 @@ export class OrganizationsService {
     return rows.map(toDto);
   }
 
-  async get(id: string): Promise<Organization> {
-    const [row] = await this.db
+  async get(id: string, db: DbExecutor = this.db): Promise<Organization> {
+    const [row] = await db
       .select(columns)
       .from(organizations)
       .where(and(eq(organizations.id, id), isNull(organizations.deletedAt)));
@@ -99,26 +99,45 @@ export class OrganizationsService {
         ...input.admin,
         actorId,
       });
+      await this.audit.log(
+        {
+          action: 'organization.create',
+          entityType: 'organization',
+          entityId: organization.id,
+          changes: { after: { name: input.name, taxId: input.taxId, admin: input.admin.email } },
+        },
+        tx,
+      );
       return organization.id;
-    });
-
-    await this.audit.log({
-      action: 'organization.create',
-      entityType: 'organization',
-      entityId: organizationId,
-      changes: { after: { name: input.name, taxId: input.taxId, admin: input.admin.email } },
     });
     return this.get(organizationId);
   }
 
   /** Suspender revoca las sesiones de sus miembros que no son super admin (F02 CA-2). */
   async update(id: string, changes: UpdateOrganization): Promise<Organization> {
-    const before = await this.get(id);
-    await this.db
-      .update(organizations)
-      .set({ ...changes, updatedAt: new Date(), updatedBy: this.scope.userId })
-      .where(eq(organizations.id, id));
+    const { before, after } = await this.db.transaction(async (tx) => {
+      const before = await this.get(id, tx);
+      await tx
+        .update(organizations)
+        .set({ ...changes, updatedAt: new Date(), updatedBy: this.scope.userId })
+        .where(eq(organizations.id, id));
+      const after = await this.get(id, tx);
+      await this.audit.log(
+        {
+          action: 'organization.update',
+          entityType: 'organization',
+          entityId: id,
+          changes: {
+            before: { name: before.name, status: before.status },
+            after: { name: after.name, status: after.status },
+          },
+        },
+        tx,
+      );
+      return { before, after };
+    });
 
+    // Después de confirmar: el puerto de sesiones no recibe la transacción (F12 CA-4).
     if (changes.status === 'suspended' && before.status !== 'suspended') {
       const members = await this.db
         .select({ userId: organizationMembers.userId })
@@ -129,16 +148,6 @@ export class OrganizationsService {
       for (const member of members) await this.sessions.revokeAllForUser(member.userId, now);
     }
 
-    const after = await this.get(id);
-    await this.audit.log({
-      action: 'organization.update',
-      entityType: 'organization',
-      entityId: id,
-      changes: {
-        before: { name: before.name, status: before.status },
-        after: { name: after.name, status: after.status },
-      },
-    });
     return after;
   }
 }

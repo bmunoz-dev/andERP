@@ -12,7 +12,7 @@ import {
 } from '@anderp/shared';
 import { Inject, Injectable } from '@nestjs/common';
 import { and, desc, eq, gte, lte, type SQL, sql } from 'drizzle-orm';
-import { DB, type Database } from '../../db/database.module';
+import { DB, type Database, type DbExecutor } from '../../db/database.module';
 import { clickiuBalance, clickiuMovements as m } from '../../db/schema';
 import { OrgScope } from '../../shared/db/org-scope';
 import { DomainError } from '../../shared/errors/domain-error';
@@ -96,8 +96,8 @@ export class ClickiuService {
     return row as ClickiuSummary;
   }
 
-  async get(id: string): Promise<ClickiuMovement> {
-    const [row] = await this.db
+  async get(id: string, db: DbExecutor = this.db): Promise<ClickiuMovement> {
+    const [row] = await db
       .select(columns)
       .from(m)
       .where(and(this.scope.where(m), eq(m.id, id)));
@@ -106,64 +106,79 @@ export class ClickiuService {
   }
 
   async create(input: SaveClickiuMovement): Promise<ClickiuMovement> {
-    const [row] = await this.db
-      .insert(m)
-      .values(
-        this.scope.forInsert({
-          type: input.type,
-          status: input.status ?? null,
-          movementDate: input.movementDate,
-          amount: input.amount,
-          description: input.description ?? null,
-        }),
-      )
-      .returning(columns);
-    if (!row) throw new Error('Insert returned no rows');
-    await this.audit.log({
-      action: 'clickiu_movement.create',
-      entityType: 'clickiu_movement',
-      entityId: row.id,
-      changes: { after: auditable(row) },
+    return this.db.transaction(async (tx) => {
+      const [row] = await tx
+        .insert(m)
+        .values(
+          this.scope.forInsert({
+            type: input.type,
+            status: input.status ?? null,
+            movementDate: input.movementDate,
+            amount: input.amount,
+            description: input.description ?? null,
+          }),
+        )
+        .returning(columns);
+      if (!row) throw new Error('Insert returned no rows');
+      await this.audit.log(
+        {
+          action: 'clickiu_movement.create',
+          entityType: 'clickiu_movement',
+          entityId: row.id,
+          changes: { after: auditable(row) },
+        },
+        tx,
+      );
+      return row;
     });
-    return row;
   }
 
   async update(id: string, changes: UpdateClickiuMovement): Promise<ClickiuMovement> {
-    const before = await this.get(id);
-    const [after] = await this.db
-      .update(m)
-      .set(
-        this.scope.forUpdate({
-          ...(changes.type !== undefined ? { type: changes.type } : {}),
-          ...(changes.status !== undefined ? { status: changes.status } : {}),
-          ...(changes.movementDate !== undefined ? { movementDate: changes.movementDate } : {}),
-          ...(changes.amount !== undefined ? { amount: changes.amount } : {}),
-          ...(changes.description !== undefined ? { description: changes.description } : {}),
-        }),
-      )
-      .where(and(this.scope.where(m), eq(m.id, id)))
-      .returning(columns);
-    if (!after) throw notFound();
-    await this.audit.log({
-      action: 'clickiu_movement.update',
-      entityType: 'clickiu_movement',
-      entityId: id,
-      changes: { before: auditable(before), after: auditable(after) },
+    return this.db.transaction(async (tx) => {
+      const before = await this.get(id, tx);
+      const [after] = await tx
+        .update(m)
+        .set(
+          this.scope.forUpdate({
+            ...(changes.type !== undefined ? { type: changes.type } : {}),
+            ...(changes.status !== undefined ? { status: changes.status } : {}),
+            ...(changes.movementDate !== undefined ? { movementDate: changes.movementDate } : {}),
+            ...(changes.amount !== undefined ? { amount: changes.amount } : {}),
+            ...(changes.description !== undefined ? { description: changes.description } : {}),
+          }),
+        )
+        .where(and(this.scope.where(m), eq(m.id, id)))
+        .returning(columns);
+      if (!after) throw notFound();
+      await this.audit.log(
+        {
+          action: 'clickiu_movement.update',
+          entityType: 'clickiu_movement',
+          entityId: id,
+          changes: { before: auditable(before), after: auditable(after) },
+        },
+        tx,
+      );
+      return after;
     });
-    return after;
   }
 
   async remove(id: string): Promise<void> {
-    const before = await this.get(id);
-    await this.db
-      .update(m)
-      .set(this.scope.forSoftDelete())
-      .where(and(this.scope.where(m), eq(m.id, id)));
-    await this.audit.log({
-      action: 'clickiu_movement.delete',
-      entityType: 'clickiu_movement',
-      entityId: id,
-      changes: { before: auditable(before) },
+    await this.db.transaction(async (tx) => {
+      const before = await this.get(id, tx);
+      await tx
+        .update(m)
+        .set(this.scope.forSoftDelete())
+        .where(and(this.scope.where(m), eq(m.id, id)));
+      await this.audit.log(
+        {
+          action: 'clickiu_movement.delete',
+          entityType: 'clickiu_movement',
+          entityId: id,
+          changes: { before: auditable(before) },
+        },
+        tx,
+      );
     });
   }
 }

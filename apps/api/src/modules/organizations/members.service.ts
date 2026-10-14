@@ -59,19 +59,23 @@ export class MembersService {
 
   async invite(input: InviteMember): Promise<Member> {
     const organizationId = this.scope.organizationId;
-    const { userId } = await this.db.transaction(async (tx) =>
-      this.onboarding.addMember(tx, {
+    const { userId } = await this.db.transaction(async (tx) => {
+      const member = await this.onboarding.addMember(tx, {
         organizationId,
         organizationName: await this.organizationName(),
         ...input,
         actorId: this.scope.userId,
-      }),
-    );
-    await this.audit.log({
-      action: 'member.invite',
-      entityType: 'user',
-      entityId: userId,
-      changes: { after: { email: input.email } },
+      });
+      await this.audit.log(
+        {
+          action: 'member.invite',
+          entityType: 'user',
+          entityId: member.userId,
+          changes: { after: { email: input.email } },
+        },
+        tx,
+      );
+      return member;
     });
     return this.get(userId);
   }
@@ -81,15 +85,18 @@ export class MembersService {
     const member = await this.get(userId);
     if (!member.invitationPending) throw new DomainError(ErrorCode.INVITE_NOT_PENDING, 422);
     const organizationName = await this.organizationName();
-    await this.db.transaction((tx) =>
-      this.onboarding.sendInvitation(tx, {
+    await this.db.transaction(async (tx) => {
+      await this.onboarding.sendInvitation(tx, {
         userId,
         email: member.email,
         firstName: member.firstName,
         organizationName,
-      }),
-    );
-    await this.audit.log({ action: 'member.invite_resent', entityType: 'user', entityId: userId });
+      });
+      await this.audit.log(
+        { action: 'member.invite_resent', entityType: 'user', entityId: userId },
+        tx,
+      );
+    });
   }
 
   /**
@@ -117,17 +124,22 @@ export class MembersService {
     }
     if (member.isSuperAdmin && !actor.isSuperAdmin) throw new DomainError(ErrorCode.FORBIDDEN, 403);
 
-    await this.db
-      .update(organizationMembers)
-      .set(this.scope.forUpdate({ isActive }))
-      .where(and(this.scope.where(organizationMembers), eq(organizationMembers.userId, userId)));
-    if (!isActive) await this.sessions.revokeAllForUser(userId, this.clock.now());
-
-    await this.audit.log({
-      action: isActive ? 'member.activate' : 'member.deactivate',
-      entityType: 'user',
-      entityId: userId,
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(organizationMembers)
+        .set(this.scope.forUpdate({ isActive }))
+        .where(and(this.scope.where(organizationMembers), eq(organizationMembers.userId, userId)));
+      await this.audit.log(
+        {
+          action: isActive ? 'member.activate' : 'member.deactivate',
+          entityType: 'user',
+          entityId: userId,
+        },
+        tx,
+      );
     });
+    // Después de confirmar: el puerto de sesiones no recibe la transacción (F12 CA-4).
+    if (!isActive) await this.sessions.revokeAllForUser(userId, this.clock.now());
     return this.get(userId);
   }
 
