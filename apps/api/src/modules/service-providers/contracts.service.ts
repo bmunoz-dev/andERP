@@ -7,7 +7,7 @@ import {
 } from '@anderp/shared';
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, desc, eq, gte, isNull, lte, or } from 'drizzle-orm';
-import { DB, type Database } from '../../db/database.module';
+import { DB, type Database, type DbExecutor } from '../../db/database.module';
 import { contractMonthTotals, providerContracts, serviceProviders } from '../../db/schema';
 import { OrgScope } from '../../shared/db/org-scope';
 import { DomainError } from '../../shared/errors/domain-error';
@@ -93,8 +93,8 @@ export class ContractsService {
       .orderBy(asc(serviceProviders.name));
   }
 
-  async get(id: string): Promise<Contract> {
-    const [row] = await this.db
+  async get(id: string, db: DbExecutor = this.db): Promise<Contract> {
+    const [row] = await db
       .select(contractColumns(this.providers.today()))
       .from(providerContracts)
       .leftJoin(contractMonthTotals, monthTotalsJoin(this.providers.today()))
@@ -107,74 +107,93 @@ export class ContractsService {
     await this.providers.assertExists(providerId);
     assertDateRange(input.startDate, input.endDate ?? null);
 
-    const [row] = await this.db
-      .insert(providerContracts)
-      .values(
-        this.scope.forInsert({
-          serviceProviderId: providerId,
-          startDate: input.startDate,
-          endDate: input.endDate ?? null,
-          workAgreement: input.workAgreement,
-          paymentFrequency: input.paymentFrequency,
-          monthlyAmount: input.monthlyAmount,
-        }),
-      )
-      .returning({ id: providerContracts.id });
-    if (!row) throw new Error('Insert returned no rows');
+    return this.db.transaction(async (tx) => {
+      const [row] = await tx
+        .insert(providerContracts)
+        .values(
+          this.scope.forInsert({
+            serviceProviderId: providerId,
+            startDate: input.startDate,
+            endDate: input.endDate ?? null,
+            workAgreement: input.workAgreement,
+            paymentFrequency: input.paymentFrequency,
+            monthlyAmount: input.monthlyAmount,
+          }),
+        )
+        .returning({ id: providerContracts.id });
+      if (!row) throw new Error('Insert returned no rows');
 
-    const contract = await this.get(row.id);
-    await this.audit.log({
-      action: 'contract.create',
-      entityType: 'provider_contract',
-      entityId: contract.id,
-      changes: { after: auditable(contract) },
+      const contract = await this.get(row.id, tx);
+      await this.audit.log(
+        {
+          action: 'contract.create',
+          entityType: 'provider_contract',
+          entityId: contract.id,
+          changes: { after: auditable(contract) },
+        },
+        tx,
+      );
+      return contract;
     });
-    return contract;
   }
 
   async update(id: string, changes: UpdateContract): Promise<Contract> {
-    const before = await this.get(id);
-    assertDateRange(
-      changes.startDate ?? before.startDate,
-      changes.endDate !== undefined ? changes.endDate : before.endDate,
-    );
+    return this.db.transaction(async (tx) => {
+      const before = await this.get(id, tx);
+      assertDateRange(
+        changes.startDate ?? before.startDate,
+        changes.endDate !== undefined ? changes.endDate : before.endDate,
+      );
 
-    await this.db
-      .update(providerContracts)
-      .set(
-        this.scope.forUpdate({
-          ...(changes.startDate !== undefined ? { startDate: changes.startDate } : {}),
-          ...(changes.endDate !== undefined ? { endDate: changes.endDate } : {}),
-          ...(changes.workAgreement !== undefined ? { workAgreement: changes.workAgreement } : {}),
-          ...(changes.paymentFrequency !== undefined
-            ? { paymentFrequency: changes.paymentFrequency }
-            : {}),
-          ...(changes.monthlyAmount !== undefined ? { monthlyAmount: changes.monthlyAmount } : {}),
-        }),
-      )
-      .where(and(this.scope.where(providerContracts), eq(providerContracts.id, id)));
+      await tx
+        .update(providerContracts)
+        .set(
+          this.scope.forUpdate({
+            ...(changes.startDate !== undefined ? { startDate: changes.startDate } : {}),
+            ...(changes.endDate !== undefined ? { endDate: changes.endDate } : {}),
+            ...(changes.workAgreement !== undefined
+              ? { workAgreement: changes.workAgreement }
+              : {}),
+            ...(changes.paymentFrequency !== undefined
+              ? { paymentFrequency: changes.paymentFrequency }
+              : {}),
+            ...(changes.monthlyAmount !== undefined
+              ? { monthlyAmount: changes.monthlyAmount }
+              : {}),
+          }),
+        )
+        .where(and(this.scope.where(providerContracts), eq(providerContracts.id, id)));
 
-    const after = await this.get(id);
-    await this.audit.log({
-      action: 'contract.update',
-      entityType: 'provider_contract',
-      entityId: id,
-      changes: { before: auditable(before), after: auditable(after) },
+      const after = await this.get(id, tx);
+      await this.audit.log(
+        {
+          action: 'contract.update',
+          entityType: 'provider_contract',
+          entityId: id,
+          changes: { before: auditable(before), after: auditable(after) },
+        },
+        tx,
+      );
+      return after;
     });
-    return after;
   }
 
   async remove(id: string): Promise<void> {
-    const before = await this.get(id);
-    await this.db
-      .update(providerContracts)
-      .set(this.scope.forSoftDelete())
-      .where(and(this.scope.where(providerContracts), eq(providerContracts.id, id)));
-    await this.audit.log({
-      action: 'contract.delete',
-      entityType: 'provider_contract',
-      entityId: id,
-      changes: { before: auditable(before) },
+    await this.db.transaction(async (tx) => {
+      const before = await this.get(id, tx);
+      await tx
+        .update(providerContracts)
+        .set(this.scope.forSoftDelete())
+        .where(and(this.scope.where(providerContracts), eq(providerContracts.id, id)));
+      await this.audit.log(
+        {
+          action: 'contract.delete',
+          entityType: 'provider_contract',
+          entityId: id,
+          changes: { before: auditable(before) },
+        },
+        tx,
+      );
     });
   }
 }
