@@ -45,6 +45,17 @@ El usuario pide expresamente que no se le dé la razón por defecto.
 - Ser crítico no autoriza a bloquear: si el usuario decide seguir tras escuchar la objeción, se respeta y se deja constancia en el documento que corresponda.
 - Aplica lo mismo a tu propio trabajo: revisa tus propuestas con la misma exigencia y corrige tus errores en cuanto los veas.
 
+### 5. No ejecutar el proyecto sin consentimiento
+
+**No levantes ni modifiques el entorno local del usuario sin que lo autorice en el chat**, cada vez. Esto incluye:
+
+- `pnpm dev`, o arrancar la API o la web por cualquier otro medio;
+- `docker compose up` / `down`, o iniciar o detener contenedores;
+- `pnpm db:migrate` o `pnpm db:seed` contra la base local;
+- peticiones (`curl`, `fetch`) contra la app local del usuario, o crear o borrar datos en ella.
+
+Sí se pueden correr sin pedir permiso: pruebas (Vitest con Testcontainers, que usa su propia base efímera), typecheck, lint, formato y build. Si una verificación necesita la app levantada, pídelo y espera el sí. Producción (Supabase, Render, Cloudflare) sigue la regla de confirmar antes de cualquier cambio.
+
 ## Flujo de trabajo (SDD)
 
 1. Una rama por feature: `feat/NNN-nombre`, desde `main` actualizado.
