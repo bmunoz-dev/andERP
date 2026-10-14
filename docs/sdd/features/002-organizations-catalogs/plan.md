@@ -97,3 +97,4 @@ El super admin también tiene acceso a las rutas de admin: el guard lo trata com
   4. no ve Plataforma, ni siquiera entrando por URL;
   5. reordena departamentos, ve "Honorarios" protegido y recibe el error de nombre duplicado;
   6. en usuarios se ve a sí misma sin la opción de desactivarse.
+- **Correo al final de la transacción (2026-10-14):** `MemberOnboarding.addMember` ya no envía el correo; devuelve `notify()`, que crea el token y lo envía. `organizations.create` y `members.invite` lo llaman después de sus demás escrituras (incluida la auditoría de F12), y `resendInvite` audita antes de enviar. Se conserva el CA-1 (si el correo falla, no queda nada) y el único caso de enlace inválido es que falle el `COMMIT` después del envío. Una cola de correos (outbox) lo cerraría del todo; se descartó por YAGNI.

@@ -238,6 +238,7 @@ describe('Organizaciones', () => {
   it('crear', async () => {
     const taxId = randomUUID().slice(0, 18);
     await failAudit('organization.create');
+    t.mailer.sent = [];
     await body(
       platform().post('/platform/organizations', {
         name: 'Nueva',
@@ -248,6 +249,8 @@ describe('Organizaciones', () => {
     );
     const list = await body<Organization[]>(platform().get('/platform/organizations'));
     expect(list.find((o) => o.taxId === taxId)).toBeUndefined();
+    // El correo es lo último antes de confirmar: si algo falla antes, no sale.
+    expect(t.mailer.sent).toHaveLength(0);
   });
 
   it('editar', async () => {
@@ -269,13 +272,16 @@ describe('Miembros', () => {
   it('invitar', async () => {
     const email = `p-${randomUUID()}@empresa.co`;
     await failAudit('member.invite');
+    t.mailer.sent = [];
     await body(invite(email), 500);
+    expect(t.mailer.sent).toHaveLength(0);
     expect((await members()).find((m) => m.email === email)).toBeUndefined();
   });
 
   it('reenviar la invitación', async () => {
     const invited = await body<Member>(invite(`p-${randomUUID()}@empresa.co`), 201);
     await failAudit('member.invite_resent');
+    t.mailer.sent = [];
     await body(api().post(`/members/${invited.userId}/resend-invite`), 500);
     const tokens = await db
       .select()
@@ -283,6 +289,7 @@ describe('Miembros', () => {
       .where(eq(passwordResets.userId, invited.userId));
     expect(tokens).toHaveLength(1);
     expect(tokens[0]!.usedAt).toBeNull();
+    expect(t.mailer.sent).toHaveLength(0);
   });
 
   it('desactivar', async () => {

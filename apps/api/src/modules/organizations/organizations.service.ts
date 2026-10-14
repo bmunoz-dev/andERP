@@ -93,7 +93,7 @@ export class OrganizationsService {
         })),
       );
 
-      await this.onboarding.addMember(tx, {
+      const admin = await this.onboarding.addMember(tx, {
         organizationId: organization.id,
         organizationName: input.name,
         ...input.admin,
@@ -108,6 +108,8 @@ export class OrganizationsService {
         },
         tx,
       );
+      // El correo, al final: nada de la transacción falla después de enviarlo.
+      await admin.notify();
       return organization.id;
     });
     return this.get(organizationId);

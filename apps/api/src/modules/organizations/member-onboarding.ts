@@ -22,14 +22,20 @@ export interface NewMember {
 
 export interface OnboardedMember {
   userId: string;
-  /** `true` si se envió una invitación para definir contraseña. */
+  /** `true` si se le invita a definir contraseña; `false` si solo recibe un aviso. */
   invited: boolean;
+  /**
+   * Crea el token (si hace falta) y envía el correo. Quien llama la invoca **al final** de su
+   * transacción, después de sus demás escrituras: si algo falla antes, el correo no sale.
+   */
+  notify(): Promise<void>;
 }
 
 /**
  * Agrega una persona a una organización (F02 CA-1 y CA-11). Reutiliza el usuario si el email
  * ya existe. Si no tiene contraseña, le envía una invitación; si ya la tiene, solo un aviso.
- * Corre dentro de la transacción de quien llama: si el correo falla, no queda nada a medias.
+ * Corre dentro de la transacción de quien llama: si el correo falla, no queda nada a medias. El
+ * correo lo envía `notify()`, que va al final para que nada falle después de enviarlo.
  */
 @Injectable()
 export class MemberOnboarding {
@@ -106,24 +112,23 @@ export class MemberOnboarding {
     });
 
     const invited = user.passwordHash === null;
-    if (invited) {
-      await this.sendInvitation(tx, {
-        userId: user.id,
-        email: member.email,
-        firstName: user.firstName,
-        organizationName: member.organizationName,
-      });
-    } else {
-      await this.mailer.send(
-        addedToOrganizationEmail({
-          to: member.email,
-          firstName: user.firstName,
-          organizationName: member.organizationName,
-          loginUrl: new URL('/login', this.env.WEB_URL).toString(),
-        }),
-      );
-    }
-    return { userId: user.id, invited };
+    const notify = () =>
+      invited
+        ? this.sendInvitation(tx, {
+            userId: user.id,
+            email: member.email,
+            firstName: user.firstName,
+            organizationName: member.organizationName,
+          })
+        : this.mailer.send(
+            addedToOrganizationEmail({
+              to: member.email,
+              firstName: user.firstName,
+              organizationName: member.organizationName,
+              loginUrl: new URL('/login', this.env.WEB_URL).toString(),
+            }),
+          );
+    return { userId: user.id, invited, notify };
   }
 
   /** Crea un token nuevo (invalida los anteriores) y envía el correo de invitación. */

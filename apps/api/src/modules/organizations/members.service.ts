@@ -75,6 +75,7 @@ export class MembersService {
         },
         tx,
       );
+      await member.notify();
       return member;
     });
     return this.get(userId);
@@ -86,16 +87,17 @@ export class MembersService {
     if (!member.invitationPending) throw new DomainError(ErrorCode.INVITE_NOT_PENDING, 422);
     const organizationName = await this.organizationName();
     await this.db.transaction(async (tx) => {
+      await this.audit.log(
+        { action: 'member.invite_resent', entityType: 'user', entityId: userId },
+        tx,
+      );
+      // El correo, al final: nada de la transacción falla después de enviarlo.
       await this.onboarding.sendInvitation(tx, {
         userId,
         email: member.email,
         firstName: member.firstName,
         organizationName,
       });
-      await this.audit.log(
-        { action: 'member.invite_resent', entityType: 'user', entityId: userId },
-        tx,
-      );
     });
   }
 
