@@ -16,6 +16,7 @@
 | F09 | [Desactivar prestadores](features/009-provider-deactivation/spec.md) | F03, F04 | Aprobado | Aprobado | Hecho |
 | F10 | [Monto mensual de referencia en los contratos](features/010-monthly-contract-amount/spec.md) | F04 | Aprobado | Aprobado | Hecho |
 | F11 | [Saldo de Clic Kiu](features/011-clickiu-balance/spec.md) | F02 | Aprobado | Aprobado | Hecho |
+| F12 | [Auditoría atómica](features/012-atomic-audit/spec.md) | F01–F06, F11 | En revisión | En revisión | Pendiente |
 
 F06 solo depende de F02, así que se puede desarrollar en paralelo con F03–F05.
 

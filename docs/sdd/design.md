@@ -31,6 +31,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-13 | Cuerpo del diseño alineado con F10 (§1, §2 decisiones 10 y 11, §8), módulos reales en §4.1 y §4.3 (solo `auth` es hexagonal; `reports` vive dentro de `expenses`; con `responsible-persons`, `mail` y `health`), `OrgScope` en §6.4 y planes **Free** de Render y Supabase en §10. | El historial registraba los cambios, pero el cuerpo seguía describiendo el modelo anterior y el plan de pago de Render (decisión del usuario del 2026-10-10: no contratar planes de pago por ahora). |
 | 2026-10-14 | Módulo **Clic Kiu** (F11): `clickiu_movements` (recargas y ventas del saldo prepagado), vista `v_clickiu_balance` y regla de saldo no negativo en la base de datos. Independiente de Egresos. | La empresa recarga saldo en Clic Kiu (agencia de viajes) y vende con él; necesita saber el saldo y lo que deben los clientes por ventas a crédito. |
 | 2026-10-14 | Los bloqueos de aplicación usan la forma de dos claves `(clase, objeto)` con una constante por regla (`11` = saldo de Clic Kiu, migración 0022). | Con una sola clave, cualquier bloqueo futuro sobre el id de la organización esperaría al de Clic Kiu; las claves de dos números no chocan con otras clases ni con las de una sola clave. |
+| 2026-10-14 | **Auditoría atómica** (F12): los servicios escriben el cambio y su registro en `audit_logs` en la misma transacción. | `AuditService` escribía después de confirmar el cambio: un fallo entre las dos sentencias dejaba cambios de dinero o credenciales sin auditar. |
 
 ---
 
@@ -451,6 +452,8 @@ Todas son vistas normales (no materializadas).
 - `INDEX (organization_id, created_at)`, `INDEX (entity_type, entity_id)`.
 
 **Se registra:** crear, editar y borrar en `expenses`, `fee_payments` (incluidos sus días), `provider_contracts` y `clickiu_movements`; revelar una credencial; y los eventos de auth (login, login fallido, bloqueo, cambio y recuperación de contraseña).
+
+**Atomicidad (F12):** el cambio y su registro se escriben en la misma transacción (`audit.log(entry, tx)`): si falla la auditoría, el cambio no queda. Los eventos de auth y `credential.reveal` se auditan fuera de cualquier transacción de negocio.
 
 **No se registra:** los cambios en catálogos (los cubren `created_by` y `updated_by`).
 
