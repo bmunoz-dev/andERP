@@ -63,6 +63,13 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 3. Avisos de Supabase `function_search_path_mutable` en los triggers (migración pequeña).
 4. T012 (migración rota a propósito), T013 (primera corrida de Playwright, requiere autorización del navegador), T015 (ensayo de restauración) y T016 (hito M4).
 
+**Pendiente (documentación, revisión del 2026-10-13):**
+1. Constitución IX dice que `fee-payments` y `credentials` son hexagonales; solo `auth` lo es (`design.md` §4.1 ya está corregido). Constitución IV dice "repositorio base"; es `OrgScope`.
+2. HU2 de la spec de F03 sigue diciendo "valor total" (F10 lo cambió a monto mensual).
+3. `CLAUDE.md` repite las reglas técnicas de la constitución; dejar solo lo operativo y enlazarla. El README de SDD no dice que el merge lo hace el usuario. La Definición de Hecho no incluye `format:check`.
+4. Pendiente 2 de F07 (Workers Builds en las ramas de PR): confirmar si quedó resuelto al desactivar las vistas previas y actualizarlo aquí.
+5. Rama `docs/claude-run-consent`: quitar los dos commits `chore` vacíos (pruebas de build de Cloudflare) o hacer squash antes del PR.
+
 **Decisiones tomadas:** la skill `ponytail` se versiona en el repo (`.agents/`, `skills-lock.json` y una copia real en `.claude/skills/ponytail/`, sin enlace simbólico). No se protege `main`: es un proyecto personal.
 
 **Pendiente (multi-organización):** un usuario que ya tiene contraseña y es agregado a una segunda organización queda en las dos, pero el login siempre entra en la más antigua. Resolverlo requiere el selector de organización, fuera de la v1 (design.md §fuera de alcance).
