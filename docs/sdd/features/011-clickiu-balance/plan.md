@@ -1,6 +1,6 @@
 # F11 — Saldo de Clic Kiu · Plan
 
-- **Estado:** Borrador
+- **Estado:** Aprobado
 - **Spec:** [spec.md](spec.md)
 
 ## Datos
@@ -68,4 +68,6 @@ Solo agrega tablas, vista y triggers: no rompe la API anterior durante la ventan
 
 ## Notas de implementación
 
-(Se llenan durante la implementación.)
+- **Privilegios (T001):** los privilegios por defecto de `0000_base.sql` (`ON TABLES`) ya cubren la vista; no hizo falta `GRANT`. La prueba lee `v_clickiu_balance` con `app_runtime`.
+- **Concurrencia (T001):** la prueba CA-9 abre dos transacciones que insertan antes de que cualquiera confirme. Se comprobó que falla si se quita el `pg_advisory_xact_lock` del trigger.
+- **Tipo inmutable:** el trigger usa `WHEN (OLD.type IS DISTINCT FROM NEW.type)`, así la función solo lanza el error.

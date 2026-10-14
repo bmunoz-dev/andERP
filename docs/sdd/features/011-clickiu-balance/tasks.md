@@ -5,7 +5,7 @@
 
 ## Bloque A — Base de datos
 
-- [ ] F11-T001 [TDD] Escribir `clickiu.db.test.ts` y después crear `0020_clickiu_movements` y `0021_clickiu_rules` con el esquema de Drizzle (`db/schema/clickiu.ts`). Pruebas:
+- [x] F11-T001 [TDD] Escribir `clickiu.db.test.ts` y después crear `0020_clickiu_movements` y `0021_clickiu_rules` con el esquema de Drizzle (`db/schema/clickiu.ts`). Pruebas:
       - CHECK de estado (venta sin estado, recarga con estado) y de monto;
       - tipo inmutable;
       - `v_clickiu_balance` no cuenta borrados;
