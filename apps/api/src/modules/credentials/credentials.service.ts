@@ -102,22 +102,35 @@ export class CredentialsService {
     return toCredential(row);
   }
 
+  /** CA-7b: la auditoría usa el DTO (`get`), que nunca trae la contraseña ni los datos cifrados. */
   async create(input: SaveCredential): Promise<Credential> {
     const id = uuidv7();
-    await this.db.insert(entityCredentials).values(
-      this.scope.forInsert({
-        id,
-        entityName: input.entityName,
-        username: input.username,
-        url: input.url ?? null,
-        contact1: input.contact1 ?? null,
-        contact2: input.contact2 ?? null,
-        notes: input.notes ?? null,
-        responsiblePersonId: input.responsiblePersonId ?? null,
-        ...this.encrypt(id, input.password),
-      }),
-    );
-    return this.get(id);
+    return this.db.transaction(async (tx) => {
+      await tx.insert(entityCredentials).values(
+        this.scope.forInsert({
+          id,
+          entityName: input.entityName,
+          username: input.username,
+          url: input.url ?? null,
+          contact1: input.contact1 ?? null,
+          contact2: input.contact2 ?? null,
+          notes: input.notes ?? null,
+          responsiblePersonId: input.responsiblePersonId ?? null,
+          ...this.encrypt(id, input.password),
+        }),
+      );
+      const created = await this.get(id, tx);
+      await this.audit.log(
+        {
+          action: 'credential.create',
+          entityType: 'credential',
+          entityId: id,
+          changes: { after: auditable(created) },
+        },
+        tx,
+      );
+      return created;
+    });
   }
 
   /** CA-7: sin `password`, la contraseña guardada no cambia. */
@@ -153,12 +166,24 @@ export class CredentialsService {
   }
 
   async remove(id: string): Promise<void> {
-    const [row] = await this.db
-      .update(entityCredentials)
-      .set(this.scope.forSoftDelete())
-      .where(and(this.scope.where(entityCredentials), eq(entityCredentials.id, id)))
-      .returning({ id: entityCredentials.id });
-    if (!row) throw notFound();
+    await this.db.transaction(async (tx) => {
+      const before = await this.get(id, tx);
+      const [row] = await tx
+        .update(entityCredentials)
+        .set(this.scope.forSoftDelete())
+        .where(and(this.scope.where(entityCredentials), eq(entityCredentials.id, id)))
+        .returning({ id: entityCredentials.id });
+      if (!row) throw notFound();
+      await this.audit.log(
+        {
+          action: 'credential.delete',
+          entityType: 'credential',
+          entityId: id,
+          changes: { before: auditable(before) },
+        },
+        tx,
+      );
+    });
   }
 
   /** CA-6: devuelve la contraseña y deja constancia de quién la vio (sin la contraseña). */

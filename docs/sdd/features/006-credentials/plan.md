@@ -84,7 +84,7 @@ CREDENTIALS_ACTIVE_KEY_VERSION=1
 - **Sin capas hexagonales:** `credentials/` tiene `credential-cipher.ts` (AES-256-GCM, una clase con las llaves), `credentials.service.ts` (consultas, comandos y auditoría), `credentials.module.ts` (controlador) y `rotate-keys.ts` (caso de uso y script). No hubo un segundo adaptador que justificara puertos.
 - **Llaves en `env.ts`:** `CREDENTIALS_KEYS` se valida y se convierte a `Map<versión, Buffer>` con el resto del entorno; si falta la llave activa o no mide 32 bytes, `loadEnv` falla y la API no arranca.
 - **Reglas en la base de datos:** `CONTACT_REQUIRED` sale del CHECK `responsible_persons_contact_ck` (también al editar) y `DUPLICATE_CREDENTIAL` del índice `entity_credentials_uq`; el servicio no las repite.
-- **Auditoría:** `credential.update` (con `passwordChanged`) y `credential.reveal`, como pide la spec. Crear y borrar no se auditan (§5.9). Los responsables tampoco.
+- **Auditoría:** `credential.update` (con `passwordChanged`) y `credential.reveal`, como pide la spec. Los responsables no se auditan. Crear y borrar no se auditaban al principio; desde el 2026-10-14 registran `credential.create` y `credential.delete` (CA-7b), porque las credenciales eran el único módulo sensible sin rastro de quién creó o quitó un acceso.
 - **CA-8:** el servicio registra `Credential integrity check failed` con nivel `error` antes de responder `500`.
 - **Rotación:** recorre también las credenciales borradas. Si un registro no se puede descifrar, se detiene con error en lugar de saltarlo.
 - **Script:** `pnpm credentials:rotate` ejecuta `apps/api/src/modules/credentials/rotate-keys.ts`.

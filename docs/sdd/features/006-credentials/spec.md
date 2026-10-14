@@ -27,6 +27,7 @@ Guardar las credenciales de acceso a portales externos (DIAN, bancos, secretarí
 - **CA-5.** `GET /credentials` y `GET /credentials/:id` **nunca** devuelven la contraseña ni los campos cifrados. En su lugar incluyen `hasPassword: true` y el responsable.
 - **CA-6.** `POST /credentials/:id/reveal` devuelve `{ password }` y registra `credential.reveal` en `audit_logs` con `entity_id` y **sin** la contraseña. Las respuestas de reveal llevan `Cache-Control: no-store`.
 - **CA-7.** `PATCH /credentials/:id`: si llega `password`, se vuelve a cifrar con IV nuevo y la llave activa; si no llega, la contraseña guardada no cambia. El cambio registra `credential.update`, sin incluir la contraseña en `changes`, solo `passwordChanged: true`.
+- **CA-7b.** Crear y borrar una credencial registran `credential.create` (con `after`) y `credential.delete` (con `before`) en `audit_logs`, en la misma transacción que el cambio y **sin** la contraseña ni sus datos cifrados. *(Agregado el 2026-10-14; reemplaza la decisión inicial de no auditarlos.)*
 - **CA-8.** Un texto cifrado copiado en SQL de un registro a otro **no** se puede descifrar: falla la verificación por AAD y se responde `500 CREDENTIAL_DECRYPT_FAILED`, que queda en el log como error de integridad.
 - **CA-9.** `GET /credentials?search=` busca por entidad, usuario o nombre del responsable.
 

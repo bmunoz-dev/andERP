@@ -177,7 +177,7 @@ describe('Credenciales', () => {
     expect(res.headers.pragma).toBe('no-cache');
     expect(t.logs.join('\n')).not.toContain(SECRET);
 
-    const logs = await auditFor(created.id);
+    const logs = (await auditFor(created.id)).filter((l) => l.action === 'credential.reveal');
     expect(logs).toEqual([{ action: 'credential.reveal', changes: null }]);
   });
 
@@ -204,6 +204,17 @@ describe('Credenciales', () => {
     expect(updates[0]!.changes).not.toHaveProperty('passwordChanged');
     expect(updates[1]!.changes).toMatchObject({ passwordChanged: true });
     expect(JSON.stringify(updates)).not.toMatch(/Nueva-123|Sup3r/);
+  });
+
+  it('CA-7b crear y borrar quedan en la auditoría, sin la contraseña', async () => {
+    const created = await newCredential();
+    await api().delete(`/credentials/${created.id}`).expect(204);
+
+    const logs = await auditFor(created.id);
+    expect(logs.map((l) => l.action)).toEqual(['credential.create', 'credential.delete']);
+    expect(logs[0]!.changes).toMatchObject({ after: { entityName: 'DIAN' } });
+    expect(logs[1]!.changes).toMatchObject({ before: { entityName: 'DIAN' } });
+    expect(JSON.stringify(logs)).not.toMatch(/Sup3r|passwordCiphertext|passwordIv|hasPassword/);
   });
 
   it('CA-8 un texto cifrado copiado a otro registro no se descifra', async () => {
@@ -304,7 +315,8 @@ describe('Aislamiento', () => {
     ]) {
       expect(res.status).toBe(404);
     }
-    expect(await auditFor(created.id)).toEqual([]);
+    // Solo queda la creación hecha por A: los intentos de B no dejan registros.
+    expect((await auditFor(created.id)).map((l) => l.action)).toEqual(['credential.create']);
 
     // Tampoco puede asignarle a su credencial un responsable de la organización A.
     const res = await other.post('/credentials', {

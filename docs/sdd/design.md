@@ -33,6 +33,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-14 | Los bloqueos de aplicación usan la forma de dos claves `(clase, objeto)` con una constante por regla (`11` = saldo de Clic Kiu, migración 0022). | Con una sola clave, cualquier bloqueo futuro sobre el id de la organización esperaría al de Clic Kiu; las claves de dos números no chocan con otras clases ni con las de una sola clave. |
 | 2026-10-14 | **Auditoría atómica** (F12): los servicios escriben el cambio y su registro en `audit_logs` en la misma transacción. | `AuditService` escribía después de confirmar el cambio: un fallo entre las dos sentencias dejaba cambios de dinero o credenciales sin auditar. |
 | 2026-10-14 | La regla del saldo de Clic Kiu rechaza las transacciones en `REPEATABLE READ` (migración 0023). | En ese nivel, dos ventas simultáneas pasarían las dos y el saldo quedaría negativo sin aviso; es mejor un error visible. |
+| 2026-10-14 | Las credenciales auditan también crear y borrar (`credential.create`, `credential.delete`), sin la contraseña. §5.9 lista además `credential.update`, que ya se auditaba desde F06. | Eran el único módulo sensible sin rastro de quién creó o quitó un acceso; `created_by` y `deleted_by` guardan solo el último actor, sin valores. |
 
 ---
 
@@ -452,7 +453,7 @@ Todas son vistas normales (no materializadas).
 
 - `INDEX (organization_id, created_at)`, `INDEX (entity_type, entity_id)`.
 
-**Se registra:** crear, editar y borrar en `expenses`, `fee_payments` (incluidos sus días), `provider_contracts` y `clickiu_movements`; revelar una credencial; y los eventos de auth (login, login fallido, bloqueo, cambio y recuperación de contraseña).
+**Se registra:** crear, editar y borrar en `expenses`, `fee_payments` (incluidos sus días), `provider_contracts`, `clickiu_movements` y `entity_credentials` (nunca con la contraseña ni sus datos cifrados); revelar una credencial; y los eventos de auth (login, login fallido, bloqueo, cambio y recuperación de contraseña).
 
 **Atomicidad (F12):** el cambio y su registro se escriben en la misma transacción (`audit.log(entry, tx)`): si falla la auditoría, el cambio no queda. Los eventos de auth y `credential.reveal` se auditan fuera de cualquier transacción de negocio.
 
