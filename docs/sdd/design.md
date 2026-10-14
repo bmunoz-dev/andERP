@@ -30,6 +30,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-10 | El contrato guarda un **monto mensual de referencia** (`monthly_amount`), no un valor total. Lo pagado se agrupa por mes trabajado (`v_contract_month_totals`) y **no se bloquea** ningún pago (F10). **Reemplaza** la decisión del 2026-10-06 (`CONTRACT_BALANCE_EXCEEDED`). | Los prestadores se pactan por mes y el usuario decide cuánto pagar cada mes; un tope total agotaba el contrato en el primer mes. |
 | 2026-10-13 | Cuerpo del diseño alineado con F10 (§1, §2 decisiones 10 y 11, §8), módulos reales en §4.1 y §4.3 (solo `auth` es hexagonal; `reports` vive dentro de `expenses`; con `responsible-persons`, `mail` y `health`), `OrgScope` en §6.4 y planes **Free** de Render y Supabase en §10. | El historial registraba los cambios, pero el cuerpo seguía describiendo el modelo anterior y el plan de pago de Render (decisión del usuario del 2026-10-10: no contratar planes de pago por ahora). |
 | 2026-10-14 | Módulo **Clic Kiu** (F11): `clickiu_movements` (recargas y ventas del saldo prepagado), vista `v_clickiu_balance` y regla de saldo no negativo en la base de datos. Independiente de Egresos. | La empresa recarga saldo en Clic Kiu (agencia de viajes) y vende con él; necesita saber el saldo y lo que deben los clientes por ventas a crédito. |
+| 2026-10-14 | Los bloqueos de aplicación usan la forma de dos claves `(clase, objeto)` con una constante por regla (`11` = saldo de Clic Kiu, migración 0022). | Con una sola clave, cualquier bloqueo futuro sobre el id de la organización esperaría al de Clic Kiu; las claves de dos números no chocan con otras clases ni con las de una sola clave. |
 
 ---
 
@@ -469,7 +470,8 @@ Todas son vistas normales (no materializadas).
 
 - `CHECK ((type = 'sale') = (status IS NOT NULL))`.
 - `INDEX (organization_id, movement_date) WHERE deleted_at IS NULL`.
-- **Trigger diferido** (`AFTER INSERT OR UPDATE`, al confirmar la transacción): toma un `pg_advisory_xact_lock` por organización y rechaza si el saldo de `v_clickiu_balance` queda negativo (`CLICKIU_INSUFFICIENT_BALANCE`). Cubre ventas nuevas o mayores, recargas reducidas y borrados lógicos, y serializa operaciones simultáneas.
+- **Trigger diferido** (`AFTER INSERT OR UPDATE`, al confirmar la transacción): toma un `pg_advisory_xact_lock(11, hashtext(organization_id::text))` y rechaza si el saldo de `v_clickiu_balance` queda negativo (`CLICKIU_INSUFFICIENT_BALANCE`). Cubre ventas nuevas o mayores, recargas reducidas y borrados lógicos, y serializa operaciones simultáneas.
+- **Bloqueos de aplicación** (`pg_advisory_xact_lock`): siempre con la forma de dos claves `(clase, objeto)`. La clase es una constante por regla, registrada aquí: `11` = saldo de Clic Kiu. La forma de una sola clave no se usa.
 
 **`v_clickiu_balance`** (`security_invoker`): por organización, `balance` = recargas − ventas, sin los movimientos borrados. Es la única fórmula del saldo: la usan el trigger y el saldo actual de la API. Los totales filtrados por fechas, tipo o estado se calculan en la consulta de la API con `SUM … FILTER`.
 
