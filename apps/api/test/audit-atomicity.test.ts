@@ -302,15 +302,28 @@ describe('Miembros', () => {
 });
 
 describe('Credenciales', () => {
+  const input = {
+    entityName: 'DIAN',
+    username: 'contador@empresa.co',
+    password: 'una-clave-segura-123',
+  };
+  const credentials = () => body<Credential[]>(api().get('/credentials'));
+
+  it('crear', async () => {
+    await failAudit('credential.create');
+    await body(api().post('/credentials', input), 500);
+    expect(await credentials()).toHaveLength(0);
+  });
+
+  it('borrar', async () => {
+    const c = await body<Credential>(api().post('/credentials', input), 201);
+    await failAudit('credential.delete');
+    await body(api().delete(`/credentials/${c.id}`), 500);
+    await body(api().get(`/credentials/${c.id}`));
+  });
+
   it('editar', async () => {
-    const c = await body<Credential>(
-      api().post('/credentials', {
-        entityName: 'DIAN',
-        username: 'contador@empresa.co',
-        password: 'una-clave-segura-123',
-      }),
-      201,
-    );
+    const c = await body<Credential>(api().post('/credentials', input), 201);
     await failAudit('credential.update');
     await body(api().patch(`/credentials/${c.id}`, { entityName: 'Otra' }), 500);
     expect((await body<Credential>(api().get(`/credentials/${c.id}`))).entityName).toBe('DIAN');
