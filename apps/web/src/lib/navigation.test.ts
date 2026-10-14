@@ -11,6 +11,7 @@ describe('navigationFor (F02 CA-18)', () => {
       'Prestadores',
       'Credenciales',
       'Responsables',
+      'Clic Kiu',
     ]);
     expect(groups[1]?.items.map((i) => i.to)).toEqual([
       '/configuracion/categorias',

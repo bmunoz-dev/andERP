@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as OlvideContrasenaRouteImport } from './routes/olvide-contrasena'
 import { Route as RestablecerRouteImport } from './routes/restablecer'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppClicKiuRouteImport } from './routes/_app/clic-kiu'
 import { Route as AppCredencialesRouteImport } from './routes/_app/credenciales'
 import { Route as AppEgresosRouteImport } from './routes/_app/egresos'
 import { Route as AppPlataformaRouteRouteImport } from './routes/_app/plataforma/route'
@@ -56,6 +57,11 @@ const RestablecerRoute = RestablecerRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClicKiuRoute = AppClicKiuRouteImport.update({
+  id: '/clic-kiu',
+  path: '/clic-kiu',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCredencialesRoute = AppCredencialesRouteImport.update({
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/olvide-contrasena': typeof OlvideContrasenaRoute
   '/restablecer': typeof RestablecerRoute
   '/plataforma': typeof AppPlataformaRouteRouteWithChildren
+  '/clic-kiu': typeof AppClicKiuRoute
   '/credenciales': typeof AppCredencialesRoute
   '/egresos': typeof AppEgresosRoute
   '/responsables': typeof AppResponsablesRoute
@@ -153,6 +160,7 @@ export interface FileRoutesByTo {
   '/olvide-contrasena': typeof OlvideContrasenaRoute
   '/restablecer': typeof RestablecerRoute
   '/plataforma': typeof AppPlataformaRouteRouteWithChildren
+  '/clic-kiu': typeof AppClicKiuRoute
   '/credenciales': typeof AppCredencialesRoute
   '/egresos': typeof AppEgresosRoute
   '/responsables': typeof AppResponsablesRoute
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/olvide-contrasena': typeof OlvideContrasenaRoute
   '/restablecer': typeof RestablecerRoute
   '/_app/plataforma': typeof AppPlataformaRouteRouteWithChildren
+  '/_app/clic-kiu': typeof AppClicKiuRoute
   '/_app/credenciales': typeof AppCredencialesRoute
   '/_app/egresos': typeof AppEgresosRoute
   '/_app/responsables': typeof AppResponsablesRoute
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/olvide-contrasena'
     | '/restablecer'
     | '/plataforma'
+    | '/clic-kiu'
     | '/credenciales'
     | '/egresos'
     | '/responsables'
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/olvide-contrasena'
     | '/restablecer'
     | '/plataforma'
+    | '/clic-kiu'
     | '/credenciales'
     | '/egresos'
     | '/responsables'
@@ -238,6 +249,7 @@ export interface FileRouteTypes {
     | '/olvide-contrasena'
     | '/restablecer'
     | '/_app/plataforma'
+    | '/_app/clic-kiu'
     | '/_app/credenciales'
     | '/_app/egresos'
     | '/_app/responsables'
@@ -303,6 +315,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/clic-kiu': {
+      id: '/_app/clic-kiu'
+      path: '/clic-kiu'
+      fullPath: '/clic-kiu'
+      preLoaderRoute: typeof AppClicKiuRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/credenciales': {
@@ -414,6 +433,7 @@ const AppPlataformaRouteRouteWithChildren =
 
 interface AppRouteChildren {
   AppPlataformaRouteRoute: typeof AppPlataformaRouteRouteWithChildren
+  AppClicKiuRoute: typeof AppClicKiuRoute
   AppCredencialesRoute: typeof AppCredencialesRoute
   AppEgresosRoute: typeof AppEgresosRoute
   AppResponsablesRoute: typeof AppResponsablesRoute
@@ -429,6 +449,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppPlataformaRouteRoute: AppPlataformaRouteRouteWithChildren,
+  AppClicKiuRoute: AppClicKiuRoute,
   AppCredencialesRoute: AppCredencialesRoute,
   AppEgresosRoute: AppEgresosRoute,
   AppResponsablesRoute: AppResponsablesRoute,

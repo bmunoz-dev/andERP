@@ -71,4 +71,5 @@ Solo agrega tablas, vista y triggers: no rompe la API anterior durante la ventan
 - **Privilegios (T001):** los privilegios por defecto de `0000_base.sql` (`ON TABLES`) ya cubren la vista; no hizo falta `GRANT`. La prueba lee `v_clickiu_balance` con `app_runtime`.
 - **Concurrencia (T001):** la prueba CA-9 abre dos transacciones que insertan antes de que cualquiera confirme. Se comprobó que falla si se quita el `pg_advisory_xact_lock` del trigger.
 - **Sin selector de tipo (T005, CA-20 actualizado):** el tipo nunca cambia, así que la página abre el diálogo ya con el tipo. Ahorra un Select (que además no se prueba bien en jsdom) y un clic.
+- **Web sin prueba de página (T006):** el proyecto prueba componentes, no rutas. La lógica de la página va en `MovementFilters` y `MovementsTable`, que tienen pruebas; `clic-kiu.tsx` solo conecta las consultas. La página calcula el mes actual igual que la API para mostrar las fechas en los filtros y en "Saldo al …".
 - **Tipo inmutable:** el trigger usa `WHEN (OLD.type IS DISTINCT FROM NEW.type)`, así la función solo lanza el error.
