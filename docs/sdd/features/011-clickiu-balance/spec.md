@@ -61,7 +61,7 @@ El módulo es independiente de Egresos: las recargas **no** aparecen en la matri
 - **CA-17.** Arriba, cuatro tarjetas que cambian con los filtros: **Recargado**, **Vendido**, **Por cobrar** (ventas en Crédito) y **Saldo al {fecha Hasta}** (`balanceAsOf`; "Saldo actual" si no hay fecha Hasta).
 - **CA-18.** Filtros **Desde** / **Hasta** (por defecto, el mes actual), **Tipo** (Todos / Recarga / Venta) y **Estado** (Todos / Crédito / Completado). Estado solo se habilita cuando Tipo = Venta. Los filtros se guardan en la URL.
 - **CA-19.** Tabla con Fecha (`dd/mm/yyyy`), Tipo, Monto (COP; `+` en recargas y `−` en ventas), Estado (insignia ámbar para Crédito y verde para Completado; "—" en recargas) y Descripción. Acciones: **Marcar como completado** (solo ventas en Crédito), Editar y Borrar (con confirmación).
-- **CA-20.** Diálogo para crear y editar: Tipo (deshabilitado al editar), Fecha (hoy por defecto), Monto, Descripción y Estado (solo en ventas, Crédito por defecto). En una venta muestra **"Saldo disponible: $X"** (`currentBalance`; al editar, sumando el monto original de la venta) y avisa si el monto lo supera. Si la API responde `CLICKIU_INSUFFICIENT_BALANCE`, se muestra su mensaje en español.
+- **CA-20.** Botones **Nueva recarga** y **Nueva venta**: cada uno abre el diálogo con el tipo fijo, que se muestra en el título (también al editar; el tipo no se cambia, CA-3). Campos: Fecha (hoy por defecto), Monto, Descripción y Estado (solo en ventas, Crédito por defecto). En una venta muestra **"Saldo disponible: $X"** (`currentBalance`; al editar, sumando el monto original de la venta) y avisa si el monto lo supera. Si la API responde `CLICKIU_INSUFFICIENT_BALANCE`, se muestra su mensaje en español.
 
 ## Fuera de alcance
 

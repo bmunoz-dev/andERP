@@ -30,9 +30,9 @@
 
 ## Bloque D — Web
 
-- [ ] F11-T005 [TDD] `movement-form-dialog.tsx`: estado solo en ventas, Crédito por defecto, tipo deshabilitado al editar, aviso de saldo (también al editar una venta) y el mensaje de `CLICKIU_INSUFFICIENT_BALANCE`.
+- [x] F11-T005 [TDD] `movement-form-dialog.tsx` y las funciones de crear y editar de `clickiu-api.ts`: estado solo en ventas, Crédito por defecto, tipo fijo en el título, aviso de saldo (también al editar una venta) y el mensaje de `CLICKIU_INSUFFICIENT_BALANCE`.
       Depende de: F11-T002 · Verificación: CA-20
-- [ ] F11-T006 [TDD] Página `/clic-kiu` y `clickiu-api.ts`: tarjetas, filtros en la URL (Estado solo con Venta), tabla, "Marcar como completado" y borrar con confirmación. Agregar "Clic Kiu" al menú.
+- [ ] F11-T006 [TDD] Página `/clic-kiu` y `clickiu-api.ts`: tarjetas, filtros en la URL (Estado solo con Venta), tabla, botones "Nueva recarga" y "Nueva venta", "Marcar como completado" y borrar con confirmación. Agregar "Clic Kiu" al menú.
       Depende de: F11-T003, F11-T005 · Verificación: CA-16–CA-19
 
 ## Cierre

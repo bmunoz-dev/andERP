@@ -53,7 +53,7 @@ Zod **no** valida la combinación tipo/estado: la aplica solo el CHECK, registra
 
 - `lib/clickiu-api.ts`: consultas y mutaciones de TanStack Query. Al guardar o borrar se invalidan `movements` y `summary`.
 - `routes/_app/clic-kiu.tsx`: `validateSearch` con un esquema propio que usa `.catch(undefined)` en cada campo (igual que `egresos.tsx`, para que una URL inválida no rompa la página), las cuatro tarjetas (`summary`), los filtros (Estado deshabilitado si Tipo ≠ Venta; al cambiar Tipo se limpia Estado) y el `DataTable` con sus acciones. "Marcar como completado" es un `PATCH { status: 'completed' }`.
-- `components/clickiu/movement-form-dialog.tsx`: usa `FormDialog`, `MoneyInput` y `SelectField`. Estado solo para ventas; "Saldo disponible" = `currentBalance` (+ el monto original si se edita una venta), con el aviso si `sumMoney([saldo, -monto])` da negativo (sin aritmética con `number`).
+- `components/clickiu/movement-form-dialog.tsx`: recibe el tipo (botones "Nueva recarga" y "Nueva venta" en la página; sin selector de tipo). Usa `FormDialog`, `MoneyInput` y `SelectField`. Estado solo para ventas; "Saldo disponible" = `currentBalance` (+ el monto original si se edita una venta), con el aviso si `sumMoney([saldo, -monto])` da negativo (sin aritmética con `number`).
 - `lib/navigation.ts`: "Clic Kiu" (icono `Wallet`) en Operación.
 
 ## Pruebas
@@ -70,4 +70,5 @@ Solo agrega tablas, vista y triggers: no rompe la API anterior durante la ventan
 
 - **Privilegios (T001):** los privilegios por defecto de `0000_base.sql` (`ON TABLES`) ya cubren la vista; no hizo falta `GRANT`. La prueba lee `v_clickiu_balance` con `app_runtime`.
 - **Concurrencia (T001):** la prueba CA-9 abre dos transacciones que insertan antes de que cualquiera confirme. Se comprobó que falla si se quita el `pg_advisory_xact_lock` del trigger.
+- **Sin selector de tipo (T005, CA-20 actualizado):** el tipo nunca cambia, así que la página abre el diálogo ya con el tipo. Ahorra un Select (que además no se prueba bien en jsdom) y un clic.
 - **Tipo inmutable:** el trigger usa `WHEN (OLD.type IS DISTINCT FROM NEW.type)`, así la función solo lanza el error.
