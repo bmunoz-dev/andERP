@@ -189,3 +189,46 @@ describe('Listado y filtros', () => {
     expect((await summary('from=2026-09-01')).balanceAsOf).toBe('1000.00');
   });
 });
+
+describe('Aislamiento', () => {
+  it('CA-15 otra organización no ve ni toca los movimientos ni el saldo ajenos', async () => {
+    await recharge('1000.00');
+    const v = await sale('300.00');
+    const other = as(t, s.orgB.admin.token);
+
+    await other.get(`/clickiu/movements/${v.id}`).expect(404);
+    await other.patch(`/clickiu/movements/${v.id}`, { status: 'completed' }).expect(404);
+    await other.delete(`/clickiu/movements/${v.id}`).expect(404);
+    expect(
+      (await other.get('/clickiu/movements?from=2026-09-01&to=2026-09-30').expect(200)).body,
+    ).toEqual([]);
+
+    // El saldo de A no sirve para vender en B, y los movimientos de B no cambian el resumen de A.
+    const noBalance = await other
+      .post('/clickiu/movements', {
+        type: 'sale',
+        status: 'credit',
+        movementDate: '2026-09-02',
+        amount: '1.00',
+      })
+      .expect(422);
+    expect(noBalance.body.code).toBe('CLICKIU_INSUFFICIENT_BALANCE');
+    await other
+      .post('/clickiu/movements', {
+        type: 'recharge',
+        movementDate: '2026-09-02',
+        amount: '5000.00',
+      })
+      .expect(201);
+    expect(await summary('from=2026-09-01&to=2026-09-30')).toEqual({
+      totalRecharged: '1000.00',
+      totalSold: '300.00',
+      creditAmount: '300.00',
+      balanceAsOf: '700.00',
+      currentBalance: '700.00',
+    });
+    expect((await api().get(`/clickiu/movements/${v.id}`).expect(200)).body).toMatchObject({
+      status: 'credit',
+    });
+  });
+});

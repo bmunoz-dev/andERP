@@ -25,7 +25,7 @@
 
 - [x] F11-T003 [TDD] Escribir `clickiu.test.ts` y después crear el módulo `clickiu` (servicio, controlador y registro del CHECK): CRUD, cambio de estado, auditoría, errores con su `code`, filtros (bordes, combinados, mes por defecto, `from > to`) y `summary`.
       Depende de: F11-T001, F11-T002 · Verificación: CA-1–CA-14
-- [ ] F11-T004 Pruebas de aislamiento con `seedTwoOrgs()`: A no lista, lee, edita ni borra lo de B, y los movimientos de B no cambian el `summary` de A.
+- [x] F11-T004 Pruebas de aislamiento con `seedTwoOrgs()`: A no lista, lee, edita ni borra lo de B, y los movimientos de B no cambian el `summary` de A.
       Depende de: F11-T003 · Verificación: CA-15
 
 ## Bloque D — Web
