@@ -20,5 +20,5 @@
 
 ## Bloque C — Cierre
 
-- [ ] F12-T005 Verificación completa (`format:check`, `lint`, `typecheck`, `test`), `roadmap.md` y notas de implementación en `plan.md`.
+- [x] F12-T005 Verificación completa (`format:check`, `lint`, `typecheck`, `test`), `roadmap.md` y notas de implementación en `plan.md`.
       Depende de: F12-T002–F12-T004
