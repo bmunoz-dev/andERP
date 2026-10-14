@@ -9,7 +9,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, eq, ilike, or, type SQL, sql } from 'drizzle-orm';
 import { InjectPinoLogger, type PinoLogger } from 'nestjs-pino';
 import { v7 as uuidv7 } from 'uuid';
-import { DB, type Database } from '../../db/database.module';
+import { DB, type Database, type DbExecutor } from '../../db/database.module';
 import { entityCredentials, responsiblePersons } from '../../db/schema';
 import { OrgScope } from '../../shared/db/org-scope';
 import { DomainError } from '../../shared/errors/domain-error';
@@ -66,8 +66,8 @@ export class CredentialsService {
     @InjectPinoLogger(CredentialsService.name) private readonly logger: PinoLogger,
   ) {}
 
-  private query(where: SQL | undefined) {
-    return this.db
+  private query(where: SQL | undefined, db: DbExecutor = this.db) {
+    return db
       .select(columns)
       .from(entityCredentials)
       .leftJoin(
@@ -96,8 +96,8 @@ export class CredentialsService {
     return rows.map(toCredential);
   }
 
-  async get(id: string): Promise<Credential> {
-    const [row] = await this.query(eq(entityCredentials.id, id));
+  async get(id: string, db: DbExecutor = this.db): Promise<Credential> {
+    const [row] = await this.query(eq(entityCredentials.id, id), db);
     if (!row) throw notFound();
     return toCredential(row);
   }
@@ -122,29 +122,34 @@ export class CredentialsService {
 
   /** CA-7: sin `password`, la contraseña guardada no cambia. */
   async update(id: string, changes: UpdateCredential): Promise<Credential> {
-    const before = await this.get(id);
-    const { password, ...rest } = changes;
-    await this.db
-      .update(entityCredentials)
-      .set(
-        this.scope.forUpdate({
-          ...this.fields(rest),
-          ...(password !== undefined ? this.encrypt(id, password) : {}),
-        }),
-      )
-      .where(and(this.scope.where(entityCredentials), eq(entityCredentials.id, id)));
-    const after = await this.get(id);
-    await this.audit.log({
-      action: 'credential.update',
-      entityType: 'credential',
-      entityId: id,
-      changes: {
-        before: auditable(before),
-        after: auditable(after),
-        ...(password !== undefined ? { passwordChanged: true } : {}),
-      },
+    return this.db.transaction(async (tx) => {
+      const before = await this.get(id, tx);
+      const { password, ...rest } = changes;
+      await tx
+        .update(entityCredentials)
+        .set(
+          this.scope.forUpdate({
+            ...this.fields(rest),
+            ...(password !== undefined ? this.encrypt(id, password) : {}),
+          }),
+        )
+        .where(and(this.scope.where(entityCredentials), eq(entityCredentials.id, id)));
+      const after = await this.get(id, tx);
+      await this.audit.log(
+        {
+          action: 'credential.update',
+          entityType: 'credential',
+          entityId: id,
+          changes: {
+            before: auditable(before),
+            after: auditable(after),
+            ...(password !== undefined ? { passwordChanged: true } : {}),
+          },
+        },
+        tx,
+      );
+      return after;
     });
-    return after;
   }
 
   async remove(id: string): Promise<void> {

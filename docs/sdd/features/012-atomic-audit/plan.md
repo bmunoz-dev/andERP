@@ -32,7 +32,7 @@ return this.db.transaction(async (tx) => {
 | `expenses` | create, update, remove | Transacción nueva. |
 | `fee-payments` | create, update, remove | La auditoría entra en la transacción de create y update; remove usa una nueva. |
 | `contracts` | create, update, remove | Transacción nueva. |
-| `organizations` | create, update | La auditoría entra en la transacción de create; update usa una nueva. |
+| `organizations` | create, update | La auditoría entra en la transacción de create; update usa una nueva, y al suspender revoca las sesiones de los miembros después de confirmar (CA-4). |
 | `members` | invite, resendInvite | La auditoría entra en la transacción que ya existe, después del correo. |
 | `members` | setActive | Transacción con la membresía y la auditoría; `revokeAllForUser` después de confirmar (CA-4). |
 | `credentials` | update | Transacción nueva. |
@@ -51,3 +51,4 @@ Las pruebas de auditoría de cada módulo y la de concurrencia del CA-9 de F11 s
 
 - **T001:** la falla de la auditoría se simula con un trigger de prueba (`anderp.test_fail_audit`, `BEFORE INSERT` en `audit_logs`) que lanza `XX000` solo para la acción indicada, en lugar del `CHECK` que proponía este plan: el mapeador de errores convierte una violación de `CHECK` en `422`, y lo que se quiere probar es un fallo real (`500`). La función se crea en `beforeAll` y el trigger se quita en `afterEach`.
 - **T001:** la verificación de "reenviar la invitación" cuenta las filas de `password_resets` del usuario: si el reenvío no se confirmó, sigue habiendo un solo token y sin usar.
+- **T004:** `organizations.update` también revoca sesiones (al suspender), con el mismo problema que `setActive`. Se le aplicó la misma regla y se amplió el CA-4 de la spec antes de cambiar el código.

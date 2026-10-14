@@ -15,7 +15,7 @@
       Depende de: F12-T001 · Verificación: CA-1, CA-2, CA-5
 - [x] F12-T003 `fee-payments` y `contracts`: igual que T002.
       Depende de: F12-T001 · Verificación: CA-1, CA-2, CA-5
-- [ ] F12-T004 `organizations`, `members` (incluida la revocación después de confirmar en `setActive`) y `credentials.update`.
+- [x] F12-T004 `organizations`, `members` (incluida la revocación después de confirmar en `setActive`) y `credentials.update`.
       Depende de: F12-T001 · Verificación: CA-1–CA-5
 
 ## Bloque C — Cierre

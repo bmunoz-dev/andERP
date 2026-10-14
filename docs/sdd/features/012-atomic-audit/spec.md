@@ -26,7 +26,7 @@ F12 hace que cada cambio auditado y su registro se confirmen juntos o no se conf
   - `members`: invitar, reenviar la invitación y activar o desactivar;
   - `credentials`: editar una credencial.
 - **CA-3.** Se auditan igual que hoy, fuera de cualquier transacción de negocio, los eventos de auth (login, login fallido, bloqueo, cambio y recuperación de contraseña), que deben quedar aunque falle lo demás, y `credential.reveal`, que ya audita antes de devolver la contraseña.
-- **CA-4.** Al desactivar un miembro, la membresía y su auditoría se confirman juntas. Las sesiones se revocan después de confirmar. Si la revocación falla, el miembro queda desactivado y sus sesiones vencen solas, como puede ocurrir hoy.
+- **CA-4.** Al desactivar un miembro o suspender una organización, el cambio y su auditoría se confirman juntos. Las sesiones se revocan después de confirmar. Si la revocación falla, el cambio queda hecho y esas sesiones vencen solas, como puede ocurrir hoy.
 - **CA-5.** El resto del comportamiento no cambia: los mismos `code` de error (incluido `CLICKIU_INSUFFICIENT_BALANCE`, que el trigger diferido sigue lanzando al confirmar), las mismas respuestas y los mismos registros en `audit_logs` cuando todo sale bien.
 
 ## Fuera de alcance
