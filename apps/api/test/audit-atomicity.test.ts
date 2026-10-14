@@ -10,10 +10,10 @@ import type {
   ServiceProvider,
 } from '@anderp/shared';
 import { randomUUID } from 'node:crypto';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DB, type Database } from '../src/db/database.module';
-import { documentTypes, passwordResets } from '../src/db/schema';
+import { auditLogs, documentTypes, passwordResets } from '../src/db/schema';
 import { createTestApp, type TestApp } from './setup/create-test-app';
 import { as, createMember, seedTwoOrgs, type TwoOrgs } from './setup/fixtures';
 import { resetDb, withOwnerSql } from './setup/reset-db';
@@ -315,4 +315,99 @@ describe('Credenciales', () => {
     await body(api().patch(`/credentials/${c.id}`, { entityName: 'Otra' }), 500);
     expect((await body<Credential>(api().get(`/credentials/${c.id}`))).entityName).toBe('DIAN');
   });
+});
+
+/**
+ * Dos borrados simultáneos: la prueba bloquea la fila, las dos peticiones leen el `before` y se
+ * quedan esperando en el `UPDATE`; al soltar el bloqueo, una borra y la otra ya no encuentra la
+ * fila. Debe responder 404 y no dejar un segundo registro de auditoría.
+ */
+describe('Dos borrados simultáneos', () => {
+  /** Espera a que `n` peticiones estén bloqueadas esperando un lock (`pg_locks` lo ve cualquier rol). */
+  async function waitForBlocked(n: number): Promise<void> {
+    for (let i = 0; i < 200; i++) {
+      const [row] = await withOwnerSql(
+        (sql) => sql<{ n: number }[]>`select count(*)::int as n from pg_locks where not granted`,
+      );
+      if (row!.n >= n) return;
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    throw new Error('Las peticiones nunca quedaron bloqueadas');
+  }
+
+  const createExpense = async () => {
+    const categories = await body<ExpenseCategory[]>(api().get('/expense-categories'));
+    return (
+      await body<Expense>(
+        api().post('/expenses', {
+          categoryId: categories.find((c) => c.name === 'Jurídico')!.id,
+          concept: 'Papelería',
+          paymentDate: '2026-09-08',
+          amount: '100000.00',
+        }),
+        201,
+      )
+    ).id;
+  };
+
+  const cases: [string, string, string, () => Promise<string>][] = [
+    [
+      'clickiu_movements',
+      '/clickiu/movements',
+      'clickiu_movement.delete',
+      async () =>
+        (
+          await body<ClickiuMovement>(
+            api().post('/clickiu/movements', {
+              type: 'recharge',
+              movementDate: '2026-09-01',
+              amount: '100.00',
+            }),
+            201,
+          )
+        ).id,
+    ],
+    ['expenses', '/expenses', 'expense.delete', createExpense],
+    [
+      'fee_payments',
+      '/fee-payments',
+      'fee_payment.delete',
+      async () =>
+        (
+          await body<FeePayment>(
+            api().post('/fee-payments', payment((await newContract()).id)),
+            201,
+          )
+        ).id,
+    ],
+    ['provider_contracts', '/contracts', 'contract.delete', async () => (await newContract()).id],
+  ];
+
+  it.each(cases)(
+    '%s: uno responde 204, el otro 404 y queda una sola auditoría',
+    async (table, path, action, create) => {
+      const id = await create();
+      let statuses!: Promise<number[]>;
+      await withOwnerSql((sql) =>
+        sql.begin(async (tx) => {
+          await tx.unsafe(`select 1 from anderp.${table} where id = $1 for update`, [id]);
+          statuses = Promise.all(
+            [1, 2].map(() =>
+              api()
+                .delete(`${path}/${id}`)
+                .then((res) => res.status),
+            ),
+          );
+          await waitForBlocked(2);
+        }),
+      );
+
+      expect((await statuses).sort()).toEqual([204, 404]);
+      const logs = await db
+        .select()
+        .from(auditLogs)
+        .where(and(eq(auditLogs.action, action), eq(auditLogs.entityId, id)));
+      expect(logs).toHaveLength(1);
+    },
+  );
 });

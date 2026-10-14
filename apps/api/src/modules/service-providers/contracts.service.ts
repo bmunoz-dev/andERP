@@ -181,10 +181,13 @@ export class ContractsService {
   async remove(id: string): Promise<void> {
     await this.db.transaction(async (tx) => {
       const before = await this.get(id, tx);
-      await tx
+      // Si otro borrado confirmó primero, la fila ya no cumple el WHERE: 404 y sin auditoría.
+      const [row] = await tx
         .update(providerContracts)
         .set(this.scope.forSoftDelete())
-        .where(and(this.scope.where(providerContracts), eq(providerContracts.id, id)));
+        .where(and(this.scope.where(providerContracts), eq(providerContracts.id, id)))
+        .returning({ id: providerContracts.id });
+      if (!row) throw notFound();
       await this.audit.log(
         {
           action: 'contract.delete',
