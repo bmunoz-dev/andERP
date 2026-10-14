@@ -29,6 +29,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-09 | `service_providers.is_active` (F09): un prestador inactivo no recibe contratos nuevos y no se puede desactivar con un contrato vigente o futuro. | Un prestador con pagos no se puede borrar; desactivarlo lo retira sin perder historial ni bloquear pagos atrasados. |
 | 2026-10-10 | El contrato guarda un **monto mensual de referencia** (`monthly_amount`), no un valor total. Lo pagado se agrupa por mes trabajado (`v_contract_month_totals`) y **no se bloquea** ningún pago (F10). **Reemplaza** la decisión del 2026-10-06 (`CONTRACT_BALANCE_EXCEEDED`). | Los prestadores se pactan por mes y el usuario decide cuánto pagar cada mes; un tope total agotaba el contrato en el primer mes. |
 | 2026-10-13 | Cuerpo del diseño alineado con F10 (§1, §2 decisiones 10 y 11, §8), módulos reales en §4.1 y §4.3 (solo `auth` es hexagonal; `reports` vive dentro de `expenses`; con `responsible-persons`, `mail` y `health`), `OrgScope` en §6.4 y planes **Free** de Render y Supabase en §10. | El historial registraba los cambios, pero el cuerpo seguía describiendo el modelo anterior y el plan de pago de Render (decisión del usuario del 2026-10-10: no contratar planes de pago por ahora). |
+| 2026-10-14 | Módulo **Clic Kiu** (F11): `clickiu_movements` (recargas y ventas del saldo prepagado), vista `v_clickiu_balance` y regla de saldo no negativo en la base de datos. Independiente de Egresos. | La empresa recarga saldo en Clic Kiu (agencia de viajes) y vende con él; necesita saber el saldo y lo que deben los clientes por ventas a crédito. |
 
 ---
 
@@ -41,7 +42,8 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 1. Ver los egresos del mes en una matriz **categoría × semana** con totales por semana, por categoría y del mes.
 2. Registrar pagos de honorarios día a día por semana, ligados al contrato del prestador, con lo pagado por mes trabajado frente al monto mensual de referencia del contrato.
 3. Guardar credenciales de portales externos cifradas, con registro de quién las revela.
-4. Nacer como sistema interno de una sola empresa, pero con el modelo de datos listo para operar varias organizaciones (multi-tenant) sin migrar datos.
+4. Llevar el saldo prepagado de Clic Kiu: recargas, ventas y lo que deben los clientes por ventas a crédito (F11).
+5. Nacer como sistema interno de una sola empresa, pero con el modelo de datos listo para operar varias organizaciones (multi-tenant) sin migrar datos.
 
 **Criterios de éxito:**
 
@@ -69,6 +71,7 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 | 12 | Roles | `super_admin` (plataforma: gestiona organizaciones y catálogos globales) y `admin` (todo dentro de su organización, incluidos ver credenciales y gestionar usuarios de la organización). |
 | 13 | Idioma | Base de datos y código en **inglés**. Interfaz en **español**. |
 | 14 | Responsables | Personas de contacto, independientes de los usuarios de la app. |
+| 15 | Clic Kiu | Módulo aparte: las recargas **no** entran en la matriz de Egresos. Una venta resta saldo esté en Crédito (el cliente debe) o Completado (ya pagó). El saldo total nunca queda negativo (F11). |
 
 ---
 
@@ -91,6 +94,8 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 | Periodicidad de pago | `payment_frequency` |
 | Semana del mes | `week_of_month` |
 | Registro de auditoría | `audit_logs` |
+| Movimiento de Clic Kiu (Recarga / Venta) | `clickiu_movements` (`recharge` / `sale`) |
+| Estado de la venta (Crédito / Completado) | `clickiu_sale_status` (`credit` / `completed`) |
 
 ---
 
@@ -139,6 +144,7 @@ apps/
         responsible-persons/ CRUD de responsables
         credentials/         cifrado AES-256-GCM (credential-cipher.ts), servicio y rotación de llaves
         audit/               escritura de audit_logs
+        clickiu/             movimientos y saldo de Clic Kiu (F11)
         mail/                envío de correos (invitaciones y recuperación)
         health/              healthcheck para el despliegue
       shared/              conexión a la DB, contexto de organización, guards, errores, logging
@@ -174,6 +180,8 @@ packages/
 | `user_status` | `active`, `locked`, `inactive` |
 | `member_role` | `admin` |
 | `payment_frequency` | `weekly`, `biweekly`, `monthly`, `bimonthly` |
+| `clickiu_movement_type` | `recharge`, `sale` |
+| `clickiu_sale_status` | `credit`, `completed` |
 
 ### 5.3 Núcleo: organizaciones y autenticación
 
@@ -441,9 +449,29 @@ Todas son vistas normales (no materializadas).
 
 - `INDEX (organization_id, created_at)`, `INDEX (entity_type, entity_id)`.
 
-**Se registra:** crear, editar y borrar en `expenses`, `fee_payments` (incluidos sus días) y `provider_contracts`; revelar una credencial; y los eventos de auth (login, login fallido, bloqueo, cambio y recuperación de contraseña).
+**Se registra:** crear, editar y borrar en `expenses`, `fee_payments` (incluidos sus días), `provider_contracts` y `clickiu_movements`; revelar una credencial; y los eventos de auth (login, login fallido, bloqueo, cambio y recuperación de contraseña).
 
 **No se registra:** los cambios en catálogos (los cubren `created_by` y `updated_by`).
+
+### 5.10 Clic Kiu (F11)
+
+**`clickiu_movements`**
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | uuid PK | |
+| organization_id | uuid NOT NULL | |
+| type | clickiu_movement_type NOT NULL | no cambia después de crear (trigger) |
+| status | clickiu_sale_status NULL | obligatorio en ventas, nulo en recargas |
+| movement_date | date NOT NULL | |
+| amount | numeric(14,2) NOT NULL | `CHECK (amount > 0)` |
+| description | varchar(500) NULL | observaciones |
+| audit | | |
+
+- `CHECK ((type = 'sale') = (status IS NOT NULL))`.
+- `INDEX (organization_id, movement_date) WHERE deleted_at IS NULL`.
+- **Trigger diferido** (`AFTER INSERT OR UPDATE`, al confirmar la transacción): toma un `pg_advisory_xact_lock` por organización y rechaza si el saldo de `v_clickiu_balance` queda negativo (`CLICKIU_INSUFFICIENT_BALANCE`). Cubre ventas nuevas o mayores, recargas reducidas y borrados lógicos, y serializa operaciones simultáneas.
+
+**`v_clickiu_balance`** (`security_invoker`): por organización, `balance` = recargas − ventas, sin los movimientos borrados. Es la única fórmula del saldo: la usan el trigger y el saldo actual de la API. Los totales filtrados por fechas, tipo o estado se calculan en la consulta de la API con `SUM … FILTER`.
 
 ---
 
@@ -521,6 +549,7 @@ Todas son vistas normales (no materializadas).
 | Prestadores | Listado y detalle con sus contratos, monto mensual y pagado este mes. |
 | Credenciales | Listado sin contraseñas; botón "Revelar" (se registra en auditoría) y copiar al portapapeles. |
 | Responsables | CRUD. |
+| Clic Kiu | Tarjetas Recargado, Vendido, Por cobrar y Saldo al corte, que cambian con los filtros (fechas, tipo y estado). Tabla de movimientos con "Marcar como completado" y diálogo de recarga o venta que muestra el saldo disponible. |
 | Configuración (admin) | Categorías de egreso y usuarios de la organización. |
 | Plataforma (super admin) | Organizaciones y catálogos globales. |
 

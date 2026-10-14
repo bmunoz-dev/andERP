@@ -1,7 +1,7 @@
 # F11 — Saldo de Clic Kiu · Spec
 
-- **Estado:** Borrador
-- **Diseño:** `design.md` §3 (glosario), §5.10 (`clickiu_movements`, `v_clickiu_balance`), §8 (pantalla Clic Kiu). Las secciones se agregan al aprobar esta spec.
+- **Estado:** Aprobado
+- **Diseño:** `design.md` §3 (glosario), §5.10 (`clickiu_movements`, `v_clickiu_balance`), §8 (pantalla Clic Kiu).
 - **Depende de:** F02 (organizaciones, auditoría y `OrgScope`)
 
 ## Objetivo
@@ -37,7 +37,7 @@ El módulo es independiente de Egresos: las recargas **no** aparecen en la matri
 
 **Listado y filtros**
 
-- **CA-10.** `GET /clickiu/movements` lista los movimientos de la organización ordenados por fecha descendente. Acepta `from` y `to` (rango de fechas, bordes incluidos), `type` y `status`, todos opcionales y combinables. Sin `from` ni `to`, el rango es el **mes actual** en Bogotá. Si llega solo uno, el otro extremo queda abierto. Si `from` es posterior a `to`, responde `400` por validación.
+- **CA-10.** `GET /clickiu/movements` lista los movimientos de la organización ordenados por fecha descendente. Acepta `from` y `to` (rango de fechas, bordes incluidos), `type` y `status`, todos opcionales y combinables. Sin `from` ni `to`, el rango es el **mes actual** en Bogotá. Si llega solo uno, el otro extremo queda abierto. Si `from` es posterior a `to`, responde `422 VALIDATION_ERROR`.
 - **CA-11.** El filtro `status` solo devuelve ventas: las recargas no tienen estado y quedan fuera.
 
 **Resumen**

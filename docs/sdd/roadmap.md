@@ -15,6 +15,7 @@
 | F08 | [Modo oscuro](features/008-dark-mode/spec.md) | F00 | Aprobado | Aprobado | Hecho |
 | F09 | [Desactivar prestadores](features/009-provider-deactivation/spec.md) | F03, F04 | Aprobado | Aprobado | Hecho |
 | F10 | [Monto mensual de referencia en los contratos](features/010-monthly-contract-amount/spec.md) | F04 | Aprobado | Aprobado | Hecho |
+| F11 | [Saldo de Clic Kiu](features/011-clickiu-balance/spec.md) | F02 | Aprobado | Borrador | Pendiente |
 
 F06 solo depende de F02, así que se puede desarrollar en paralelo con F03–F05.
 
@@ -51,7 +52,7 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 ## Bloqueos y notas
 
-**Siguiente paso:** cerrar los riesgos abiertos de F07 (abajo).
+**Siguiente paso:** cerrar los riesgos abiertos de F07 (abajo). F11 está especificada y planificada; **el respaldo de producción debería estar antes de desplegarla** (es otro módulo con dinero en una base sin backups).
 
 **Estado de producción (2026-10-10):**
 - Hecho: pipeline activo (environment `production` con secretos, `API_HEALTH_URL`, Auto-Deploy de Render apagado), correo con Brevo, `PROXY_SECRET` rotado como Secret del Worker, `app_runtime` como único usuario de la API.
@@ -68,7 +69,6 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 2. HU2 de la spec de F03 sigue diciendo "valor total" (F10 lo cambió a monto mensual).
 3. `CLAUDE.md` repite las reglas técnicas de la constitución; dejar solo lo operativo y enlazarla. El README de SDD no dice que el merge lo hace el usuario. La Definición de Hecho no incluye `format:check`.
 4. Pendiente 2 de F07 (Workers Builds en las ramas de PR): confirmar si quedó resuelto al desactivar las vistas previas y actualizarlo aquí.
-5. Rama `docs/claude-run-consent`: quitar los dos commits `chore` vacíos (pruebas de build de Cloudflare) o hacer squash antes del PR.
 
 **Decisiones tomadas:** la skill `ponytail` se versiona en el repo (`.agents/`, `skills-lock.json` y una copia real en `.claude/skills/ponytail/`, sin enlace simbólico). No se protege `main`: es un proyecto personal.
 
