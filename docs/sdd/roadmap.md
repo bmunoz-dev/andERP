@@ -53,7 +53,7 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 ## Bloqueos y notas
 
-**Siguiente paso:** cerrar los riesgos abiertos de F07 (abajo). F12 terminada (2026-10-14): cada cambio auditado y su registro se confirman en la misma transacción. **Pendientes que dejó F12** (fuera de su alcance): (1) ~~crear y borrar credenciales no se audita~~ resuelto el 2026-10-14 (F06 CA-7b); (2) los correos de invitación se envían dentro de la transacción, así que si esta falla después del envío, el enlace no sirve. F11 terminada y desplegada (2026-10-14). **Decisión del usuario:** se desplegó sin respaldo porque producción aún no tiene datos reales; el respaldo (pendiente 1 de F07) vuelve a ser prioritario en cuanto haya datos.
+**Siguiente paso:** cerrar los riesgos abiertos de F07 (abajo). F12 terminada (2026-10-14): cada cambio auditado y su registro se confirman en la misma transacción. **Pendientes que dejó F12** (fuera de su alcance): (1) ~~crear y borrar credenciales no se audita~~ resuelto el 2026-10-14 (F06 CA-7b); (2) ~~los correos de invitación se envían dentro de la transacción~~ reducido el 2026-10-14: el correo es lo último antes de confirmar (notas del plan de F02); solo un fallo del `COMMIT` dejaría un enlace inválido. F11 terminada y desplegada (2026-10-14). **Decisión del usuario:** se desplegó sin respaldo porque producción aún no tiene datos reales; el respaldo (pendiente 1 de F07) vuelve a ser prioritario en cuanto haya datos.
 
 **Estado de producción (2026-10-10):**
 - Hecho: pipeline activo (environment `production` con secretos, `API_HEALTH_URL`, Auto-Deploy de Render apagado), correo con Brevo, `PROXY_SECRET` rotado como Secret del Worker, `app_runtime` como único usuario de la API.
