@@ -80,6 +80,11 @@ const MESSAGES = {
     'Este prestador está inactivo y no puede recibir contratos nuevos. Actívalo primero.',
   PROVIDER_HAS_ACTIVE_CONTRACT:
     'El prestador tiene un contrato vigente o futuro. Ponle una fecha de fin ya cumplida antes de desactivarlo.',
+  CLICKIU_INSUFFICIENT_BALANCE: 'El saldo de Clic Kiu no alcanza para este movimiento.',
+  CLICKIU_MOVEMENT_TYPE_IMMUTABLE:
+    'Una recarga no se puede convertir en venta ni al revés. Borra el movimiento y créalo de nuevo.',
+  CLICKIU_SALE_STATUS_REQUIRED:
+    'Una venta debe tener estado (Crédito o Completado); una recarga no.',
 } satisfies Record<ErrorCode, string>;
 
 const CLIENT_MESSAGES: Record<string, string> = {

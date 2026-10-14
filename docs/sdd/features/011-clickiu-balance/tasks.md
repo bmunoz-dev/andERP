@@ -17,7 +17,7 @@
 
 ## Bloque B — Compartido
 
-- [ ] F11-T002 [P] Esquemas Zod en `packages/shared/src/schemas/clickiu.ts` (con pruebas de `description` vacía → `null` y `from > to`) y los tres códigos de error con su mensaje en español.
+- [x] F11-T002 [P] Esquemas Zod en `packages/shared/src/schemas/clickiu.ts` (con pruebas de `description` vacía → `null` y `from > to`) y los tres códigos de error con su mensaje en español.
       Archivos: `packages/shared/src/schemas/clickiu.ts`, `packages/shared/src/errors/codes.ts`, `apps/web/src/lib/error-messages.es.ts`
       Verificación: CA-1, CA-10
 
