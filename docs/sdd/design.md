@@ -28,6 +28,8 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-09 | La web tiene tema **claro, oscuro o del sistema** (F08). La preferencia se guarda en el navegador, no en la cuenta. | Comodidad visual sin tocar la API ni la base de datos; la paleta oscura ya venía con shadcn/ui. |
 | 2026-10-09 | `service_providers.is_active` (F09): un prestador inactivo no recibe contratos nuevos y no se puede desactivar con un contrato vigente o futuro. | Un prestador con pagos no se puede borrar; desactivarlo lo retira sin perder historial ni bloquear pagos atrasados. |
 | 2026-10-10 | El contrato guarda un **monto mensual de referencia** (`monthly_amount`), no un valor total. Lo pagado se agrupa por mes trabajado (`v_contract_month_totals`) y **no se bloquea** ningún pago (F10). **Reemplaza** la decisión del 2026-10-06 (`CONTRACT_BALANCE_EXCEEDED`). | Los prestadores se pactan por mes y el usuario decide cuánto pagar cada mes; un tope total agotaba el contrato en el primer mes. |
+| 2026-10-13 | Cuerpo del diseño alineado con F10 (§1, §2 decisiones 10 y 11, §8), módulos reales en §4.1 y §4.3 (solo `auth` es hexagonal; `reports` vive dentro de `expenses`; con `responsible-persons`, `mail` y `health`), `OrgScope` en §6.4 y planes **Free** de Render y Supabase en §10. | El historial registraba los cambios, pero el cuerpo seguía describiendo el modelo anterior y el plan de pago de Render (decisión del usuario del 2026-10-10: no contratar planes de pago por ahora). |
+| 2026-10-14 | Módulo **Clic Kiu** (F11): `clickiu_movements` (recargas y ventas del saldo prepagado), vista `v_clickiu_balance` y regla de saldo no negativo en la base de datos. Independiente de Egresos. | La empresa recarga saldo en Clic Kiu (agencia de viajes) y vende con él; necesita saber el saldo y lo que deben los clientes por ventas a crédito. |
 
 ---
 
@@ -38,9 +40,10 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 **Objetivos:**
 
 1. Ver los egresos del mes en una matriz **categoría × semana** con totales por semana, por categoría y del mes.
-2. Registrar pagos de honorarios día a día por semana, ligados al contrato del prestador, con control de saldo del contrato.
+2. Registrar pagos de honorarios día a día por semana, ligados al contrato del prestador, con lo pagado por mes trabajado frente al monto mensual de referencia del contrato.
 3. Guardar credenciales de portales externos cifradas, con registro de quién las revela.
-4. Nacer como sistema interno de una sola empresa, pero con el modelo de datos listo para operar varias organizaciones (multi-tenant) sin migrar datos.
+4. Llevar el saldo prepagado de Clic Kiu: recargas, ventas y lo que deben los clientes por ventas a crédito (F11).
+5. Nacer como sistema interno de una sola empresa, pero con el modelo de datos listo para operar varias organizaciones (multi-tenant) sin migrar datos.
 
 **Criterios de éxito:**
 
@@ -63,11 +66,12 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 | 7 | Honorarios en egresos | Una vista une los egresos manuales y los pagos de honorarios. La categoría "Honorarios" (`system_code = 'FEES'`) se alimenta **solo** del módulo de honorarios y no se puede elegir en egresos manuales. Los honorarios facturados (p. ej. un abogado externo) se registran como egreso manual en su categoría (p. ej. "Jurídico"). |
 | 8 | Fecha que manda en egresos | `payment_date` (criterio de caja), tanto para egresos manuales como para pagos de honorarios. |
 | 9 | Pago de honorarios | Se registra un **valor en dinero por fecha trabajada**, sin tarifas. Festivo es una marca (`is_holiday`) sugerida por el sistema. |
-| 10 | Prestadores | Separados en `service_providers` (identidad y cuenta bancaria) y `provider_contracts` (fechas, acuerdo, periodicidad, valor total). |
-| 11 | "Pago total" | Es el **valor total del contrato**. Lo pagado y el saldo se calculan. |
+| 10 | Prestadores | Separados en `service_providers` (identidad y cuenta bancaria) y `provider_contracts` (fechas, acuerdo, periodicidad, monto mensual de referencia). |
+| 11 | Monto del contrato | Es un **monto mensual de referencia** (F10). Lo pagado se calcula por mes trabajado; superarlo genera un aviso, no un bloqueo. No hay saldo total del contrato. |
 | 12 | Roles | `super_admin` (plataforma: gestiona organizaciones y catálogos globales) y `admin` (todo dentro de su organización, incluidos ver credenciales y gestionar usuarios de la organización). |
 | 13 | Idioma | Base de datos y código en **inglés**. Interfaz en **español**. |
 | 14 | Responsables | Personas de contacto, independientes de los usuarios de la app. |
+| 15 | Clic Kiu | Módulo aparte: las recargas **no** entran en la matriz de Egresos. Una venta resta saldo esté en Crédito (el cliente debe) o Completado (ya pagó). El saldo total nunca queda negativo (F11). |
 
 ---
 
@@ -90,6 +94,8 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 | Periodicidad de pago | `payment_frequency` |
 | Semana del mes | `week_of_month` |
 | Registro de auditoría | `audit_logs` |
+| Movimiento de Clic Kiu (Recarga / Venta) | `clickiu_movements` (`recharge` / `sale`) |
+| Estado de la venta (Crédito / Completado) | `clickiu_sale_status` (`credit` / `completed`) |
 
 ---
 
@@ -97,7 +103,7 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 
 ### 4.1 Estilo
 
-**Monolito modular** con NestJS. Una sola aplicación desplegable, dividida en módulos con fronteras claras. La **arquitectura hexagonal** (dominio / aplicación / infraestructura, con puertos y adaptadores) se aplica **solo en los módulos con lógica de dominio real**: `auth`, `fee-payments` y `credentials`. Los módulos CRUD usan controlador → servicio → repositorio, sin capas vacías.
+**Monolito modular** con NestJS. Una sola aplicación desplegable, dividida en módulos con fronteras claras. La **arquitectura hexagonal** (dominio / aplicación / infraestructura, con puertos y adaptadores) se aplica **solo en los módulos con lógica de dominio real**. Se planeó para `auth`, `fee-payments` y `credentials`, pero hoy solo `auth` la tiene: en `fee-payments` y `credentials` cada puerto habría tenido una sola implementación, así que usan funciones puras, un servicio y triggers (notas de implementación de F04 y F06). El resto usa controlador → servicio → repositorio, sin capas vacías.
 
 Se descartaron: hexagonal estricta en todos los módulos (sobrecarga sin beneficio en un sistema con mucho CRUD) y microservicios (complejidad operativa injustificada; las fronteras de módulo permiten extraer servicios más adelante).
 
@@ -133,11 +139,14 @@ apps/
         organizations/       CRUD de organizaciones (super admin) y miembros
         catalogs/            CRUD de bancos, tipos de cuenta, tipos de documento y categorías
         service-providers/   prestadores y contratos
-        fee-payments/      ◆ hexagonal: invariantes de semana, días y saldo del contrato
-        expenses/            CRUD de egresos manuales
-        reports/             lectura de vistas (matriz mensual, libro de egresos)
-        credentials/       ◆ hexagonal: CipherPort → adaptador AesGcmCipher
+        fee-payments/        invariantes de semana y días (funciones puras + triggers)
+        expenses/            CRUD de egresos manuales y lectura de vistas (reports.service: matriz mensual, libro de egresos)
+        responsible-persons/ CRUD de responsables
+        credentials/         cifrado AES-256-GCM (credential-cipher.ts), servicio y rotación de llaves
         audit/               escritura de audit_logs
+        clickiu/             movimientos y saldo de Clic Kiu (F11)
+        mail/                envío de correos (invitaciones y recuperación)
+        health/              healthcheck para el despliegue
       shared/              conexión a la DB, contexto de organización, guards, errores, logging
   web/                     React + Vite
 packages/
@@ -171,6 +180,8 @@ packages/
 | `user_status` | `active`, `locked`, `inactive` |
 | `member_role` | `admin` |
 | `payment_frequency` | `weekly`, `biweekly`, `monthly`, `bimonthly` |
+| `clickiu_movement_type` | `recharge`, `sale` |
+| `clickiu_sale_status` | `credit`, `completed` |
 
 ### 5.3 Núcleo: organizaciones y autenticación
 
@@ -438,9 +449,29 @@ Todas son vistas normales (no materializadas).
 
 - `INDEX (organization_id, created_at)`, `INDEX (entity_type, entity_id)`.
 
-**Se registra:** crear, editar y borrar en `expenses`, `fee_payments` (incluidos sus días) y `provider_contracts`; revelar una credencial; y los eventos de auth (login, login fallido, bloqueo, cambio y recuperación de contraseña).
+**Se registra:** crear, editar y borrar en `expenses`, `fee_payments` (incluidos sus días), `provider_contracts` y `clickiu_movements`; revelar una credencial; y los eventos de auth (login, login fallido, bloqueo, cambio y recuperación de contraseña).
 
 **No se registra:** los cambios en catálogos (los cubren `created_by` y `updated_by`).
+
+### 5.10 Clic Kiu (F11)
+
+**`clickiu_movements`**
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | uuid PK | |
+| organization_id | uuid NOT NULL | |
+| type | clickiu_movement_type NOT NULL | no cambia después de crear (trigger) |
+| status | clickiu_sale_status NULL | obligatorio en ventas, nulo en recargas |
+| movement_date | date NOT NULL | |
+| amount | numeric(14,2) NOT NULL | `CHECK (amount > 0)` |
+| description | varchar(500) NULL | observaciones |
+| audit | | |
+
+- `CHECK ((type = 'sale') = (status IS NOT NULL))`.
+- `INDEX (organization_id, movement_date) WHERE deleted_at IS NULL`.
+- **Trigger diferido** (`AFTER INSERT OR UPDATE`, al confirmar la transacción): toma un `pg_advisory_xact_lock` por organización y rechaza si el saldo de `v_clickiu_balance` queda negativo (`CLICKIU_INSUFFICIENT_BALANCE`). Cubre ventas nuevas o mayores, recargas reducidas y borrados lógicos, y serializa operaciones simultáneas.
+
+**`v_clickiu_balance`** (`security_invoker`): por organización, `balance` = recargas − ventas, sin los movimientos borrados. Es la única fórmula del saldo: la usan el trigger y el saldo actual de la API. Los totales filtrados por fechas, tipo o estado se calculan en la consulta de la API con `SUM … FILTER`.
 
 ---
 
@@ -470,7 +501,7 @@ Todas son vistas normales (no materializadas).
 ### 6.4 Aislamiento por organización y permisos
 
 - **Contexto:** el JWT lleva `userId` y la organización activa. Un guard verifica la membresía en `organization_members` (o `is_super_admin`) en cada petición.
-- **Repositorio base:** `nestjs-cls` guarda `userId` y `organizationId`. El repositorio base de Drizzle aplica `organization_id = :orgId` y `deleted_at IS NULL` en toda consulta y llena `created_by` y `updated_by`.
+- **`OrgScope`:** `nestjs-cls` guarda `userId` y `organizationId`. El servicio `OrgScope` (`where`, `forInsert`, `forUpdate`, `forSoftDelete`) aplica `organization_id = :orgId` y `deleted_at IS NULL` en toda consulta y llena `created_by` y `updated_by`. Cumple el papel del "repositorio base" de la constitución (principio IV); se eligió un servicio explícito porque los genéricos de Drizzle hacen incómoda una clase base tipada (F02).
 - **Base de datos:** las FK compuestas impiden referencias entre organizaciones aunque falle el backend.
 - **Permisos:**
 
@@ -514,10 +545,11 @@ Todas son vistas normales (no materializadas).
 |---|---|
 | Login y recuperación de contraseña | |
 | Egresos | Matriz categoría × semana del mes seleccionado, con totales por fila, por columna y del mes. Cada celda abre el detalle de sus egresos. Formulario de egreso: select de semana que acota el selector de fecha, sin la categoría "Honorarios". Las filas de honorarios enlazan a su pago. |
-| Pagos de honorarios | Listado filtrable por mes, prestador y semana. Formulario: contrato → año/mes/semana → cuadrícula con los días del rango (marcando festivos) y un valor por día, fecha de pago y total calculado. Advertencia de saldo del contrato. |
-| Prestadores | Listado y detalle con sus contratos, pagado y saldo. |
+| Pagos de honorarios | Listado filtrable por mes, prestador y semana. Formulario: contrato → año/mes/semana → cuadrícula con los días del rango (marcando festivos) y un valor por día, fecha de pago y total calculado. Lo pagado en el mes trabajado frente al monto mensual, con aviso si se supera (no bloquea). |
+| Prestadores | Listado y detalle con sus contratos, monto mensual y pagado este mes. |
 | Credenciales | Listado sin contraseñas; botón "Revelar" (se registra en auditoría) y copiar al portapapeles. |
 | Responsables | CRUD. |
+| Clic Kiu | Tarjetas Recargado, Vendido, Por cobrar y Saldo al corte, que cambian con los filtros (fechas, tipo y estado). Tabla de movimientos con "Marcar como completado" y diálogo de recarga o venta que muestra el saldo disponible. |
 | Configuración (admin) | Categorías de egreso y usuarios de la organización. |
 | Plataforma (super admin) | Organizaciones y catálogos globales. |
 
@@ -549,7 +581,8 @@ La interfaz está en español y el formato de moneda es COP (`es-CO`).
 - **Datos iniciales:** catálogos globales y una organización inicial con su usuario super admin (la contraseña se define por variable de entorno en el primer arranque).
 - **Entornos:** local con Postgres en Docker (`docker compose`) y producción en Supabase. Staging con un segundo proyecto de Supabase cuando haga falta.
 - **Rol de la base de datos:** la API se conecta con un rol propio con privilegios mínimos, distinto del rol dueño de las migraciones.
-- **Despliegue de la API:** contenedor Docker en Render (plan de pago, sin dormirse).
+- **Despliegue de la API:** contenedor Docker en Render. Hoy en plan **Free** (se duerme tras inactividad, ~50 s al despertar); pasar a un plan de pago cuando el uso lo justifique.
+- **Base de datos en producción:** Supabase en plan **Free**: sin backups automáticos y se pausa tras una semana sin uso. El respaldo propio está pendiente (`roadmap.md`, F07).
 - **Despliegue de la web:** Cloudflare Worker con archivos estáticos; el Worker reenvía `/api/*` a la API agregando `X-Proxy-Secret`. La web y la API comparten origen: la cookie `SameSite=Strict` funciona y no hace falta CORS. El detalle está en `features/007-deployment/plan.md`.
 - **Secretos:** `DATABASE_URL`, `JWT_SECRET`, `CREDENTIALS_KEY_V*` y la configuración de correo para la recuperación de contraseña, como variables de entorno del proveedor.
 

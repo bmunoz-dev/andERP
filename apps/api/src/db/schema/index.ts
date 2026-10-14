@@ -5,3 +5,4 @@ export * from './service-providers';
 export * from './fee-payments';
 export * from './expenses';
 export * from './credentials';
+export * from './clickiu';

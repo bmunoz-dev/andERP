@@ -1,6 +1,8 @@
 # F04 — Pagos de honorarios · Tareas
 
 - **Rama:** `feat/004-fee-payments`
+
+> **Modificado por [F10](../010-monthly-contract-amount/spec.md) (2026-10-10):** el contrato ya no tiene valor total ni saldo, sino un monto mensual de referencia, y no se bloquea ningún pago. Las tareas siguen marcadas como hechas porque se cumplieron en su momento; lo que F10 reemplazó está marcado con *(Reemplazado por F10)*.
 - **Plan:** [plan.md](plan.md)
 
 ## Bloque A — Datos
@@ -18,8 +20,8 @@
 - [x] F04-T004 [TDD] Escribir las pruebas de las vistas y después crear `0009_fee_payment_views`:
       - totales;
       - un pago borrado no suma;
-      - contrato sin pagos con saldo igual al total;
-      - saldo negativo.
+      - contrato sin pagos con saldo igual al total; *(Reemplazado por F10)*
+      - saldo negativo. *(Reemplazado por F10)*
       Depende de: F04-T001
 - [x] F04-T005 Ampliar el mapper con `fee_payments_period_uq` → `FEE_PAYMENT_ALREADY_EXISTS` y con los `code` de los triggers.
       Depende de: F04-T003
@@ -35,7 +37,7 @@
 
 - [x] F04-T009 Definir los puertos y crear los adaptadores Drizzle: repositorio, `ContractReader`, `BalanceReader` y `UnitOfWork`.
       Depende de: F04-T001
-- [x] F04-T010 [TDD] Comando `create-fee-payment`: transacción, `warnings` de saldo y auditoría.
+- [x] F04-T010 [TDD] Comando `create-fee-payment`: transacción, `warnings` de saldo y auditoría. *(Los `warnings` de saldo: reemplazados por F10)*
       Depende de: F04-T008, F04-T009 · Verificación: CA-1, CA-9, CA-13
 - [x] F04-T011 [TDD] Comando `update-fee-payment`: reemplaza los días, rechaza cambios de periodo o contrato y registra la auditoría antes y después.
       Depende de: F04-T010 · Verificación: CA-11
@@ -49,7 +51,7 @@
       - `GET /contracts?overlaps=`.
       Depende de: F04-T004 · Verificación: CA-10, CA-14, CA-15, CA-17
 - [x] F04-T015 [P] [TDD] Agregar `sumMoney` con `BigInt` en `@anderp/shared/money.ts`.
-- [x] F04-T016 Añadir los códigos `FEE_PAYMENT_WITHOUT_DAYS`, `DUPLICATE_WORK_DATE`, `WORK_DATE_OUTSIDE_WEEK`, `WORK_DATE_OUTSIDE_CONTRACT`, `FEE_PAYMENT_ALREADY_EXISTS`, `FEE_PAYMENT_PERIOD_IMMUTABLE`, `CONTRACT_HAS_PAYMENTS`, `CONTRACT_DATES_EXCLUDE_PAYMENTS` y `CONTRACT_BALANCE_EXCEEDED`, con sus mensajes en español.
+- [x] F04-T016 Añadir los códigos `FEE_PAYMENT_WITHOUT_DAYS`, `DUPLICATE_WORK_DATE`, `WORK_DATE_OUTSIDE_WEEK`, `WORK_DATE_OUTSIDE_CONTRACT`, `FEE_PAYMENT_ALREADY_EXISTS`, `FEE_PAYMENT_PERIOD_IMMUTABLE`, `CONTRACT_HAS_PAYMENTS`, `CONTRACT_DATES_EXCLUDE_PAYMENTS` y `CONTRACT_BALANCE_EXCEEDED`, con sus mensajes en español. *(`CONTRACT_BALANCE_EXCEEDED`: eliminado por F10)*
 
 ## Bloque D — Pruebas de API
 
@@ -62,13 +64,13 @@
 
 - [x] F04-T019 [TDD] Crear el componente `WeekGrid`: 7 y 10 columnas, días fuera del contrato deshabilitados, festivos marcados y total en vivo.
       Depende de: F04-T015
-- [x] F04-T020 Crear `FeePaymentForm` con el flujo de periodo → contrato → cuadrícula → fecha de pago, y el aviso de saldo.
+- [x] F04-T020 Crear `FeePaymentForm` con el flujo de periodo → contrato → cuadrícula → fecha de pago, y el aviso de saldo. *(Aviso de saldo: reemplazado por F10)*
       Depende de: F04-T019
 - [x] F04-T021 Crear el listado de honorarios con filtros, y las páginas de nuevo pago y edición.
       Depende de: F04-T020 · Verificación: CA-19
-- [x] F04-T022 Mostrar pagado y saldo en el detalle del prestador (F03).
+- [x] F04-T022 Mostrar pagado y saldo en el detalle del prestador (F03). *(Reemplazado por F10)*
       Depende de: F04-T014
 
 ## Cierre
 
-- [x] F04-T023 Verificación manual: registrar la semana 3 de agosto de 2026 (incluye el festivo del lunes 17) y la semana 4 (10 días, del 22 al 31), editar un pago, borrarlo y superar el saldo del contrato. Revisar la Definición de Hecho y actualizar `roadmap.md`.
+- [x] F04-T023 Verificación manual: registrar la semana 3 de agosto de 2026 (incluye el festivo del lunes 17) y la semana 4 (10 días, del 22 al 31), editar un pago, borrarlo y superar el saldo del contrato (esto último (Reemplazado por F10)). Revisar la Definición de Hecho y actualizar `roadmap.md`.
