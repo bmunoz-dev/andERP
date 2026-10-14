@@ -122,4 +122,18 @@ describe('F11 en la base de datos', () => {
     expect(String(rejected.reason)).toMatch(/CLICKIU_INSUFFICIENT_BALANCE/);
     expect(await withRuntimeSql(balance)).toBe('400.00');
   });
+
+  it('la regla del saldo rechaza REPEATABLE READ (no vería las ventas de otras transacciones)', async () => {
+    const inLevel = (level: string) =>
+      withRuntimeSql((sql) =>
+        sql.begin(async (tx) => {
+          await tx.unsafe(`set transaction isolation level ${level}`);
+          await insert(tx as unknown as postgres.Sql, { type: 'recharge', amount: '10.00' });
+        }),
+      );
+
+    await expect(inLevel('repeatable read')).rejects.toThrow(/requires read committed/);
+    await inLevel('serializable');
+    expect(await withRuntimeSql(balance)).toBe('10.00');
+  });
 });
