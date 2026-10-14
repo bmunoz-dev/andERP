@@ -72,4 +72,8 @@ Solo agrega tablas, vista y triggers: no rompe la API anterior durante la ventan
 - **Concurrencia (T001):** la prueba CA-9 abre dos transacciones que insertan antes de que cualquiera confirme. Se comprobó que falla si se quita el `pg_advisory_xact_lock` del trigger.
 - **Sin selector de tipo (T005, CA-20 actualizado):** el tipo nunca cambia, así que la página abre el diálogo ya con el tipo. Ahorra un Select (que además no se prueba bien en jsdom) y un clic.
 - **Web sin prueba de página (T006):** el proyecto prueba componentes, no rutas. La lógica de la página va en `MovementFilters` y `MovementsTable`, que tienen pruebas; `clic-kiu.tsx` solo conecta las consultas. La página calcula el mes actual igual que la API para mostrar las fechas en los filtros y en "Saldo al …".
+- **CA-17 con prueba (T007):** al revisar la Definición de Hecho, las tarjetas no tenían prueba porque estaban dentro de la página. Se pasaron a `SummaryCards`, con su prueba.
+- **Prueba de F00 actualizada (T007):** `foundation.test.ts` compara la lista exacta de enums de `anderp` con `design.md` §5.2; se agregaron los dos de F11.
+- **OpenAPI (T007):** `clickiu.test.ts` comprueba que los tres caminos de `/clickiu` aparecen en `/api/docs-json`.
+- **Verificación completa (T007):** `format:check`, `lint`, `typecheck` y `test` en verde (50 archivos y 435 pruebas, más 2 de `SummaryCards`).
 - **Tipo inmutable:** el trigger usa `WHEN (OLD.type IS DISTINCT FROM NEW.type)`, así la función solo lanza el error.

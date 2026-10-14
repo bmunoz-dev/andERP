@@ -5,7 +5,6 @@ import {
   clickiuMovementTypeSchema,
   clickiuSaleStatusSchema,
   daysInMonth,
-  formatCOP,
   formatIsoDate,
   isoDateSchema,
   parseIsoDate,
@@ -20,10 +19,11 @@ import { z } from 'zod';
 import { MovementFilters } from '@/components/clickiu/movement-filters';
 import { MovementFormDialog } from '@/components/clickiu/movement-form-dialog';
 import { MovementsTable } from '@/components/clickiu/movements-table';
+import { SummaryCards } from '@/components/clickiu/summary-cards';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   clickiuKeys,
   deleteClickiuMovement,
@@ -32,7 +32,6 @@ import {
   updateClickiuMovement,
 } from '@/lib/clickiu-api';
 import { errorMessage } from '@/lib/error-messages.es';
-import { formatDate } from '@/lib/format';
 
 export const Route = createFileRoute('/_app/clic-kiu')({
   // Los filtros van en la URL (CA-18); un valor inválido se ignora en vez de romper la página.
@@ -93,16 +92,6 @@ function ClickiuPage() {
     onError: (e) => toast.error(errorMessage(e)),
   });
 
-  const cards = [
-    { label: 'Recargado', value: summary.data?.totalRecharged },
-    { label: 'Vendido', value: summary.data?.totalSold },
-    { label: 'Por cobrar (Crédito)', value: summary.data?.creditAmount },
-    {
-      label: filters.to ? `Saldo al ${formatDate(filters.to)}` : 'Saldo actual',
-      value: summary.data?.balanceAsOf,
-    },
-  ];
-
   return (
     <>
       <PageHeader
@@ -130,18 +119,7 @@ function ClickiuPage() {
           </>
         }
       />
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map((c) => (
-          <Card key={c.label}>
-            <CardHeader>
-              <CardDescription>{c.label}</CardDescription>
-              <CardTitle className="text-2xl tabular-nums">
-                {c.value === undefined ? '—' : formatCOP(c.value)}
-              </CardTitle>
-            </CardHeader>
-          </Card>
-        ))}
-      </div>
+      <SummaryCards summary={summary.data} {...(filters.to ? { to: filters.to } : {})} />
       <Card className="mb-6">
         <CardContent>
           <MovementFilters

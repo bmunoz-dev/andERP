@@ -232,3 +232,16 @@ describe('Aislamiento', () => {
     });
   });
 });
+
+it('los endpoints de Clic Kiu aparecen en OpenAPI', async () => {
+  const { paths } = (await t.http.get('/api/docs-json').expect(200)).body as {
+    paths: Record<string, unknown>;
+  };
+  expect(Object.keys(paths)).toEqual(
+    expect.arrayContaining([
+      '/api/v1/clickiu/movements',
+      '/api/v1/clickiu/summary',
+      '/api/v1/clickiu/movements/{id}',
+    ]),
+  );
+});

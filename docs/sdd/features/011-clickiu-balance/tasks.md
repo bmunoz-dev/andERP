@@ -37,7 +37,7 @@
 
 ## Cierre
 
-- [ ] F11-T007 Verificación completa (`pnpm format:check && pnpm lint && pnpm typecheck && pnpm test`), endpoints en OpenAPI, Definición de Hecho y notas de implementación en `plan.md`.
+- [x] F11-T007 Verificación completa (`pnpm format:check && pnpm lint && pnpm typecheck && pnpm test`), endpoints en OpenAPI, Definición de Hecho y notas de implementación en `plan.md`.
       Depende de: F11-T004, F11-T006
 - [ ] F11-T008 Verificación manual del usuario (recargar, vender a crédito, marcar como completada, intentar vender sin saldo, filtros y tarjetas) y `roadmap.md`.
       Depende de: F11-T007

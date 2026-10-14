@@ -3,6 +3,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { MovementFilters } from './movement-filters';
 import { MovementsTable } from './movements-table';
+import { SummaryCards } from './summary-cards';
 
 const movement = (overrides: Partial<ClickiuMovement>): ClickiuMovement => ({
   id: crypto.randomUUID(),
@@ -70,5 +71,31 @@ describe('MovementsTable (F11 CA-19)', () => {
     expect(within(completed!).queryByRole('button', { name })).toBeNull();
     fireEvent.click(within(credit!).getByRole('button', { name }));
     expect(onComplete).toHaveBeenCalledWith(rows[1]);
+  });
+});
+
+describe('SummaryCards (F11 CA-17)', () => {
+  const summary = {
+    totalRecharged: '1500000.00',
+    totalSold: '500000.00',
+    creditAmount: '300000.00',
+    balanceAsOf: '1000000.00',
+    currentBalance: '1200000.00',
+  };
+
+  it('muestra los totales filtrados y el saldo al corte de "Hasta"', () => {
+    render(<SummaryCards summary={summary} to="2026-10-31" />);
+    expect(screen.getByText('Recargado').parentElement).toHaveTextContent(/\$\s*1\.500\.000/);
+    expect(screen.getByText('Por cobrar (Crédito)').parentElement).toHaveTextContent(
+      /\$\s*300\.000/,
+    );
+    expect(screen.getByText('Saldo al 31/10/2026').parentElement).toHaveTextContent(
+      /\$\s*1\.000\.000/,
+    );
+  });
+
+  it('sin "Hasta" la tarjeta dice "Saldo actual"', () => {
+    render(<SummaryCards summary={summary} />);
+    expect(screen.getByText('Saldo actual')).toBeInTheDocument();
   });
 });
