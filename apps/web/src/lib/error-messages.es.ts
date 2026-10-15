@@ -95,6 +95,7 @@ const MESSAGES = {
     'El próximo vencimiento debe ser posterior a la fecha que se está completando.',
   DUE_DATE_COMPLETED_IMMUTABLE: 'Un vencimiento ya completado no se puede cambiar.',
   DUE_DATE_ALREADY_EXISTS: 'Esta obligación ya tiene un vencimiento en esa fecha. Elige otra.',
+  NOTIFICATION_NOT_FOUND: 'La notificación ya no está disponible.',
 } satisfies Record<ErrorCode, string>;
 
 const CLIENT_MESSAGES: Record<string, string> = {

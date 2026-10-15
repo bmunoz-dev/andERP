@@ -74,6 +74,8 @@ export const ErrorCode = {
   NEXT_DUE_DATE_NOT_AFTER: 'NEXT_DUE_DATE_NOT_AFTER',
   DUE_DATE_COMPLETED_IMMUTABLE: 'DUE_DATE_COMPLETED_IMMUTABLE',
   DUE_DATE_ALREADY_EXISTS: 'DUE_DATE_ALREADY_EXISTS',
+  // F14 — notificaciones
+  NOTIFICATION_NOT_FOUND: 'NOTIFICATION_NOT_FOUND',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

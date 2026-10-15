@@ -46,6 +46,14 @@ export const STATUS_LABELS: Record<ObligationStatus, string> = {
   none: 'Sin próximo',
 };
 
+/** Insignia de estado de la Agenda (F13 CA-18), también en el panel de notificaciones (F14). */
+export const STATUS_CLASSES: Record<ObligationStatus, string> = {
+  overdue: 'bg-destructive text-white',
+  upcoming: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
+  scheduled: 'bg-muted text-muted-foreground',
+  none: 'border-border bg-transparent text-muted-foreground',
+};
+
 export const FREQUENCY_LABELS: Record<ObligationFrequency, string> = {
   once: 'Única',
   monthly: 'Mensual',

@@ -1,18 +1,11 @@
-import type { Obligation, ObligationStatus } from '@anderp/shared';
+import type { Obligation } from '@anderp/shared';
 import type { ColumnDef } from '@tanstack/react-table';
 import { CircleCheck, History, Pencil, Trash2 } from 'lucide-react';
 import { DataTable } from '@/components/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/format';
-import { dueText, FREQUENCY_LABELS, STATUS_LABELS } from '@/lib/obligations-api';
-
-const STATUS_CLASSES: Record<ObligationStatus, string> = {
-  overdue: 'bg-destructive text-white',
-  upcoming: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
-  scheduled: 'bg-muted text-muted-foreground',
-  none: 'border-border bg-transparent text-muted-foreground',
-};
+import { dueText, FREQUENCY_LABELS, STATUS_CLASSES, STATUS_LABELS } from '@/lib/obligations-api';
 
 /** Tabla de la agenda (F13 CA-18). */
 export function AgendaTable({

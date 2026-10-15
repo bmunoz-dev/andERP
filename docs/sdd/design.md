@@ -35,6 +35,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-14 | La regla del saldo de Clic Kiu rechaza las transacciones en `REPEATABLE READ` (migración 0023). | En ese nivel, dos ventas simultáneas pasarían las dos y el saldo quedaría negativo sin aviso; es mejor un error visible. |
 | 2026-10-14 | Las credenciales auditan también crear y borrar (`credential.create`, `credential.delete`), sin la contraseña. §5.9 lista además `credential.update`, que ya se auditaba desde F06. | Eran el único módulo sensible sin rastro de quién creó o quitó un acceso; `created_by` y `deleted_by` guardan solo el último actor, sin valores. |
 | 2026-10-14 | **Agenda de pagos a entidades** (F13): `payment_obligations` y `obligation_due_dates`, un solo vencimiento pendiente por obligación (índice único) y vencimientos completados inmutables (trigger). Estado calculado con la fecha de Bogotá; alertas solo dentro de la app. | La empresa debe cumplir obligaciones periódicas con la DIAN, Fontur y otras entidades, y necesita que AndERP le avise antes de cada fecha límite. Sin correo ni tareas programadas: Render Free se duerme y no correría un cron confiable. |
+| 2026-10-15 | **Panel de notificaciones** (F14): campana en la cabecera con un punto si hay algo sin revisar. Las notificaciones se calculan de la Agenda; solo se guarda por usuario lo visto y lo descartado (`notification_states`, §5.12), sin borrado lógico ni auditoría. | El contador del menú dice cuántas alertas hay, pero no si hay algo nuevo, y no permite apartar lo ya atendido. Calcularlas en vez de guardarlas evita una tarea programada y una segunda fuente de verdad sobre los estados. |
 
 ---
 
@@ -106,6 +107,7 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 | Obligación (agenda de pagos) | `payment_obligations` |
 | Vencimiento | `obligation_due_dates` |
 | Periodicidad de la obligación | `obligation_frequency` |
+| Notificación (Próximo / Vencido) | `notification_kind` (`obligation_upcoming` / `obligation_overdue`); lo visto y descartado, en `notification_states` |
 
 ---
 
@@ -194,6 +196,7 @@ packages/
 | `clickiu_movement_type` | `recharge`, `sale` |
 | `clickiu_sale_status` | `credit`, `completed` |
 | `obligation_frequency` | `once`, `monthly`, `bimonthly`, `quarterly`, `semiannual`, `annual` |
+| `notification_kind` | `obligation_upcoming`, `obligation_overdue` |
 
 ### 5.3 Núcleo: organizaciones y autenticación
 
@@ -465,7 +468,7 @@ Todas son vistas normales (no materializadas).
 
 **Atomicidad (F12):** el cambio y su registro se escriben en la misma transacción (`audit.log(entry, tx)`): si falla la auditoría, el cambio no queda. Los eventos de auth y `credential.reveal` se auditan fuera de cualquier transacción de negocio.
 
-**No se registra:** los cambios en catálogos (los cubren `created_by` y `updated_by`).
+**No se registra:** los cambios en catálogos (los cubren `created_by` y `updated_by`), ni ver o descartar notificaciones (F14, §5.12): es estado de la interfaz de cada usuario, no un dato del negocio.
 
 ### 5.10 Clic Kiu (F11)
 
@@ -519,6 +522,26 @@ Todas son vistas normales (no materializadas).
 - `UNIQUE (obligation_id, due_date) WHERE deleted_at IS NULL`.
 - **Trigger:** un vencimiento completado no cambia de `due_date` ni de `obligation_id` (`DUE_DATE_COMPLETED_IMMUTABLE`).
 - **Estado** (calculado en la consulta con `todayIn()`, no se guarda): Vencido, Próximo (hasta `notice_days` días), Programado o Sin próximo.
+
+### 5.12 Notificaciones (F14)
+
+Las notificaciones **no se guardan**: son los vencimientos pendientes en estado Próximo o Vencido (§5.11), calculados al consultar. Una notificación es el par `(due_date_id, kind)`. Solo se guarda lo que cada usuario hizo con ella.
+
+**`notification_states`**
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | uuid PK | |
+| organization_id | uuid NOT NULL | |
+| user_id | uuid NOT NULL FK → users | lo pone la sesión |
+| due_date_id | uuid NOT NULL | FK compuesta → obligation_due_dates |
+| kind | notification_kind NOT NULL | |
+| seen_at | timestamptz NULL | al abrir el panel |
+| dismissed_at | timestamptz NULL | al descartar |
+| created_at, updated_at | timestamptz NOT NULL | |
+
+- `UNIQUE (organization_id, id)` y `UNIQUE (user_id, due_date_id, kind)` (destino del upsert).
+- **Excepciones a §5.1:** sin `created_by`, `updated_by` ni borrado lógico (el autor es siempre `user_id` y descartar no es borrar), y sin auditoría (§5.9).
+- Las filas de vencimientos completados o borrados se quedan: la consulta parte de las alertas activas y no las vuelve a leer.
 
 ---
 
@@ -598,6 +621,7 @@ Todas son vistas normales (no materializadas).
 | Responsables | CRUD. |
 | Clic Kiu | Tarjetas Recargado, Vendido, Por cobrar y Saldo al corte, que cambian con los filtros (fechas, tipo y estado). Tabla de movimientos con "Marcar como completado" y diálogo de recarga o venta que muestra el saldo disponible. |
 | Agenda | Obligaciones por urgencia (pestañas Vencidos, Próximos, Programados, Sin próximo), completar con la fecha siguiente sugerida e historial. El menú muestra un contador de vencidas y próximas. |
+| Notificaciones (cabecera) | Campana con un punto si hay notificaciones sin revisar (sin número). Abre un panel con las alertas de la Agenda: pulsar lleva a la pestaña de la Agenda, la X la descarta; abrir el panel las marca como vistas (F14). |
 | Configuración (admin) | Categorías de egreso y usuarios de la organización. |
 | Plataforma (super admin) | Organizaciones y catálogos globales. |
 
