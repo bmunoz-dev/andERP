@@ -7,6 +7,7 @@ import {
   getNotifications,
   markNotificationsSeen,
 } from '@/lib/notifications-api';
+import { obligationKeys } from '@/lib/obligations-api';
 import { NotificationsBell } from './notifications-bell';
 
 const navigate = vi.fn();
@@ -30,12 +31,15 @@ const item = (overrides: Partial<NotificationItem>): NotificationItem => ({
   ...overrides,
 });
 
+let queryClient: QueryClient;
+
 async function renderBell(data: Notifications) {
   vi.mocked(getNotifications).mockResolvedValue(data);
   vi.mocked(markNotificationsSeen).mockResolvedValue(undefined);
   vi.mocked(dismissNotification).mockResolvedValue(undefined);
+  queryClient = new QueryClient();
   render(
-    <QueryClientProvider client={new QueryClient()}>
+    <QueryClientProvider client={queryClient}>
       <NotificationsBell />
     </QueryClientProvider>,
   );
@@ -119,4 +123,12 @@ describe('NotificationsBell (F14)', () => {
     fireEvent.click(await renderBell({ unseen: false, items: [] }));
     expect(await screen.findByText('No tienes notificaciones.')).toBeInTheDocument();
   });
+});
+
+it('CA-18 los cambios en la Agenda vuelven a consultar las notificaciones', async () => {
+  await renderBell({ unseen: false, items: [] });
+  expect(getNotifications).toHaveBeenCalledOnce();
+  // Lo que invalida cada mutación de la Agenda (crear, editar, borrar, completar, pendiente).
+  await queryClient.invalidateQueries({ queryKey: obligationKeys.all });
+  expect(getNotifications).toHaveBeenCalledTimes(2);
 });

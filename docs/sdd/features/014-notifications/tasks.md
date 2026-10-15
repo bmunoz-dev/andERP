@@ -29,7 +29,7 @@
 
 ## Cierre
 
-- [ ] F14-T006 Verificación completa (`pnpm format:check && pnpm lint && pnpm typecheck && pnpm test`), Definición de Hecho (cada CA con prueba) y notas de implementación en `plan.md`.
+- [x] F14-T006 Verificación completa (`pnpm format:check && pnpm lint && pnpm typecheck && pnpm test`), Definición de Hecho (cada CA con prueba) y notas de implementación en `plan.md`.
       Depende de: F14-T004, F14-T005
 - [ ] F14-T007 Verificación manual del usuario (ver el punto con una obligación próxima, abrir el panel y ver que se apaga, ir a la Agenda, descartar, pasarla a vencida y ver que vuelve) y `roadmap.md`.
       Depende de: F14-T006
