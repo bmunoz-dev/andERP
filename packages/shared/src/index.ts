@@ -14,3 +14,4 @@ export * from './schemas/responsible-persons';
 export * from './schemas/credentials';
 export * from './schemas/clickiu';
 export * from './schemas/obligations';
+export * from './schemas/notifications';

@@ -11,7 +11,7 @@
 
 ## Bloque B — Compartido
 
-- [ ] F14-T002 [P] Esquemas Zod de `schemas/notifications.ts` y el código `NOTIFICATION_NOT_FOUND` con su mensaje en español.
+- [x] F14-T002 [P] Esquemas Zod de `schemas/notifications.ts` y el código `NOTIFICATION_NOT_FOUND` con su mensaje en español.
       Archivos: `packages/shared/src/schemas/notifications.ts`, `packages/shared/src/errors/codes.ts`, `apps/web/src/lib/error-messages.es.ts`
       Verificación: CA-7, CA-9
 
