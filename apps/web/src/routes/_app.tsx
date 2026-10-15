@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
 import { AppSidebar } from '@/components/app-sidebar';
+import { NotificationsBell } from '@/components/notifications/notifications-bell';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { UserMenu } from '@/components/user-menu';
 import { authStore, useAuth } from '@/lib/auth-store';
@@ -27,7 +28,8 @@ function AppLayout() {
           <span className="truncate text-sm text-muted-foreground">
             {auth.user.organization.name}
           </span>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-1">
+            <NotificationsBell />
             <UserMenu user={auth.user} />
           </div>
         </header>

@@ -24,7 +24,7 @@
 
 ## Bloque D — Web
 
-- [ ] F14-T005 [TDD] `ui/popover.tsx`, `notifications-api.ts` (clave bajo `obligationKeys.all`), `STATUS_CLASSES` exportado, `NotificationsBell` y su lugar en la cabecera.
+- [x] F14-T005 [TDD] `ui/popover.tsx`, `notifications-api.ts` (clave bajo `obligationKeys.all`), `STATUS_CLASSES` exportado, `NotificationsBell` y su lugar en la cabecera.
       Depende de: F14-T003 · Verificación: CA-12–CA-19
 
 ## Cierre
