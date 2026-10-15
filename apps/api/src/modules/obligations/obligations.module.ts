@@ -1,9 +1,11 @@
 import {
+  completeDueDateSchema,
   createObligationSchema,
   ErrorCode,
   type Obligation,
   type ObligationDetail,
   obligationStatusSchema,
+  pendingDueDateSchema,
   updateObligationSchema,
 } from '@anderp/shared';
 import {
@@ -17,6 +19,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -32,6 +35,8 @@ registerConstraintCodes({
 
 class CreateObligationDto extends createZodDto(createObligationSchema) {}
 class UpdateObligationDto extends createZodDto(updateObligationSchema) {}
+class CompleteDueDateDto extends createZodDto(completeDueDateSchema) {}
+class PendingDueDateDto extends createZodDto(pendingDueDateSchema) {}
 class AgendaQueryDto extends createZodDto(
   z.object({ status: obligationStatusSchema.optional() }),
 ) {}
@@ -69,6 +74,29 @@ export class ObligationsController {
   @HttpCode(204)
   remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.obligations.remove(id);
+  }
+
+  @Post(':id/complete')
+  @HttpCode(200)
+  complete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: CompleteDueDateDto,
+  ): Promise<ObligationDetail> {
+    return this.obligations.complete(id, body);
+  }
+
+  @Put(':id/pending')
+  setPending(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: PendingDueDateDto,
+  ): Promise<ObligationDetail> {
+    return this.obligations.setPending(id, body);
+  }
+
+  @Delete(':id/pending')
+  @HttpCode(204)
+  removePending(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    return this.obligations.removePending(id);
   }
 }
 

@@ -1,9 +1,11 @@
 import {
+  type CompleteDueDate,
   type CreateObligation,
   ErrorCode,
   type Obligation,
   type ObligationDetail,
   type ObligationStatus,
+  type PendingDueDate,
   todayIn,
   type UpdateObligation,
 } from '@anderp/shared';
@@ -174,6 +176,116 @@ export class ObligationsService {
         tx,
       );
       return after;
+    });
+  }
+
+  /**
+   * CA-6 y CA-7: completa el vencimiento que el usuario está viendo. Si otro lo completó primero,
+   * el UPDATE ya no cumple el WHERE (espera su bloqueo y lo reevalúa): 409, sin siguiente ni auditoría.
+   */
+  async complete(id: string, input: CompleteDueDate): Promise<ObligationDetail> {
+    return this.db.transaction(async (tx) => {
+      await this.get(id, tx);
+      const [done] = await tx
+        .update(d)
+        .set(this.scope.forUpdate({ completedAt: new Date(), completedBy: this.scope.userId }))
+        .where(
+          and(
+            this.scope.where(d),
+            eq(d.id, input.dueDateId),
+            eq(d.obligationId, id),
+            isNull(d.completedAt),
+          ),
+        )
+        .returning({ dueDate: d.dueDate });
+      if (!done) {
+        const [existing] = await tx
+          .select({ id: d.id })
+          .from(d)
+          .where(and(this.scope.where(d), eq(d.id, input.dueDateId), eq(d.obligationId, id)));
+        throw existing ? new DomainError(ErrorCode.DUE_DATE_ALREADY_COMPLETED, 409) : notFound();
+      }
+      if (input.nextDueDate !== undefined) {
+        if (input.nextDueDate <= done.dueDate) {
+          throw new DomainError(ErrorCode.NEXT_DUE_DATE_NOT_AFTER, 422);
+        }
+        await tx
+          .insert(d)
+          .values(this.scope.forInsert({ obligationId: id, dueDate: input.nextDueDate }));
+      }
+      await this.audit.log(
+        {
+          action: 'obligation_due_date.complete',
+          entityType: 'obligation_due_date',
+          entityId: input.dueDateId,
+          changes: {
+            after: { dueDate: done.dueDate, nextDueDate: input.nextDueDate ?? null },
+          },
+        },
+        tx,
+      );
+      return this.get(id, tx);
+    });
+  }
+
+  /** CA-8: crea el pendiente si no hay, o le cambia la fecha. */
+  async setPending(id: string, input: PendingDueDate): Promise<ObligationDetail> {
+    return this.db.transaction(async (tx) => {
+      const { pending } = await this.get(id, tx);
+      let dueDateId: string;
+      if (pending) {
+        const [row] = await tx
+          .update(d)
+          .set(this.scope.forUpdate({ dueDate: input.dueDate }))
+          .where(and(this.scope.where(d), eq(d.id, pending.id), isNull(d.completedAt)))
+          .returning({ id: d.id });
+        if (!row) throw new DomainError(ErrorCode.DUE_DATE_ALREADY_COMPLETED, 409);
+        dueDateId = row.id;
+      } else {
+        const [row] = await tx
+          .insert(d)
+          .values(this.scope.forInsert({ obligationId: id, dueDate: input.dueDate }))
+          .returning({ id: d.id });
+        if (!row) throw new Error('Insert returned no rows');
+        dueDateId = row.id;
+      }
+      await this.audit.log(
+        {
+          action: 'obligation_due_date.set',
+          entityType: 'obligation_due_date',
+          entityId: dueDateId,
+          changes: {
+            before: pending ? { dueDate: pending.dueDate } : null,
+            after: { dueDate: input.dueDate },
+          },
+        },
+        tx,
+      );
+      return this.get(id, tx);
+    });
+  }
+
+  /** CA-8: quita el pendiente (la obligación deja de aplicar o se corrige). */
+  async removePending(id: string): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      const { pending } = await this.get(id, tx);
+      const noPending = () => new DomainError(ErrorCode.NO_PENDING_DUE_DATE, 409);
+      if (!pending) throw noPending();
+      const [row] = await tx
+        .update(d)
+        .set(this.scope.forSoftDelete())
+        .where(and(this.scope.where(d), eq(d.id, pending.id), isNull(d.completedAt)))
+        .returning({ id: d.id });
+      if (!row) throw noPending();
+      await this.audit.log(
+        {
+          action: 'obligation_due_date.delete',
+          entityType: 'obligation_due_date',
+          entityId: pending.id,
+          changes: { before: { dueDate: pending.dueDate } },
+        },
+        tx,
+      );
     });
   }
 

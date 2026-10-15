@@ -378,6 +378,32 @@ describe('Agenda de pagos', () => {
     await body(api().delete(`/obligations/${o.id}`), 500);
     await body(api().get(`/obligations/${o.id}`));
   });
+  it('completar (con el siguiente)', async () => {
+    const o = await body<Obligation>(create(), 201);
+    await failAudit('obligation_due_date.complete');
+    await body(
+      api().post(`/obligations/${o.id}/complete`, {
+        dueDateId: o.pending!.id,
+        nextDueDate: '2027-01-12',
+      }),
+      500,
+    );
+    expect((await body<Obligation>(api().get(`/obligations/${o.id}`))).pending).toEqual(o.pending);
+  });
+
+  it('cambiar el pendiente', async () => {
+    const o = await body<Obligation>(create(), 201);
+    await failAudit('obligation_due_date.set');
+    await body(api().put(`/obligations/${o.id}/pending`, { dueDate: '2026-12-01' }), 500);
+    expect((await body<Obligation>(api().get(`/obligations/${o.id}`))).pending).toEqual(o.pending);
+  });
+
+  it('quitar el pendiente', async () => {
+    const o = await body<Obligation>(create(), 201);
+    await failAudit('obligation_due_date.delete');
+    await body(api().delete(`/obligations/${o.id}/pending`), 500);
+    expect((await body<Obligation>(api().get(`/obligations/${o.id}`))).pending).toEqual(o.pending);
+  });
 });
 
 describe('Dos borrados simultáneos', () => {

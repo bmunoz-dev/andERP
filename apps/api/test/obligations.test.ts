@@ -165,3 +165,76 @@ describe('Agenda', () => {
     expect(detail.history[1]!.completedAt).toEqual(expect.any(String));
   });
 });
+
+describe('Completar y pendiente', () => {
+  const complete = (id: string, body: Record<string, unknown>) =>
+    api().post(`/obligations/${id}/complete`, body);
+
+  it('CA-6 completa y deja el siguiente pendiente, con auditoría', async () => {
+    const o = await create({ firstDueDate: inDays(3) });
+    const res = await complete(o.id, { dueDateId: o.pending!.id, nextDueDate: inDays(63) });
+    expect(res.status).toBe(200);
+    const after = res.body as ObligationDetail;
+    expect(after).toMatchObject({ pending: { dueDate: inDays(63) }, status: 'scheduled' });
+    expect(after.history.map((h) => [h.dueDate, h.completedBy?.name ?? null])).toEqual([
+      [inDays(63), null],
+      [inDays(3), 'Ana Gómez'],
+    ]);
+    expect(await auditActions(o.pending!.id)).toEqual(['obligation_due_date.complete']);
+  });
+
+  it('CA-6 sin fecha siguiente queda Sin próximo; la siguiente debe ser posterior', async () => {
+    const o = await create({ firstDueDate: inDays(3) });
+    const bad = await complete(o.id, { dueDateId: o.pending!.id, nextDueDate: inDays(3) });
+    expect(bad.status).toBe(422);
+    expect(bad.body.code).toBe('NEXT_DUE_DATE_NOT_AFTER');
+    expect((await api().get(`/obligations/${o.id}`)).body).toMatchObject({ status: 'upcoming' });
+
+    const res = await complete(o.id, { dueDateId: o.pending!.id });
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ pending: null, status: 'none', daysLeft: null });
+  });
+
+  it('CA-7 un vencimiento ya completado responde 409 y uno ajeno 404', async () => {
+    const o = await create();
+    const other = await create();
+    await complete(o.id, { dueDateId: o.pending!.id, nextDueDate: inDays(90) }).expect(200);
+    const again = await complete(o.id, { dueDateId: o.pending!.id, nextDueDate: inDays(120) });
+    expect(again.status).toBe(409);
+    expect(again.body.code).toBe('DUE_DATE_ALREADY_COMPLETED');
+    await complete(o.id, { dueDateId: other.pending!.id }).expect(404);
+  });
+
+  it('CA-7 dos personas completan a la vez: un 200, un 409, un solo siguiente y una auditoría', async () => {
+    const o = await create({ firstDueDate: inDays(3) });
+    const body = { dueDateId: o.pending!.id, nextDueDate: inDays(63) };
+    const results = await Promise.all([
+      complete(o.id, body),
+      as(t, s.superAdmin.token).post(`/obligations/${o.id}/complete`, body),
+    ]);
+    expect(results.map((r) => r.status).sort()).toEqual([200, 409]);
+    expect(results.find((r) => r.status === 409)!.body.code).toBe('DUE_DATE_ALREADY_COMPLETED');
+    const detail = (await api().get(`/obligations/${o.id}`)).body as ObligationDetail;
+    expect(detail.history.map((h) => h.dueDate)).toEqual([inDays(63), inDays(3)]);
+    expect(await auditActions(o.pending!.id)).toEqual(['obligation_due_date.complete']);
+  });
+
+  it('CA-8 cambia, quita y vuelve a crear el pendiente, con auditoría', async () => {
+    const o = await create({ firstDueDate: inDays(30) });
+    const moved = await api().put(`/obligations/${o.id}/pending`, { dueDate: inDays(5) });
+    expect(moved.status).toBe(200);
+    expect(moved.body).toMatchObject({ pending: { id: o.pending!.id, dueDate: inDays(5) } });
+
+    await api().delete(`/obligations/${o.id}/pending`).expect(204);
+    expect((await api().get(`/obligations/${o.id}`)).body).toMatchObject({ status: 'none' });
+    const none = await api().delete(`/obligations/${o.id}/pending`).expect(409);
+    expect(none.body.code).toBe('NO_PENDING_DUE_DATE');
+
+    const added = await api().put(`/obligations/${o.id}/pending`, { dueDate: inDays(40) });
+    expect(added.body).toMatchObject({ pending: { dueDate: inDays(40) }, status: 'scheduled' });
+    expect((await auditActions(o.pending!.id)).sort()).toEqual([
+      'obligation_due_date.delete',
+      'obligation_due_date.set',
+    ]);
+  });
+});
