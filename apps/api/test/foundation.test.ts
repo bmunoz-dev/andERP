@@ -178,6 +178,7 @@ describe('CA-8 migración base', () => {
         'clickiu_movement_type',
         'clickiu_sale_status',
         'member_role',
+        'obligation_frequency',
         'organization_status',
         'payment_frequency',
         'user_status',

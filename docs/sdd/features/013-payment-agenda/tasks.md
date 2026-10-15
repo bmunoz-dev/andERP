@@ -5,7 +5,7 @@
 
 ## Bloque A — Base de datos
 
-- [ ] F13-T001 [TDD] Escribir `obligations.db.test.ts` y después crear `0024_payment_obligations`, `0025_obligation_rules` y `db/schema/obligations.ts`. Agregar `obligation_frequency` a la lista de enums de `foundation.test.ts`.
+- [x] F13-T001 [TDD] Escribir `obligations.db.test.ts` y después crear `0024_payment_obligations`, `0025_obligation_rules` y `db/schema/obligations.ts`. Agregar `obligation_frequency` a la lista de enums de `foundation.test.ts`.
       Archivos: `apps/api/drizzle/0024_*.sql`, `apps/api/drizzle/0025_*.sql`, `apps/api/src/db/schema/obligations.ts`
       Verificación: CA-1, CA-2, CA-5, CA-9
 

@@ -1,6 +1,6 @@
 # F13 — Agenda de pagos a entidades · Plan
 
-- **Estado:** Borrador
+- **Estado:** Aprobado
 - **Spec:** [spec.md](spec.md)
 
 ## Datos
@@ -87,4 +87,4 @@ Solo agrega tablas, índices y un trigger: no rompe la API anterior. Pasa por el
 
 ## Notas de implementación
 
-(Se llenan durante la implementación.)
+- **T001:** la migración generada crea `obligation_due_dates` antes que `payment_obligations` y agrega las FK al final; se aplica bien desde cero. `drizzle-kit generate` confirma que no hay cambios pendientes. Además de lo previsto, una prueba comprueba que un vencimiento no puede apuntar a una obligación de otra organización (FK compuesta).
