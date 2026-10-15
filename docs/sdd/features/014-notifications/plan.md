@@ -1,6 +1,6 @@
 # F14 — Panel de notificaciones · Plan
 
-- **Estado:** Borrador (pendiente de aprobación del usuario)
+- **Estado:** Aprobado
 - **Spec:** [spec.md](spec.md)
 
 ## Datos
@@ -75,4 +75,4 @@ Solo agrega un enum y una tabla: no rompe la API anterior. Pasa por el pipeline 
 
 ## Notas de implementación
 
-_(se completan al implementar)_
+- **T001:** la migración generada es `0026_notification_states`; `drizzle-kit generate` confirma que no hay cambios pendientes. El comando correcto es `pnpm db:generate --name x`: con el `--` que indica `CLAUDE.md`, drizzle-kit rechaza las opciones.

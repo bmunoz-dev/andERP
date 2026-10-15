@@ -183,6 +183,13 @@
       "when": 1792028840220,
       "tag": "0025_obligation_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1792072098373,
+      "tag": "0026_notification_states",
+      "breakpoints": true
     }
   ]
 }

@@ -5,7 +5,7 @@
 
 ## Bloque A — Base de datos
 
-- [ ] F14-T001 [TDD] Escribir `notifications.db.test.ts` y después crear `0026_notification_states` y `db/schema/notifications.ts`. Agregar `notification_kind` a la lista de enums de `foundation.test.ts`.
+- [x] F14-T001 [TDD] Escribir `notifications.db.test.ts` y después crear `0026_notification_states` y `db/schema/notifications.ts`. Agregar `notification_kind` a la lista de enums de `foundation.test.ts`.
       Archivos: `apps/api/drizzle/0026_*.sql`, `apps/api/src/db/schema/notifications.ts`
       Verificación: CA-1, CA-5
 
