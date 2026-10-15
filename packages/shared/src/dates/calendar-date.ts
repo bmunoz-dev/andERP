@@ -65,6 +65,14 @@ export function addDays(value: string, days: number): string {
   return fromUtcMs(toUtcMs(value) + days * MS_PER_DAY);
 }
 
+/** Suma meses; si el día no existe en el mes de destino, usa el último día de ese mes (F13). */
+export function addMonths(value: string, months: number): string {
+  const { year, month, day } = parseIsoDate(value);
+  const index = year * 12 + month - 1 + months;
+  const target = { year: Math.floor(index / 12), month: (index % 12) + 1 };
+  return formatIsoDate({ ...target, day: Math.min(day, daysInMonth(target.year, target.month)) });
+}
+
 /** Zona horaria de negocio (design.md §5.1). */
 export const BUSINESS_TIME_ZONE = 'America/Bogota';
 

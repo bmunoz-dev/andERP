@@ -11,7 +11,7 @@
 
 ## Bloque B — Compartido
 
-- [ ] F13-T002 [P] [TDD] `addMonths` con sus pruebas, los esquemas Zod de `schemas/obligations.ts`, `FREQUENCY_MONTHS` y los seis códigos de error con su mensaje en español.
+- [x] F13-T002 [P] [TDD] `addMonths` con sus pruebas, los esquemas Zod de `schemas/obligations.ts`, `FREQUENCY_MONTHS` y los seis códigos de error con su mensaje en español.
       Archivos: `packages/shared/src/dates/calendar-date.ts`, `packages/shared/src/schemas/obligations.ts`, `packages/shared/src/errors/codes.ts`, `apps/web/src/lib/error-messages.es.ts`
       Verificación: CA-1, CA-20 (regla de la fecha sugerida)
 
