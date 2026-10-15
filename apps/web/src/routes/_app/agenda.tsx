@@ -7,6 +7,9 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { AgendaTable } from '@/components/obligations/agenda-table';
+import { CompleteDueDateDialog } from '@/components/obligations/complete-due-date-dialog';
+import { ObligationFormDialog } from '@/components/obligations/obligation-form-dialog';
+import { ObligationHistorySheet } from '@/components/obligations/obligation-history-sheet';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,7 +30,7 @@ export const Route = createFileRoute('/_app/agenda')({
 const TABS = ['overdue', 'upcoming', 'scheduled', 'none'] as const;
 
 /** Qué diálogo está abierto. `form` con `null` es una obligación nueva. */
-export type AgendaDialog =
+type AgendaDialog =
   | { kind: 'form'; obligation: Obligation | null }
   | { kind: 'complete' | 'history'; obligation: Obligation }
   | null;
@@ -37,8 +40,7 @@ function AgendaPage() {
   const queryClient = useQueryClient();
   const navigate = Route.useNavigate();
   const { status } = Route.useSearch();
-  // Los diálogos que leen este estado se agregan en F13-T007.
-  const [, setDialog] = useState<AgendaDialog>(null);
+  const [dialog, setDialog] = useState<AgendaDialog>(null);
   const [deleting, setDeleting] = useState<Obligation | null>(null);
 
   // Una sola consulta (la misma del contador del menú); las pestañas filtran en la web.
@@ -46,6 +48,10 @@ function AgendaPage() {
   const rows = status ? agenda.data?.filter((o) => o.status === status) : agenda.data;
   const count = (s?: Obligation['status']) =>
     agenda.data?.filter((o) => !s || o.status === s).length ?? 0;
+
+  const close = () => {
+    setDialog(null);
+  };
 
   const remove = useMutation({
     mutationFn: (o: Obligation) => deleteObligation(o.id),
@@ -104,6 +110,19 @@ function AgendaPage() {
         }}
         onDelete={setDeleting}
       />
+      {dialog?.kind === 'form' && (
+        <ObligationFormDialog
+          obligation={dialog.obligation}
+          entities={agenda.data?.map((o) => o.entityName).sort() ?? []}
+          onClose={close}
+        />
+      )}
+      {dialog?.kind === 'complete' && (
+        <CompleteDueDateDialog obligation={dialog.obligation} onClose={close} />
+      )}
+      {dialog?.kind === 'history' && (
+        <ObligationHistorySheet obligationId={dialog.obligation.id} onClose={close} />
+      )}
       <ConfirmDialog
         open={deleting !== null}
         onOpenChange={(open) => {

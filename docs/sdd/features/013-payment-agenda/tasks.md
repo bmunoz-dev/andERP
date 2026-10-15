@@ -28,7 +28,7 @@
 
 - [x] F13-T006 [TDD] `obligations-api.ts` con `countAlerts`, `AgendaBadge` en el menú, "Agenda" en `navigation.ts`, `AgendaTable` y la página `/agenda` con pestañas en la URL.
       Depende de: F13-T003 · Verificación: CA-16–CA-18
-- [ ] F13-T007 [TDD] `ObligationFormDialog`, `CompleteDueDateDialog` y `ObligationHistorySheet`, conectados a la página.
+- [x] F13-T007 [TDD] `ObligationFormDialog`, `CompleteDueDateDialog` y `ObligationHistorySheet`, conectados a la página.
       Depende de: F13-T004, F13-T006 · Verificación: CA-19–CA-21
 
 ## Cierre
