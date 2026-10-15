@@ -17,7 +17,7 @@
 | F10 | [Monto mensual de referencia en los contratos](features/010-monthly-contract-amount/spec.md) | F04 | Aprobado | Aprobado | Hecho |
 | F11 | [Saldo de Clic Kiu](features/011-clickiu-balance/spec.md) | F02 | Aprobado | Aprobado | Hecho |
 | F12 | [Auditoría atómica](features/012-atomic-audit/spec.md) | F01–F06, F11 | Aprobado | Aprobado | Hecho |
-| F13 | [Agenda de pagos a entidades](features/013-payment-agenda/spec.md) | F02, F12 | Aprobado | Aprobado | En progreso |
+| F13 | [Agenda de pagos a entidades](features/013-payment-agenda/spec.md) | F02, F12 | Aprobado | Aprobado | Hecho |
 
 F06 solo depende de F02, así que se puede desarrollar en paralelo con F03–F05.
 
@@ -54,7 +54,7 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 ## Bloqueos y notas
 
-**Siguiente paso:** cerrar los riesgos abiertos de F07 (abajo). F12 terminada (2026-10-14): cada cambio auditado y su registro se confirman en la misma transacción. **Pendientes que dejó F12** (fuera de su alcance): (1) ~~crear y borrar credenciales no se audita~~ resuelto el 2026-10-14 (F06 CA-7b); (2) ~~los correos de invitación se envían dentro de la transacción~~ reducido el 2026-10-14: el correo es lo último antes de confirmar (notas del plan de F02); solo un fallo del `COMMIT` dejaría un enlace inválido. F11 terminada y desplegada (2026-10-14). **Decisión del usuario:** se desplegó sin respaldo porque producción aún no tiene datos reales; el respaldo (pendiente 1 de F07) vuelve a ser prioritario en cuanto haya datos.
+**Siguiente paso:** cerrar los riesgos abiertos de F07 (abajo). F13 terminada (2026-10-14): agenda de pagos a entidades con alertas dentro de la app. **Antes de cargar obligaciones reales en producción, hacer el respaldo (pendiente 1 de F07):** serán los primeros datos de negocio reales. F12 terminada (2026-10-14): cada cambio auditado y su registro se confirman en la misma transacción. **Pendientes que dejó F12** (fuera de su alcance): (1) ~~crear y borrar credenciales no se audita~~ resuelto el 2026-10-14 (F06 CA-7b); (2) ~~los correos de invitación se envían dentro de la transacción~~ reducido el 2026-10-14: el correo es lo último antes de confirmar (notas del plan de F02); solo un fallo del `COMMIT` dejaría un enlace inválido. F11 terminada y desplegada (2026-10-14). **Decisión del usuario:** se desplegó sin respaldo porque producción aún no tiene datos reales; el respaldo (pendiente 1 de F07) vuelve a ser prioritario en cuanto haya datos.
 
 **Estado de producción (2026-10-10):**
 - Hecho: pipeline activo (environment `production` con secretos, `API_HEALTH_URL`, Auto-Deploy de Render apagado), correo con Brevo, `PROXY_SECRET` rotado como Secret del Worker, `app_runtime` como único usuario de la API.
