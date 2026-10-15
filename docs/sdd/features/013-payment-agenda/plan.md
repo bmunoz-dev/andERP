@@ -88,3 +88,4 @@ Solo agrega tablas, índices y un trigger: no rompe la API anterior. Pasa por el
 ## Notas de implementación
 
 - **T001:** la migración generada crea `obligation_due_dates` antes que `payment_obligations` y agrega las FK al final; se aplica bien desde cero. `drizzle-kit generate` confirma que no hay cambios pendientes. Además de lo previsto, una prueba comprueba que un vencimiento no puede apuntar a una obligación de otra organización (FK compuesta).
+- **T003:** el `CASE` del estado vive en un solo lugar (`agenda()`), que sirve a la lista, al filtro y al detalle. Los casos de crear, editar y borrar se agregaron a `audit-atomicity.test.ts` (F12): si la auditoría falla, no queda ni la obligación ni su primer vencimiento.

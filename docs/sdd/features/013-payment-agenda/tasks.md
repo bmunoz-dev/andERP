@@ -17,7 +17,7 @@
 
 ## Bloque C — API
 
-- [ ] F13-T003 [TDD] Escribir la primera parte de `obligations.test.ts` y crear el módulo: crear (con el primer vencimiento), editar, borrar, la agenda (estados, `daysLeft`, orden y filtro) y el detalle con historial, todo con auditoría atómica.
+- [x] F13-T003 [TDD] Escribir la primera parte de `obligations.test.ts` y crear el módulo: crear (con el primer vencimiento), editar, borrar, la agenda (estados, `daysLeft`, orden y filtro) y el detalle con historial, todo con auditoría atómica.
       Depende de: F13-T001, F13-T002 · Verificación: CA-1–CA-4, CA-10–CA-14
 - [ ] F13-T004 [TDD] Completar (con `dueDateId`, con y sin siguiente, 409 y 404), completar en paralelo, y `PUT` y `DELETE` del pendiente.
       Depende de: F13-T003 · Verificación: CA-5–CA-8, CA-13

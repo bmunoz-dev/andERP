@@ -7,6 +7,7 @@ import { DatabaseModule } from './db/database.module';
 import { AuditModule } from './modules/audit/audit.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { ClickiuModule } from './modules/clickiu/clickiu.module';
+import { ObligationsModule } from './modules/obligations/obligations.module';
 import { CredentialsModule } from './modules/credentials/credentials.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
 import { ResponsiblePersonsModule } from './modules/responsible-persons/responsible-persons.module';
@@ -47,6 +48,7 @@ export class AppModule {
         ResponsiblePersonsModule,
         CredentialsModule,
         ClickiuModule,
+        ObligationsModule,
       ],
       controllers: [HealthController],
       providers: [
