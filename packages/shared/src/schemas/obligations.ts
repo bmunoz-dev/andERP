@@ -29,7 +29,12 @@ export const saveObligationSchema = z.object({
   entityName: z.string().trim().min(1, 'Indica la entidad').max(100),
   concept: z.string().trim().min(1, 'Indica el concepto').max(150),
   frequency: obligationFrequencySchema,
-  noticeDays: z.number().int().min(0).max(365).default(15),
+  noticeDays: z
+    .number({ error: 'Indica los días de aviso' })
+    .int('Debe ser un número entero')
+    .min(0, 'Debe estar entre 0 y 365')
+    .max(365, 'Debe estar entre 0 y 365')
+    .default(15),
   notes: optionalText(5000),
 });
 

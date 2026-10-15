@@ -73,6 +73,7 @@ export const ErrorCode = {
   NO_PENDING_DUE_DATE: 'NO_PENDING_DUE_DATE',
   NEXT_DUE_DATE_NOT_AFTER: 'NEXT_DUE_DATE_NOT_AFTER',
   DUE_DATE_COMPLETED_IMMUTABLE: 'DUE_DATE_COMPLETED_IMMUTABLE',
+  DUE_DATE_ALREADY_EXISTS: 'DUE_DATE_ALREADY_EXISTS',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

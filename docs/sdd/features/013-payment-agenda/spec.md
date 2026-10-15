@@ -25,7 +25,7 @@ Las alertas son **dentro de la app**: no hay correo ni tareas programadas.
 
 **Obligaciones**
 
-- **CA-1.** Una obligación tiene `entityName` (hasta 100 caracteres), `concept` (hasta 150), `frequency` (`once` = única, `monthly`, `bimonthly`, `quarterly`, `semiannual`, `annual`), `noticeDays` (0 a 365, 15 por defecto) y `notes` opcionales.
+- **CA-1.** Una obligación tiene `entityName` (hasta 100 caracteres), `concept` (hasta 150), `frequency` (`once` = única, `monthly`, `bimonthly`, `quarterly`, `semiannual`, `annual`), `noticeDays` (entero de 0 a 365, 15 por defecto; vacío es un error, no 0) y `notes` opcionales.
 - **CA-2.** No puede haber dos obligaciones con la misma entidad y concepto en la organización, sin distinguir mayúsculas: `409 DUPLICATE_OBLIGATION`. Una obligación borrada no cuenta.
 - **CA-3.** Al crearla se indica `firstDueDate` y se crea su primer vencimiento pendiente en la misma transacción.
 - **CA-4.** Se pueden editar entidad, concepto, periodicidad, días de aviso y notas. Borrar es lógico: la obligación y su historial dejan de aparecer.
@@ -35,7 +35,7 @@ Las alertas son **dentro de la app**: no hay correo ni tareas programadas.
 - **CA-5.** Una obligación tiene **como máximo un vencimiento pendiente**. La base de datos lo garantiza (`409 OBLIGATION_ALREADY_PENDING`).
 - **CA-6.** Completar (`POST /obligations/:id/complete` con `dueDateId`, el vencimiento que el usuario está viendo) lo marca con la fecha y el usuario, y si llega `nextDueDate` crea el siguiente pendiente, todo en una transacción. `nextDueDate` es opcional en cualquier periodicidad: sin él, la obligación queda sin próximo vencimiento. Si llega, debe ser posterior a la fecha que se completa: `422 NEXT_DUE_DATE_NOT_AFTER`.
 - **CA-7.** Si `dueDateId` ya está completado responde `409 DUE_DATE_ALREADY_COMPLETED`, sin crear un siguiente ni auditar; si no es de esa obligación (o de la organización), `404`. Así, si dos personas completan el mismo vencimiento a la vez, una lo completa y la otra recibe el `409`: queda un solo siguiente y una sola auditoría, y nadie completa por error el vencimiento nuevo que acaba de crear la otra. *(Cambio al planificar, 2026-10-14: antes se completaba "el pendiente actual" sin identificarlo.)*
-- **CA-8.** `PUT /obligations/:id/pending` con `dueDate` crea el pendiente si no hay o le cambia la fecha si existe. `DELETE /obligations/:id/pending` lo quita (`409 NO_PENDING_DUE_DATE` si no hay).
+- **CA-8.** `PUT /obligations/:id/pending` con `dueDate` crea el pendiente si no hay o le cambia la fecha si existe. `DELETE /obligations/:id/pending` lo quita (`409 NO_PENDING_DUE_DATE` si no hay). Si la fecha coincide con otro vencimiento de la misma obligación (incluido uno del historial), `409 DUE_DATE_ALREADY_EXISTS`; lo mismo para la fecha siguiente al completar. *(Agregado en la auditoría previa al PR, 2026-10-14.)*
 - **CA-9.** Un vencimiento completado no cambia de fecha ni de obligación: `422 DUE_DATE_COMPLETED_IMMUTABLE` (trigger en la base de datos).
 
 **Agenda y estados**

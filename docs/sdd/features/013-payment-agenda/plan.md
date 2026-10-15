@@ -31,7 +31,7 @@ Los privilegios por defecto de `0000_base.sql` cubren las tablas nuevas para `ap
   - `createObligationSchema = saveObligationSchema.extend({ firstDueDate })`, y `updateObligationSchema = saveObligationSchema.partial()`;
   - `completeDueDateSchema`: `{ dueDateId: uuid, nextDueDate?: isoDate }`, y `pendingDueDateSchema`: `{ dueDate }`;
   - `obligationSchema` (agenda: `pending`, `status`, `daysLeft`) y `obligationDetailSchema` (agrega `history`).
-- **Errores** en `codes.ts` y en `error-messages.es.ts`: `DUPLICATE_OBLIGATION`, `OBLIGATION_ALREADY_PENDING`, `DUE_DATE_ALREADY_COMPLETED`, `NO_PENDING_DUE_DATE`, `NEXT_DUE_DATE_NOT_AFTER` y `DUE_DATE_COMPLETED_IMMUTABLE`.
+- **Errores** en `codes.ts` y en `error-messages.es.ts`: `DUPLICATE_OBLIGATION`, `OBLIGATION_ALREADY_PENDING`, `DUE_DATE_ALREADY_COMPLETED`, `NO_PENDING_DUE_DATE`, `NEXT_DUE_DATE_NOT_AFTER`, `DUE_DATE_COMPLETED_IMMUTABLE` y `DUE_DATE_ALREADY_EXISTS` (agregado en T010).
 
 ## API: módulo `obligations` (controlador → servicio, sin hexagonal)
 
@@ -100,4 +100,4 @@ Solo agrega tablas, índices y un trigger: no rompe la API anterior. Pasa por el
 2. **Baja:** `noticeDays` en `schemas/obligations.ts` usa los mensajes por defecto de Zod, en inglés ("Too big: expected number to be <=365"), que se muestran bajo el campo. El resto de esquemas tiene mensajes en español.
 3. **Mejora:** `obligation_due_dates_date_uq` no está registrado en `registerConstraintCodes`. Si un pendiente o un siguiente coincide con una fecha del historial, la API responde el genérico `CONFLICT` ("Ya existe un registro con esos datos.") en lugar de un código propio.
 
-Se resuelven en F13-T010.
+**Resueltos en F13-T010:** el formulario envía `NaN` si el campo está vacío y el esquema responde "Indica los días de aviso"; `noticeDays` tiene mensajes en español (entero, entre 0 y 365); `obligation_due_dates_date_uq` se registró como `DUE_DATE_ALREADY_EXISTS` (spec CA-8 actualizado). Cada uno con su prueba, escrita y vista fallar primero.

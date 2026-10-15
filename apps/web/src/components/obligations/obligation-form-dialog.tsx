@@ -72,7 +72,8 @@ export function ObligationFormDialog({
     const { firstDueDate, ...rest } = values;
     const body = {
       ...rest,
-      noticeDays: Number(values.noticeDays),
+      // Vacío no es 0: `Number('')` daría 0 y quitaría los avisos sin que el usuario lo note.
+      noticeDays: values.noticeDays.trim() === '' ? Number.NaN : Number(values.noticeDays),
       ...(obligation ? {} : { firstDueDate }),
     };
     const parsed = (obligation ? updateObligationSchema : createObligationSchema).safeParse(body);

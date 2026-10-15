@@ -22,6 +22,15 @@ describe('createObligationSchema', () => {
     expect(createObligationSchema.safeParse({ ...base, noticeDays: 1.5 }).success).toBe(false);
     expect(createObligationSchema.safeParse({ ...base, frequency: 'weekly' }).success).toBe(false);
   });
+
+  it('días de aviso: vacío, decimales o fuera de rango dan mensajes en español', () => {
+    const message = (noticeDays: number) =>
+      createObligationSchema.safeParse({ ...base, noticeDays }).error?.issues[0]?.message;
+    expect(message(Number.NaN)).toBe('Indica los días de aviso');
+    expect(message(1.5)).toBe('Debe ser un número entero');
+    expect(message(-1)).toBe('Debe estar entre 0 y 365');
+    expect(message(366)).toBe('Debe estar entre 0 y 365');
+  });
 });
 
 describe('completeDueDateSchema', () => {

@@ -31,6 +31,7 @@ import { ObligationsService } from './obligations.service';
 registerConstraintCodes({
   payment_obligations_name_uq: ErrorCode.DUPLICATE_OBLIGATION,
   obligation_due_dates_pending_uq: ErrorCode.OBLIGATION_ALREADY_PENDING,
+  obligation_due_dates_date_uq: ErrorCode.DUE_DATE_ALREADY_EXISTS,
 });
 
 class CreateObligationDto extends createZodDto(createObligationSchema) {}

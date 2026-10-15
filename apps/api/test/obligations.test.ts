@@ -239,6 +239,19 @@ describe('Completar y pendiente', () => {
   });
 });
 
+describe('Fecha repetida (F13-T010)', () => {
+  it('un pendiente con la fecha de un vencimiento del historial responde DUE_DATE_ALREADY_EXISTS', async () => {
+    const o = await create({ firstDueDate: inDays(3) });
+    await api()
+      .post(`/obligations/${o.id}/complete`, { dueDateId: o.pending!.id, nextDueDate: inDays(63) })
+      .expect(200);
+    const res = await api()
+      .put(`/obligations/${o.id}/pending`, { dueDate: inDays(3) })
+      .expect(409);
+    expect(res.body.code).toBe('DUE_DATE_ALREADY_EXISTS');
+  });
+});
+
 describe('Aislamiento', () => {
   it('CA-15 otra organización no ve ni toca las obligaciones ni los vencimientos ajenos', async () => {
     const o = await create({ firstDueDate: inDays(3) });

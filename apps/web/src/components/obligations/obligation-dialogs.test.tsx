@@ -142,6 +142,16 @@ describe('ObligationFormDialog (F13 CA-19)', () => {
   });
 });
 
+describe('ObligationFormDialog — días de aviso (F13-T010)', () => {
+  it('vacío no se guarda como 0: muestra el error y no llama a la API', async () => {
+    wrap(<ObligationFormDialog obligation={obligation()} entities={[]} onClose={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText('Días de aviso'), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    expect(await screen.findByText('Indica los días de aviso')).toBeInTheDocument();
+    expect(createObligation).not.toHaveBeenCalled();
+  });
+});
+
 describe('ObligationHistorySheet (F13 CA-21)', () => {
   const detail = (pending: boolean): ObligationDetail => ({
     ...obligation(pending ? {} : { pending: null, status: 'none', daysLeft: null }),
