@@ -54,7 +54,7 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 ## Bloqueos y notas
 
-**Siguiente paso:** cerrar los riesgos abiertos de F07 (abajo). F13 terminada (2026-10-14): agenda de pagos a entidades con alertas dentro de la app. **Antes de cargar obligaciones reales en producción, hacer el respaldo (pendiente 1 de F07):** serán los primeros datos de negocio reales. F12 terminada (2026-10-14): cada cambio auditado y su registro se confirman en la misma transacción. **Pendientes que dejó F12** (fuera de su alcance): (1) ~~crear y borrar credenciales no se audita~~ resuelto el 2026-10-14 (F06 CA-7b); (2) ~~los correos de invitación se envían dentro de la transacción~~ reducido el 2026-10-14: el correo es lo último antes de confirmar (notas del plan de F02); solo un fallo del `COMMIT` dejaría un enlace inválido. F11 terminada y desplegada (2026-10-14). **Decisión del usuario:** se desplegó sin respaldo porque producción aún no tiene datos reales; el respaldo (pendiente 1 de F07) vuelve a ser prioritario en cuanto haya datos.
+**Siguiente paso:** cerrar los riesgos abiertos de F07 (abajo). F13 terminada (2026-10-14) y mergeada (PR #30, 2026-10-15): agenda de pagos a entidades con alertas dentro de la app. **Antes de cargar obligaciones reales en producción, hacer el respaldo (pendiente 1 de F07):** serán los primeros datos de negocio reales. F12 terminada (2026-10-14): cada cambio auditado y su registro se confirman en la misma transacción. **Pendientes que dejó F12** (fuera de su alcance): (1) ~~crear y borrar credenciales no se audita~~ resuelto el 2026-10-14 (F06 CA-7b); (2) ~~los correos de invitación se envían dentro de la transacción~~ reducido el 2026-10-14: el correo es lo último antes de confirmar (notas del plan de F02); solo un fallo del `COMMIT` dejaría un enlace inválido. F11 terminada y desplegada (2026-10-14). **Decisión del usuario:** se desplegó sin respaldo porque producción aún no tiene datos reales; el respaldo (pendiente 1 de F07) vuelve a ser prioritario en cuanto haya datos.
 
 **Estado de producción (2026-10-10):**
 - Hecho: pipeline activo (environment `production` con secretos, `API_HEALTH_URL`, Auto-Deploy de Render apagado), correo con Brevo, `PROXY_SECRET` rotado como Secret del Worker, `app_runtime` como único usuario de la API.
@@ -62,7 +62,7 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 **Pendiente de F07:**
 1. Respaldo diario gratuito con GitHub Actions (`pg_dump` cifrado) mientras no haya plan Pro. Propuesto, sin aprobar.
-2. Cloudflare Workers Builds falla en las ramas de PR (vistas previas); `main` despliega bien.
+2. ~~Cloudflare Workers Builds falla en las ramas de PR (vistas previas)~~ resuelto (confirmado por el usuario el 2026-10-15).
 3. Avisos de Supabase `function_search_path_mutable` en los triggers (migración pequeña).
 4. T012 (migración rota a propósito), T013 (primera corrida de Playwright, requiere autorización del navegador), T015 (ensayo de restauración) y T016 (hito M4).
 
@@ -70,7 +70,7 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 1. Constitución IX dice que `fee-payments` y `credentials` son hexagonales; solo `auth` lo es (`design.md` §4.1 ya está corregido). Constitución IV dice "repositorio base"; es `OrgScope`.
 2. HU2 de la spec de F03 sigue diciendo "valor total" (F10 lo cambió a monto mensual).
 3. `CLAUDE.md` repite las reglas técnicas de la constitución; dejar solo lo operativo y enlazarla. El README de SDD no dice que el merge lo hace el usuario. La Definición de Hecho no incluye `format:check`.
-4. Pendiente 2 de F07 (Workers Builds en las ramas de PR): confirmar si quedó resuelto al desactivar las vistas previas y actualizarlo aquí.
+4. ~~Pendiente 2 de F07 (Workers Builds en las ramas de PR)~~ resuelto el 2026-10-15.
 
 **Decisiones tomadas:** la skill `ponytail` se versiona en el repo (`.agents/`, `skills-lock.json` y una copia real en `.claude/skills/ponytail/`, sin enlace simbólico). No se protege `main`: es un proyecto personal.
 
