@@ -37,3 +37,5 @@
       Depende de: F13-T005, F13-T007
 - [ ] F13-T009 Verificación manual del usuario (crear una obligación trimestral, verla como Próxima, completarla con la fecha sugerida, ver el historial, quitar un pendiente y el contador del menú) y `roadmap.md`.
       Depende de: F13-T008
+- [ ] F13-T010 [TDD] Resolver los hallazgos de la auditoría (`plan.md`): "Días de aviso" vacío → error de validación en español; mensajes en español en `noticeDays`; registrar `obligation_due_dates_date_uq` con un código propio (`DUE_DATE_ALREADY_EXISTS`) y su mensaje.
+      Depende de: F13-T008 · Verificación: CA-1, CA-6, CA-8, CA-19

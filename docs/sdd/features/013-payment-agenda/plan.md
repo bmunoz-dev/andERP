@@ -93,3 +93,11 @@ Solo agrega tablas, índices y un trigger: no rompe la API anterior. Pasa por el
 - **T006/T007:** T006 dejó el estado de los diálogos sin leer (con un comentario a F13-T007) en lugar de desactivar la regla de lint; T007 lo conectó. "Hecho el …" convierte `completedAt` (un instante) al día de Bogotá con `todayIn(BUSINESS_TIME_ZONE, fecha)`, sin el desfase de un `Date` en UTC; la prueba usa 01:00 UTC del 10/08, que en Bogotá es el 09/08.
 - **T008 — Definición de Hecho:** cada CA tiene al menos una prueba. El CA-9 se prueba en la base de datos (`obligations.db.test.ts`): ningún endpoint edita un vencimiento completado, así que el trigger es solo la defensa en la base. Al revisar se encontró que el CA-17 no tenía prueba (las pestañas estaban dentro de la página) y que usaba las etiquetas de estado en singular ("Vencido") en lugar de las de la spec ("Vencidos"). Se pasaron a `AgendaTabs`, con etiquetas en plural y su prueba.
 - **T008 — Verificación completa:** `format:check`, `lint`, `typecheck` y `test` en verde (58 archivos, 525 pruebas). Una corrida cortó dos archivos por el trabajador de Vitest (`0xC0000409`, nota del entorno en `CLAUDE.md`); al repetirla pasó completa.
+
+## Hallazgos de la auditoría (2026-10-14, antes del PR)
+
+1. **Media:** en el formulario, vaciar "Días de aviso" envía `Number('') = 0` y Zod lo acepta: la obligación queda avisando solo el día del vencimiento, sin que el usuario lo note. Debe responder un error de validación.
+2. **Baja:** `noticeDays` en `schemas/obligations.ts` usa los mensajes por defecto de Zod, en inglés ("Too big: expected number to be <=365"), que se muestran bajo el campo. El resto de esquemas tiene mensajes en español.
+3. **Mejora:** `obligation_due_dates_date_uq` no está registrado en `registerConstraintCodes`. Si un pendiente o un siguiente coincide con una fecha del historial, la API responde el genérico `CONFLICT` ("Ya existe un registro con esos datos.") en lugar de un código propio.
+
+Se resuelven en F13-T010.
