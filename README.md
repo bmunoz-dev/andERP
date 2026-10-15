@@ -34,5 +34,5 @@ Antes del primer arranque, copia `apps/api/.env.example` a `apps/api/.env`.
 | `pnpm typecheck` | Verificación de tipos en todos los paquetes |
 | `pnpm test` | Pruebas unitarias e integración (requiere Docker) |
 | `pnpm db:generate` | Genera una migración a partir del esquema Drizzle |
-| `pnpm db:generate:custom -- --name=<nombre>` | Crea una migración SQL vacía para escribir a mano |
+| `pnpm db:generate:custom --name=<nombre>` | Crea una migración SQL vacía para escribir a mano |
 | `pnpm db:migrate` | Aplica las migraciones pendientes |

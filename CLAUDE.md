@@ -84,8 +84,8 @@ Sí se pueden correr sin pedir permiso: pruebas (Vitest con Testcontainers, que 
 | `docker compose up -d` | Postgres 17 (`:5432`) y Mailpit (SMTP `:1025`, bandeja http://localhost:8025) |
 | `pnpm dev` | shared en watch + API (`:3000`) + web (`:5173`) |
 | `pnpm db:migrate` / `pnpm db:seed` | Migraciones y datos iniciales (idempotente) |
-| `pnpm db:generate -- --name x` | Migración desde el esquema Drizzle |
-| `pnpm db:generate:custom -- --name x` | Migración SQL escrita a mano (triggers, EXCLUDE, vistas) |
+| `pnpm db:generate --name x` | Migración desde el esquema Drizzle |
+| `pnpm db:generate:custom --name x` | Migración SQL escrita a mano (triggers, EXCLUDE, vistas) |
 | `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test` | Verificación completa, la misma del CI |
 | `npx vitest run --project api test/x.test.ts` | Un archivo de pruebas |
 

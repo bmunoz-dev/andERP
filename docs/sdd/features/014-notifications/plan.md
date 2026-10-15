@@ -75,4 +75,4 @@ Solo agrega un enum y una tabla: no rompe la API anterior. Pasa por el pipeline 
 
 ## Notas de implementación
 
-- **T001:** la migración generada es `0026_notification_states`; `drizzle-kit generate` confirma que no hay cambios pendientes. El comando correcto es `pnpm db:generate --name x`: con el `--` que indica `CLAUDE.md`, drizzle-kit rechaza las opciones.
+- **T001:** la migración generada es `0026_notification_states`; `drizzle-kit generate` confirma que no hay cambios pendientes. El comando correcto es `pnpm db:generate --name x`: con `--` (como decían `CLAUDE.md` y el README, ya corregidos), pnpm lo reenvía y drizzle-kit rechaza las opciones.
