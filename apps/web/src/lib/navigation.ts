@@ -1,5 +1,6 @@
 import {
   Building2,
+  CalendarClock,
   FileText,
   HandCoins,
   KeyRound,
@@ -32,6 +33,7 @@ const operation: NavGroup = {
     { label: 'Credenciales', to: '/credenciales', icon: KeyRound },
     { label: 'Responsables', to: '/responsables', icon: UserRound },
     { label: 'Clic Kiu', to: '/clic-kiu', icon: Wallet },
+    { label: 'Agenda', to: '/agenda', icon: CalendarClock },
   ],
 };
 

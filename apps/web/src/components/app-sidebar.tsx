@@ -1,5 +1,6 @@
 import type { AuthProfile } from '@anderp/shared';
 import { Link, useRouterState } from '@tanstack/react-router';
+import { AgendaBadge } from '@/components/obligations/agenda-badge';
 import {
   Sidebar,
   SidebarContent,
@@ -38,6 +39,7 @@ export function AppSidebar({ user }: { user: AuthProfile }) {
                         <span>{item.label}</span>
                       </Link>
                     </SidebarMenuButton>
+                    {item.to === '/agenda' && <AgendaBadge />}
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
