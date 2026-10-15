@@ -104,5 +104,6 @@ export class ObligationsController {
 @Module({
   controllers: [ObligationsController],
   providers: [ObligationsService],
+  exports: [ObligationsService],
 })
 export class ObligationsModule {}
