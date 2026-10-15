@@ -17,6 +17,7 @@
 | F10 | [Monto mensual de referencia en los contratos](features/010-monthly-contract-amount/spec.md) | F04 | Aprobado | Aprobado | Hecho |
 | F11 | [Saldo de Clic Kiu](features/011-clickiu-balance/spec.md) | F02 | Aprobado | Aprobado | Hecho |
 | F12 | [Auditoría atómica](features/012-atomic-audit/spec.md) | F01–F06, F11 | Aprobado | Aprobado | Hecho |
+| F13 | [Agenda de pagos a entidades](features/013-payment-agenda/spec.md) | F02, F12 | Aprobado | Borrador | Pendiente |
 
 F06 solo depende de F02, así que se puede desarrollar en paralelo con F03–F05.
 

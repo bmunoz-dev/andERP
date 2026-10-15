@@ -1,7 +1,7 @@
 # F13 — Agenda de pagos a entidades · Spec
 
-- **Estado:** Borrador
-- **Diseño:** `design.md` §3 (glosario), §5.2 (enum), §5.11 (`payment_obligations`, `obligation_due_dates`), §8 (pantalla Agenda). Se agregan al aprobar esta spec.
+- **Estado:** Aprobado
+- **Diseño:** `design.md` §3 (glosario), §5.2 (enum), §5.11 (`payment_obligations`, `obligation_due_dates`), §8 (pantalla Agenda).
 - **Depende de:** F02 (organizaciones y `OrgScope`), F12 (auditoría atómica)
 
 ## Objetivo
@@ -33,8 +33,8 @@ Las alertas son **dentro de la app**: no hay correo ni tareas programadas.
 **Vencimientos**
 
 - **CA-5.** Una obligación tiene **como máximo un vencimiento pendiente**. La base de datos lo garantiza (`409 OBLIGATION_ALREADY_PENDING`).
-- **CA-6.** Completar (`POST /obligations/:id/complete`) marca el pendiente con la fecha y el usuario, y si llega `nextDueDate` crea el siguiente pendiente, todo en una transacción. `nextDueDate` es opcional en cualquier periodicidad: sin él, la obligación queda sin próximo vencimiento. Si llega, debe ser posterior a la fecha que se completa: `422 NEXT_DUE_DATE_NOT_AFTER`.
-- **CA-7.** Completar sin pendiente responde `409 NO_PENDING_DUE_DATE`. Si dos personas completan el mismo vencimiento a la vez, una lo completa y la otra recibe `409 DUE_DATE_ALREADY_COMPLETED`; queda un solo siguiente y una sola auditoría.
+- **CA-6.** Completar (`POST /obligations/:id/complete` con `dueDateId`, el vencimiento que el usuario está viendo) lo marca con la fecha y el usuario, y si llega `nextDueDate` crea el siguiente pendiente, todo en una transacción. `nextDueDate` es opcional en cualquier periodicidad: sin él, la obligación queda sin próximo vencimiento. Si llega, debe ser posterior a la fecha que se completa: `422 NEXT_DUE_DATE_NOT_AFTER`.
+- **CA-7.** Si `dueDateId` ya está completado responde `409 DUE_DATE_ALREADY_COMPLETED`, sin crear un siguiente ni auditar; si no es de esa obligación (o de la organización), `404`. Así, si dos personas completan el mismo vencimiento a la vez, una lo completa y la otra recibe el `409`: queda un solo siguiente y una sola auditoría, y nadie completa por error el vencimiento nuevo que acaba de crear la otra. *(Cambio al planificar, 2026-10-14: antes se completaba "el pendiente actual" sin identificarlo.)*
 - **CA-8.** `PUT /obligations/:id/pending` con `dueDate` crea el pendiente si no hay o le cambia la fecha si existe. `DELETE /obligations/:id/pending` lo quita (`409 NO_PENDING_DUE_DATE` si no hay).
 - **CA-9.** Un vencimiento completado no cambia de fecha ni de obligación: `422 DUE_DATE_COMPLETED_IMMUTABLE` (trigger en la base de datos).
 
