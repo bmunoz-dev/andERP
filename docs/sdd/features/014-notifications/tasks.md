@@ -19,7 +19,7 @@
 
 - [x] F14-T003 [TDD] Escribir `notifications.test.ts` y crear el módulo: `GET`, `/seen` y `/dismiss` sobre `ObligationsService.list()`, con los casos de aparecer, desaparecer, volver al vencerse, cambio de fecha, por usuario y sin auditoría.
       Depende de: F14-T001, F14-T002 · Verificación: CA-1–CA-10
-- [ ] F14-T004 Aislamiento con `seedTwoOrgs()`, `401` sin sesión y endpoints en OpenAPI.
+- [x] F14-T004 Aislamiento con `seedTwoOrgs()`, `401` sin sesión y endpoints en OpenAPI.
       Depende de: F14-T003 · Verificación: CA-10, CA-11
 
 ## Bloque D — Web

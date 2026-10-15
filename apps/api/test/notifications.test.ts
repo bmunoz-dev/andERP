@@ -182,3 +182,35 @@ describe('Visto y descartado', () => {
     expect(await auditCount()).toBe(before);
   });
 });
+
+describe('Permisos y aislamiento', () => {
+  it('CA-10 sin sesión responde 401', async () => {
+    await t.http.get('/api/v1/notifications').expect(401);
+    await t.http.post('/api/v1/notifications/seen').expect(401);
+  });
+
+  it('CA-11 otra organización no ve ni toca las notificaciones ajenas', async () => {
+    const o = await create(inDays(1));
+    const other = as(t, s.orgB.admin.token);
+
+    expect(await notifications(other)).toEqual({ unseen: false, items: [] });
+    await other.post('/notifications/seen').expect(204);
+    const res = await dismiss(o.pending!.id, 'obligation_upcoming', other).expect(404);
+    expect(res.body.code).toBe('NOTIFICATION_NOT_FOUND');
+
+    expect(await notifications()).toMatchObject({ unseen: true, items: [{ seen: false }] });
+  });
+});
+
+it('los endpoints de notificaciones aparecen en OpenAPI', async () => {
+  const { paths } = (await t.http.get('/api/docs-json').expect(200)).body as {
+    paths: Record<string, unknown>;
+  };
+  expect(Object.keys(paths)).toEqual(
+    expect.arrayContaining([
+      '/api/v1/notifications',
+      '/api/v1/notifications/seen',
+      '/api/v1/notifications/dismiss',
+    ]),
+  );
+});
