@@ -36,6 +36,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-14 | Las credenciales auditan también crear y borrar (`credential.create`, `credential.delete`), sin la contraseña. §5.9 lista además `credential.update`, que ya se auditaba desde F06. | Eran el único módulo sensible sin rastro de quién creó o quitó un acceso; `created_by` y `deleted_by` guardan solo el último actor, sin valores. |
 | 2026-10-14 | **Agenda de pagos a entidades** (F13): `payment_obligations` y `obligation_due_dates`, un solo vencimiento pendiente por obligación (índice único) y vencimientos completados inmutables (trigger). Estado calculado con la fecha de Bogotá; alertas solo dentro de la app. | La empresa debe cumplir obligaciones periódicas con la DIAN, Fontur y otras entidades, y necesita que AndERP le avise antes de cada fecha límite. Sin correo ni tareas programadas: Render Free se duerme y no correría un cron confiable. |
 | 2026-10-15 | **Panel de notificaciones** (F14): campana en la cabecera con un punto si hay algo sin revisar. Las notificaciones se calculan de la Agenda; solo se guarda por usuario lo visto y lo descartado (`notification_states`, §5.12), sin borrado lógico ni auditoría. | El contador del menú dice cuántas alertas hay, pero no si hay algo nuevo, y no permite apartar lo ya atendido. Calcularlas en vez de guardarlas evita una tarea programada y una segunda fuente de verdad sobre los estados. |
+| 2026-10-15 | **Vistas para el celular** (F15): por debajo de 768 px las tablas se muestran como tarjetas generadas de sus mismas columnas, sin ocultar ninguna (§8). | El usuario consulta la Agenda, las credenciales y Clic Kiu, y registra movimientos, desde el teléfono; con tablas había que desplazarse de lado para ver columnas y acciones. Generar las tarjetas de las columnas evita mantener dos maquetaciones por pantalla. |
 
 ---
 
@@ -626,6 +627,8 @@ Las notificaciones **no se guardan**: son los vencimientos pendientes en estado 
 | Plataforma (super admin) | Organizaciones y catálogos globales. |
 
 La interfaz está en español y el formato de moneda es COP (`es-CO`).
+
+**Celular (F15):** por debajo de 768 px (`useIsMobile`), `DataTable` muestra cada fila como una tarjeta con una línea "Etiqueta: valor" por columna y las acciones al pie; no se oculta ninguna columna. Los diálogos se desplazan por dentro si no caben en el alto de la pantalla. La matriz de Egresos y la cuadrícula de honorarios siguen siendo vistas de escritorio (desplazamiento horizontal).
 
 ---
 
