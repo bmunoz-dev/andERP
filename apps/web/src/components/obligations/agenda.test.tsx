@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { listObligations } from '@/lib/obligations-api';
 import { AgendaBadge } from './agenda-badge';
 import { AgendaTable } from './agenda-table';
+import { AgendaTabs } from './agenda-tabs';
 
 vi.mock('@/lib/obligations-api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/obligations-api')>()),
@@ -95,5 +96,34 @@ describe('AgendaTable (F13 CA-18)', () => {
     expect(within(none!).queryByRole('button', { name: 'Completar' })).toBeNull();
     fireEvent.click(within(overdue!).getByRole('button', { name: 'Completar' }));
     expect(onComplete).toHaveBeenCalledWith(rows[0]);
+  });
+});
+
+describe('AgendaTabs (F13 CA-17)', () => {
+  const rows = [
+    obligation({ status: 'overdue' }),
+    obligation({ status: 'upcoming' }),
+    obligation({ status: 'upcoming' }),
+    obligation({ status: 'none', pending: null, daysLeft: null }),
+  ];
+
+  it('muestra cada pestaña con su número y marca la elegida', () => {
+    render(<AgendaTabs data={rows} value="upcoming" onChange={vi.fn()} />);
+    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual([
+      'Todos (4)',
+      'Vencidos (1)',
+      'Próximos (2)',
+      'Programados (0)',
+      'Sin próximo (1)',
+    ]);
+    expect(screen.getByRole('tab', { name: 'Próximos (2)' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+  });
+
+  it('sin estado elegido marca "Todos"', () => {
+    render(<AgendaTabs data={rows} value={undefined} onChange={vi.fn()} />);
+    expect(screen.getByRole('tab', { name: 'Todos (4)' })).toHaveAttribute('aria-selected', 'true');
   });
 });

@@ -7,27 +7,20 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { AgendaTable } from '@/components/obligations/agenda-table';
+import { AgendaTabs } from '@/components/obligations/agenda-tabs';
 import { CompleteDueDateDialog } from '@/components/obligations/complete-due-date-dialog';
 import { ObligationFormDialog } from '@/components/obligations/obligation-form-dialog';
 import { ObligationHistorySheet } from '@/components/obligations/obligation-history-sheet';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { errorMessage } from '@/lib/error-messages.es';
-import {
-  deleteObligation,
-  listObligations,
-  obligationKeys,
-  STATUS_LABELS,
-} from '@/lib/obligations-api';
+import { deleteObligation, listObligations, obligationKeys } from '@/lib/obligations-api';
 
 export const Route = createFileRoute('/_app/agenda')({
   // La pestaña va en la URL (CA-17); un valor inválido muestra "Todos".
   validateSearch: z.object({ status: obligationStatusSchema.optional().catch(undefined) }),
   component: AgendaPage,
 });
-
-const TABS = ['overdue', 'upcoming', 'scheduled', 'none'] as const;
 
 /** Qué diálogo está abierto. `form` con `null` es una obligación nueva. */
 type AgendaDialog =
@@ -46,8 +39,6 @@ function AgendaPage() {
   // Una sola consulta (la misma del contador del menú); las pestañas filtran en la web.
   const agenda = useQuery({ queryKey: obligationKeys.list, queryFn: listObligations });
   const rows = status ? agenda.data?.filter((o) => o.status === status) : agenda.data;
-  const count = (s?: Obligation['status']) =>
-    agenda.data?.filter((o) => !s || o.status === s).length ?? 0;
 
   const close = () => {
     setDialog(null);
@@ -78,24 +69,13 @@ function AgendaPage() {
           </Button>
         }
       />
-      <Tabs
-        className="mb-4"
-        value={status ?? 'all'}
-        onValueChange={(value) => {
-          void navigate({
-            search: value === 'all' ? {} : { status: value as Obligation['status'] },
-          });
+      <AgendaTabs
+        data={agenda.data}
+        value={status}
+        onChange={(next) => {
+          void navigate({ search: next ? { status: next } : {} });
         }}
-      >
-        <TabsList>
-          <TabsTrigger value="all">Todos ({count()})</TabsTrigger>
-          {TABS.map((s) => (
-            <TabsTrigger key={s} value={s}>
-              {STATUS_LABELS[s]} ({count(s)})
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      />
       <AgendaTable
         data={rows}
         isLoading={agenda.isPending}

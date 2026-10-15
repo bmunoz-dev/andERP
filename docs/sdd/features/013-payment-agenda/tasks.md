@@ -33,7 +33,7 @@
 
 ## Cierre
 
-- [ ] F13-T008 Verificación completa (`pnpm format:check && pnpm lint && pnpm typecheck && pnpm test`), Definición de Hecho (cada CA con prueba) y notas de implementación en `plan.md`.
+- [x] F13-T008 Verificación completa (`pnpm format:check && pnpm lint && pnpm typecheck && pnpm test`), Definición de Hecho (cada CA con prueba) y notas de implementación en `plan.md`.
       Depende de: F13-T005, F13-T007
 - [ ] F13-T009 Verificación manual del usuario (crear una obligación trimestral, verla como Próxima, completarla con la fecha sugerida, ver el historial, quitar un pendiente y el contador del menú) y `roadmap.md`.
       Depende de: F13-T008
