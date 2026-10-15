@@ -238,3 +238,47 @@ describe('Completar y pendiente', () => {
     ]);
   });
 });
+
+describe('Aislamiento', () => {
+  it('CA-15 otra organización no ve ni toca las obligaciones ni los vencimientos ajenos', async () => {
+    const o = await create({ firstDueDate: inDays(3) });
+    const other = as(t, s.orgB.admin.token);
+    const dueDateId = o.pending!.id;
+
+    expect((await other.get('/obligations').expect(200)).body).toEqual([]);
+    await other.get(`/obligations/${o.id}`).expect(404);
+    await other.patch(`/obligations/${o.id}`, { noticeDays: 1 }).expect(404);
+    await other.delete(`/obligations/${o.id}`).expect(404);
+    await other.post(`/obligations/${o.id}/complete`, { dueDateId }).expect(404);
+    await other.put(`/obligations/${o.id}/pending`, { dueDate: inDays(9) }).expect(404);
+    await other.delete(`/obligations/${o.id}/pending`).expect(404);
+
+    // B puede usar la misma entidad y concepto: la unicidad es por organización.
+    await other
+      .post('/obligations', {
+        entityName: o.entityName,
+        concept: o.concept,
+        frequency: 'bimonthly',
+        firstDueDate: inDays(3),
+      })
+      .expect(201);
+    expect((await api().get(`/obligations/${o.id}`).expect(200)).body).toMatchObject({
+      noticeDays: 15,
+      pending: { id: dueDateId, dueDate: inDays(3) },
+    });
+  });
+});
+
+it('los endpoints de la agenda aparecen en OpenAPI', async () => {
+  const { paths } = (await t.http.get('/api/docs-json').expect(200)).body as {
+    paths: Record<string, unknown>;
+  };
+  expect(Object.keys(paths)).toEqual(
+    expect.arrayContaining([
+      '/api/v1/obligations',
+      '/api/v1/obligations/{id}',
+      '/api/v1/obligations/{id}/complete',
+      '/api/v1/obligations/{id}/pending',
+    ]),
+  );
+});

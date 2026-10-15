@@ -21,7 +21,7 @@
       Depende de: F13-T001, F13-T002 · Verificación: CA-1–CA-4, CA-10–CA-14
 - [x] F13-T004 [TDD] Completar (con `dueDateId`, con y sin siguiente, 409 y 404), completar en paralelo, y `PUT` y `DELETE` del pendiente.
       Depende de: F13-T003 · Verificación: CA-5–CA-8, CA-13
-- [ ] F13-T005 Aislamiento con `seedTwoOrgs()` y endpoints en OpenAPI.
+- [x] F13-T005 Aislamiento con `seedTwoOrgs()` y endpoints en OpenAPI.
       Depende de: F13-T004 · Verificación: CA-15
 
 ## Bloque D — Web
