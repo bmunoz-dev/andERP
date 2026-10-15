@@ -1,6 +1,6 @@
 # F14 — Panel de notificaciones · Spec
 
-- **Estado:** Borrador (pendiente de aprobación del usuario)
+- **Estado:** Aprobado
 - **Diseño:** `design.md` §3 (glosario), §5.2 (enum), §5.9 (no se audita), §5.12 (`notification_states`), §8 (campana y panel).
 - **Depende de:** F13 (agenda de pagos; de ella salen las notificaciones)
 
