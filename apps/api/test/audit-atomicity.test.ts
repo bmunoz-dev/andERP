@@ -6,6 +6,7 @@ import type {
   ExpenseCategory,
   FeePayment,
   Member,
+  Obligation,
   Organization,
   ServiceProvider,
 } from '@anderp/shared';
@@ -13,7 +14,7 @@ import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DB, type Database } from '../src/db/database.module';
-import { auditLogs, documentTypes, passwordResets } from '../src/db/schema';
+import { auditLogs, documentTypes, obligationDueDates, passwordResets } from '../src/db/schema';
 import { createTestApp, type TestApp } from './setup/create-test-app';
 import { as, createMember, seedTwoOrgs, type TwoOrgs } from './setup/fixtures';
 import { resetDb, withOwnerSql } from './setup/reset-db';
@@ -342,6 +343,69 @@ describe('Credenciales', () => {
  * quedan esperando en el `UPDATE`; al soltar el bloqueo, una borra y la otra ya no encuentra la
  * fila. Debe responder 404 y no dejar un segundo registro de auditoría.
  */
+describe('Agenda de pagos', () => {
+  const create = () =>
+    api().post('/obligations', {
+      entityName: 'DIAN',
+      concept: 'IVA bimestral',
+      frequency: 'bimonthly',
+      firstDueDate: '2026-11-12',
+    });
+  const list = () => body<Obligation[]>(api().get('/obligations'));
+
+  it('crear (con su primer vencimiento)', async () => {
+    await failAudit('obligation.create');
+    await body(create(), 500);
+    expect(await list()).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(obligationDueDates)
+        .where(eq(obligationDueDates.organizationId, s.orgA.id)),
+    ).toHaveLength(0);
+  });
+
+  it('editar', async () => {
+    const o = await body<Obligation>(create(), 201);
+    await failAudit('obligation.update');
+    await body(api().patch(`/obligations/${o.id}`, { noticeDays: 40 }), 500);
+    expect((await body<Obligation>(api().get(`/obligations/${o.id}`))).noticeDays).toBe(15);
+  });
+
+  it('borrar', async () => {
+    const o = await body<Obligation>(create(), 201);
+    await failAudit('obligation.delete');
+    await body(api().delete(`/obligations/${o.id}`), 500);
+    await body(api().get(`/obligations/${o.id}`));
+  });
+  it('completar (con el siguiente)', async () => {
+    const o = await body<Obligation>(create(), 201);
+    await failAudit('obligation_due_date.complete');
+    await body(
+      api().post(`/obligations/${o.id}/complete`, {
+        dueDateId: o.pending!.id,
+        nextDueDate: '2027-01-12',
+      }),
+      500,
+    );
+    expect((await body<Obligation>(api().get(`/obligations/${o.id}`))).pending).toEqual(o.pending);
+  });
+
+  it('cambiar el pendiente', async () => {
+    const o = await body<Obligation>(create(), 201);
+    await failAudit('obligation_due_date.set');
+    await body(api().put(`/obligations/${o.id}/pending`, { dueDate: '2026-12-01' }), 500);
+    expect((await body<Obligation>(api().get(`/obligations/${o.id}`))).pending).toEqual(o.pending);
+  });
+
+  it('quitar el pendiente', async () => {
+    const o = await body<Obligation>(create(), 201);
+    await failAudit('obligation_due_date.delete');
+    await body(api().delete(`/obligations/${o.id}/pending`), 500);
+    expect((await body<Obligation>(api().get(`/obligations/${o.id}`))).pending).toEqual(o.pending);
+  });
+});
+
 describe('Dos borrados simultáneos', () => {
   /** Espera a que `n` peticiones estén bloqueadas esperando un lock (`pg_locks` lo ve cualquier rol). */
   async function waitForBlocked(n: number): Promise<void> {

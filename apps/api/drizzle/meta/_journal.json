@@ -169,6 +169,20 @@
       "when": 1791997159389,
       "tag": "0023_clickiu_isolation_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792028838021,
+      "tag": "0024_payment_obligations",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1792028840220,
+      "tag": "0025_obligation_rules",
+      "breakpoints": true
     }
   ]
 }

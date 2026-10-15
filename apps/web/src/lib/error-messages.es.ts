@@ -85,6 +85,16 @@ const MESSAGES = {
     'Una recarga no se puede convertir en venta ni al revés. Borra el movimiento y créalo de nuevo.',
   CLICKIU_SALE_STATUS_REQUIRED:
     'Una venta debe tener estado (Crédito o Completado); una recarga no.',
+  DUPLICATE_OBLIGATION: 'Ya existe una obligación con esa entidad y ese concepto.',
+  OBLIGATION_ALREADY_PENDING:
+    'Esta obligación ya tiene un vencimiento pendiente. Cámbiale la fecha o complétalo.',
+  DUE_DATE_ALREADY_COMPLETED:
+    'Otra persona ya marcó este vencimiento como hecho. La agenda se actualizó.',
+  NO_PENDING_DUE_DATE: 'Esta obligación no tiene un vencimiento pendiente.',
+  NEXT_DUE_DATE_NOT_AFTER:
+    'El próximo vencimiento debe ser posterior a la fecha que se está completando.',
+  DUE_DATE_COMPLETED_IMMUTABLE: 'Un vencimiento ya completado no se puede cambiar.',
+  DUE_DATE_ALREADY_EXISTS: 'Esta obligación ya tiene un vencimiento en esa fecha. Elige otra.',
 } satisfies Record<ErrorCode, string>;
 
 const CLIENT_MESSAGES: Record<string, string> = {

@@ -34,6 +34,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-14 | **Auditoría atómica** (F12): los servicios escriben el cambio y su registro en `audit_logs` en la misma transacción. | `AuditService` escribía después de confirmar el cambio: un fallo entre las dos sentencias dejaba cambios de dinero o credenciales sin auditar. |
 | 2026-10-14 | La regla del saldo de Clic Kiu rechaza las transacciones en `REPEATABLE READ` (migración 0023). | En ese nivel, dos ventas simultáneas pasarían las dos y el saldo quedaría negativo sin aviso; es mejor un error visible. |
 | 2026-10-14 | Las credenciales auditan también crear y borrar (`credential.create`, `credential.delete`), sin la contraseña. §5.9 lista además `credential.update`, que ya se auditaba desde F06. | Eran el único módulo sensible sin rastro de quién creó o quitó un acceso; `created_by` y `deleted_by` guardan solo el último actor, sin valores. |
+| 2026-10-14 | **Agenda de pagos a entidades** (F13): `payment_obligations` y `obligation_due_dates`, un solo vencimiento pendiente por obligación (índice único) y vencimientos completados inmutables (trigger). Estado calculado con la fecha de Bogotá; alertas solo dentro de la app. | La empresa debe cumplir obligaciones periódicas con la DIAN, Fontur y otras entidades, y necesita que AndERP le avise antes de cada fecha límite. Sin correo ni tareas programadas: Render Free se duerme y no correría un cron confiable. |
 
 ---
 
@@ -46,8 +47,9 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 1. Ver los egresos del mes en una matriz **categoría × semana** con totales por semana, por categoría y del mes.
 2. Registrar pagos de honorarios día a día por semana, ligados al contrato del prestador, con lo pagado por mes trabajado frente al monto mensual de referencia del contrato.
 3. Guardar credenciales de portales externos cifradas, con registro de quién las revela.
-4. Llevar el saldo prepagado de Clic Kiu: recargas, ventas y lo que deben los clientes por ventas a crédito (F11).
-5. Nacer como sistema interno de una sola empresa, pero con el modelo de datos listo para operar varias organizaciones (multi-tenant) sin migrar datos.
+4. Avisar con anticipación las fechas límite de las obligaciones con entidades (DIAN, Fontur…) y llevar su historial de cumplimiento (F13).
+5. Llevar el saldo prepagado de Clic Kiu: recargas, ventas y lo que deben los clientes por ventas a crédito (F11).
+6. Nacer como sistema interno de una sola empresa, pero con el modelo de datos listo para operar varias organizaciones (multi-tenant) sin migrar datos.
 
 **Criterios de éxito:**
 
@@ -76,6 +78,7 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 | 13 | Idioma | Base de datos y código en **inglés**. Interfaz en **español**. |
 | 14 | Responsables | Personas de contacto, independientes de los usuarios de la app. |
 | 15 | Clic Kiu | Módulo aparte: las recargas **no** entran en la matriz de Egresos. Una venta resta saldo esté en Crédito (el cliente debe) o Completado (ya pagó). El saldo total nunca queda negativo (F11). |
+| 16 | Agenda de pagos | Registra obligaciones y sus fechas límite, **no los pagos**. Las fechas las ingresa el usuario: AndERP no calcula el calendario tributario. Alertas solo dentro de la app (F13). |
 
 ---
 
@@ -100,6 +103,9 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 | Registro de auditoría | `audit_logs` |
 | Movimiento de Clic Kiu (Recarga / Venta) | `clickiu_movements` (`recharge` / `sale`) |
 | Estado de la venta (Crédito / Completado) | `clickiu_sale_status` (`credit` / `completed`) |
+| Obligación (agenda de pagos) | `payment_obligations` |
+| Vencimiento | `obligation_due_dates` |
+| Periodicidad de la obligación | `obligation_frequency` |
 
 ---
 
@@ -149,6 +155,7 @@ apps/
         credentials/         cifrado AES-256-GCM (credential-cipher.ts), servicio y rotación de llaves
         audit/               escritura de audit_logs
         clickiu/             movimientos y saldo de Clic Kiu (F11)
+        obligations/         agenda de pagos a entidades (F13)
         mail/                envío de correos (invitaciones y recuperación)
         health/              healthcheck para el despliegue
       shared/              conexión a la DB, contexto de organización, guards, errores, logging
@@ -186,6 +193,7 @@ packages/
 | `payment_frequency` | `weekly`, `biweekly`, `monthly`, `bimonthly` |
 | `clickiu_movement_type` | `recharge`, `sale` |
 | `clickiu_sale_status` | `credit`, `completed` |
+| `obligation_frequency` | `once`, `monthly`, `bimonthly`, `quarterly`, `semiannual`, `annual` |
 
 ### 5.3 Núcleo: organizaciones y autenticación
 
@@ -453,7 +461,7 @@ Todas son vistas normales (no materializadas).
 
 - `INDEX (organization_id, created_at)`, `INDEX (entity_type, entity_id)`.
 
-**Se registra:** crear, editar y borrar en `expenses`, `fee_payments` (incluidos sus días), `provider_contracts`, `clickiu_movements` y `entity_credentials` (nunca con la contraseña ni sus datos cifrados); revelar una credencial; y los eventos de auth (login, login fallido, bloqueo, cambio y recuperación de contraseña).
+**Se registra:** crear, editar y borrar en `expenses`, `fee_payments` (incluidos sus días), `provider_contracts`, `clickiu_movements`, `entity_credentials` (nunca con la contraseña ni sus datos cifrados), `payment_obligations` y `obligation_due_dates` (incluidos completar y crear, cambiar o quitar el pendiente); revelar una credencial; y los eventos de auth (login, login fallido, bloqueo, cambio y recuperación de contraseña).
 
 **Atomicidad (F12):** el cambio y su registro se escriben en la misma transacción (`audit.log(entry, tx)`): si falla la auditoría, el cambio no queda. Los eventos de auth y `credential.reveal` se auditan fuera de cualquier transacción de negocio.
 
@@ -479,6 +487,38 @@ Todas son vistas normales (no materializadas).
 - **Bloqueos de aplicación** (`pg_advisory_xact_lock`): siempre con la forma de dos claves `(clase, objeto)`. La clase es una constante por regla, registrada aquí: `11` = saldo de Clic Kiu. La forma de una sola clave no se usa.
 
 **`v_clickiu_balance`** (`security_invoker`): por organización, `balance` = recargas − ventas, sin los movimientos borrados. Es la única fórmula del saldo: la usan el trigger y el saldo actual de la API. Los totales filtrados por fechas, tipo o estado se calculan en la consulta de la API con `SUM … FILTER`.
+
+### 5.11 Agenda de pagos (F13)
+
+**`payment_obligations`**
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | uuid PK | |
+| organization_id | uuid NOT NULL | |
+| entity_name | varchar(100) NOT NULL | DIAN, Fontur… (texto libre) |
+| concept | varchar(150) NOT NULL | "IVA bimestral"… |
+| frequency | obligation_frequency NOT NULL | solo sugiere la fecha siguiente |
+| notice_days | smallint NOT NULL | default 15; `CHECK (notice_days BETWEEN 0 AND 365)` |
+| notes | text NULL | |
+| audit | | |
+
+- `UNIQUE (organization_id, lower(entity_name), lower(concept)) WHERE deleted_at IS NULL`.
+
+**`obligation_due_dates`**
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | uuid PK | |
+| organization_id | uuid NOT NULL | |
+| obligation_id | uuid NOT NULL | FK compuesta → payment_obligations |
+| due_date | date NOT NULL | fecha límite |
+| completed_at | timestamptz NULL | NULL = pendiente |
+| completed_by | uuid NULL FK → users | `CHECK ((completed_at IS NULL) = (completed_by IS NULL))` |
+| audit | | |
+
+- `UNIQUE (obligation_id) WHERE completed_at IS NULL AND deleted_at IS NULL`: un solo pendiente por obligación.
+- `UNIQUE (obligation_id, due_date) WHERE deleted_at IS NULL`.
+- **Trigger:** un vencimiento completado no cambia de `due_date` ni de `obligation_id` (`DUE_DATE_COMPLETED_IMMUTABLE`).
+- **Estado** (calculado en la consulta con `todayIn()`, no se guarda): Vencido, Próximo (hasta `notice_days` días), Programado o Sin próximo.
 
 ---
 
@@ -557,6 +597,7 @@ Todas son vistas normales (no materializadas).
 | Credenciales | Listado sin contraseñas; botón "Revelar" (se registra en auditoría) y copiar al portapapeles. |
 | Responsables | CRUD. |
 | Clic Kiu | Tarjetas Recargado, Vendido, Por cobrar y Saldo al corte, que cambian con los filtros (fechas, tipo y estado). Tabla de movimientos con "Marcar como completado" y diálogo de recarga o venta que muestra el saldo disponible. |
+| Agenda | Obligaciones por urgencia (pestañas Vencidos, Próximos, Programados, Sin próximo), completar con la fecha siguiente sugerida e historial. El menú muestra un contador de vencidas y próximas. |
 | Configuración (admin) | Categorías de egreso y usuarios de la organización. |
 | Plataforma (super admin) | Organizaciones y catálogos globales. |
 
