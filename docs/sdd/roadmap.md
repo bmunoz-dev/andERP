@@ -19,7 +19,7 @@
 | F12 | [Auditoría atómica](features/012-atomic-audit/spec.md) | F01–F06, F11 | Aprobado | Aprobado | Hecho |
 | F13 | [Agenda de pagos a entidades](features/013-payment-agenda/spec.md) | F02, F12 | Aprobado | Aprobado | Hecho |
 | F14 | [Panel de notificaciones](features/014-notifications/spec.md) | F13 | Aprobado | Aprobado | Hecho |
-| F15 | [Vistas para el celular](features/015-mobile-views/spec.md) | F13, F14 | Aprobado | Borrador | — |
+| F15 | [Vistas para el celular](features/015-mobile-views/spec.md) | F13, F14 | Aprobado | Aprobado | En progreso |
 
 F06 solo depende de F02, así que se puede desarrollar en paralelo con F03–F05.
 

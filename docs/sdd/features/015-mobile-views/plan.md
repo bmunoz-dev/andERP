@@ -1,6 +1,6 @@
 # F15 — Vistas para el celular · Plan
 
-- **Estado:** Borrador (pendiente de aprobación del usuario)
+- **Estado:** Aprobado (2026-10-16)
 - **Spec:** [spec.md](spec.md)
 
 Solo web. Sin cambios en la API, la base de datos, el paquete compartido ni los códigos de error.
@@ -65,4 +65,4 @@ Solo cambia el frontend. Pasa por el pipeline de F07 (Cloudflare). Sin variables
 
 ## Notas de implementación
 
-(Se completan durante la implementación.)
+- **T001:** las tarjetas son una lista (`<ul>`/`<li>`) con un `<dl>` por fila. El stub de `matchMedia` va dentro de `if (typeof window !== 'undefined')`: `worker.test.ts` corre en Node y `setup.ts` también se carga ahí. El proyecto no tiene `@testing-library/user-event`; la prueba usa `fireEvent`, como las demás. `hooks/use-mobile.ts` está excluido del lint (es de shadcn).

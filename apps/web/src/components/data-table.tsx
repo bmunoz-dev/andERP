@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DataTableProps<T> {
   columns: ColumnDef<T>[];
@@ -34,6 +35,60 @@ export function DataTable<T>({
     getRowId,
     getCoreRowModel: getCoreRowModel(),
   });
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    // F15: una tarjeta por fila. Las columnas con cabecera de texto van como "Etiqueta: valor";
+    // las demás (acciones) van al pie.
+    if (isLoading) {
+      return (
+        <div className="space-y-3">
+          {Array.from({ length: 3 }, (_, i) => (
+            <Skeleton key={`loading-${String(i)}`} className="h-20 w-full" />
+          ))}
+        </div>
+      );
+    }
+    if (table.getRowModel().rows.length === 0) {
+      return (
+        <div className="flex h-24 items-center justify-center rounded-md border text-center text-sm text-muted-foreground">
+          {emptyMessage}
+        </div>
+      );
+    }
+    return (
+      <ul className="space-y-3">
+        {table.getRowModel().rows.map((row) => {
+          const cells = row.getVisibleCells();
+          const isField = (c: (typeof cells)[number]) =>
+            typeof c.column.columnDef.header === 'string';
+          return (
+            <li key={row.id} className="rounded-md border p-4 text-sm">
+              <dl className="space-y-1">
+                {cells.filter(isField).map((cell) => (
+                  <div key={cell.id}>
+                    <dt className="inline text-muted-foreground">
+                      {String(cell.column.columnDef.header)}:
+                    </dt>{' '}
+                    <dd className="inline">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              {cells
+                .filter((c) => !isField(c))
+                .map((cell) => (
+                  <div key={cell.id} className="mt-3 flex justify-end">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </div>
+                ))}
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
 
   return (
     <div className="overflow-x-auto rounded-md border">

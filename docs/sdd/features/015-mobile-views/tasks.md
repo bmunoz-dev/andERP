@@ -5,7 +5,7 @@
 
 ## Bloque A — Tablas
 
-- [ ] F15-T001 [TDD] Stub de `matchMedia` en `test/setup.ts`. Escribir `data-table.test.tsx` y después inicializar `useIsMobile` con el ancho de la ventana y agregar las tarjetas a `DataTable`.
+- [x] F15-T001 [TDD] Stub de `matchMedia` en `test/setup.ts`. Escribir `data-table.test.tsx` y después inicializar `useIsMobile` con el ancho de la ventana y agregar las tarjetas a `DataTable`.
       Archivos: `apps/web/src/test/setup.ts`, `apps/web/src/hooks/use-mobile.ts`, `apps/web/src/components/data-table.tsx`, `apps/web/src/components/data-table.test.tsx`
       Verificación: CA-1–CA-5
 - [ ] F15-T002 [TDD] Caso a 375 px en `agenda.test.tsx`: completar un vencimiento desde su tarjeta.
