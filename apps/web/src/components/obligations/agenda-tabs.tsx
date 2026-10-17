@@ -22,7 +22,7 @@ export function AgendaTabs({
     data?.filter((o) => !status || o.status === status).length ?? 0;
   return (
     <Tabs
-      className="mb-4"
+      className="mb-4 max-w-full overflow-x-auto"
       value={value ?? 'all'}
       onValueChange={(next) => {
         onChange(next === 'all' ? undefined : (next as ObligationStatus));

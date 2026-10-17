@@ -13,7 +13,7 @@
 
 ## Bloque B — Pantallas
 
-- [ ] F15-T003 [P] Pestañas de la Agenda con desplazamiento propio, diálogos con alto máximo y desplazamiento interno, y cuadrículas y monto de Clic Kiu.
+- [x] F15-T003 [P] Pestañas de la Agenda con desplazamiento propio, diálogos con alto máximo y desplazamiento interno, y cuadrículas y monto de Clic Kiu.
       Archivos: `apps/web/src/components/obligations/agenda-tabs.tsx`, `apps/web/src/components/ui/dialog.tsx`, `apps/web/src/components/clickiu/summary-cards.tsx`, `apps/web/src/components/clickiu/movement-filters.tsx`
       Verificación: CA-6–CA-9 (visual, en F15-T005)
 
