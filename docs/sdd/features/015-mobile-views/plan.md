@@ -70,3 +70,4 @@ Solo cambia el frontend. Pasa por el pipeline de F07 (Cloudflare). Sin variables
 - **T003:** a 360 px cada tarjeta de saldo mide unos 156 px (`main` con `px-4` y `gap-4`). Con el `px-6` de `CardHeader` quedaban unos 106 px, y "$ 12.345.678" en `text-lg` no cabía. Por eso el relleno reducido (`px-4 sm:px-6`) se aplicó desde el principio, en lugar de esperar a la verificación visual.
 - **T004 — Definición de Hecho:** CA-1 a CA-4 están en `data-table.test.tsx`. CA-5 lo cubren las pruebas existentes de las pantallas (siguen en escritorio, sin cambios) y el caso de la Agenda en el celular. CA-6 a CA-9 son solo CSS y se comprueban en CA-10 (T005).
 - **T004 — Verificación completa:** `format:check`, `lint`, `typecheck` y `test` en verde (62 archivos, 553 pruebas).
+- **T005:** el usuario hizo la verificación visual de CA-10 (2026-10-16), sin cambios.
