@@ -63,7 +63,7 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 - **Decisión del usuario:** por ahora no se contratan planes de pago. Supabase y Render siguen en Free. Riesgos aceptados: Supabase Free **no tiene backups** y pausa el proyecto tras una semana sin uso; Render Free se duerme (~50 s al despertar).
 
 **Pendiente de F07:**
-1. Respaldo diario gratuito con GitHub Actions (`pg_dump` cifrado) mientras no haya plan Pro. Propuesto, sin aprobar.
+1. Respaldo diario gratuito con GitHub Actions (`pg_dump` cifrado) mientras no haya plan Pro. Propuesto, sin aprobar. **Decisión del usuario (2026-10-17):** se pospone hasta que el usuario avise que hace falta; riesgo aceptado: sin respaldo, cualquier dato cargado en producción se pierde si Supabase falla.
 2. ~~Cloudflare Workers Builds falla en las ramas de PR (vistas previas)~~ resuelto (confirmado por el usuario el 2026-10-15).
 3. Avisos de Supabase `function_search_path_mutable` en los triggers (migración pequeña).
 4. T012 (migración rota a propósito), T013 (primera corrida de Playwright, requiere autorización del navegador), T015 (ensayo de restauración) y T016 (hito M4).
