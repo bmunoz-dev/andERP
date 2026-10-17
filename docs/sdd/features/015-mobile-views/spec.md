@@ -1,6 +1,6 @@
 # F15 — Vistas para el celular · Spec
 
-- **Estado:** Borrador (pendiente de aprobación del usuario)
+- **Estado:** Aprobado (2026-10-16)
 - **Diseño:** `design.md` §8 (Frontend: tablas como tarjetas por debajo de 768 px).
 - **Depende de:** F13 (Agenda), F14 (notificaciones)
 
@@ -23,7 +23,7 @@ Sin cambios en la API ni en la base de datos. Sin app nativa ni instalable: el n
 
 **Tablas**
 
-- **CA-1.** Por debajo de 768 px de ancho (el corte de `useIsMobile`), `DataTable` muestra **una tarjeta por fila** en lugar de la tabla. Desde 768 px muestra la tabla como hoy. Se dibuja solo una de las dos versiones.
+- **CA-1.** Por debajo de 768 px de ancho (el corte de `useIsMobile`), `DataTable` muestra **una tarjeta por fila** en lugar de la tabla. Desde 768 px muestra la tabla como hoy. Se dibuja solo una de las dos versiones, desde el primer render: `useIsMobile` se inicializa con el ancho de la ventana, así que en el celular la tabla no aparece ni un instante.
 - **CA-2.** Cada columna con cabecera de texto aparece en la tarjeta como una línea "Etiqueta: valor", con la misma celda que en la tabla. Ninguna columna se oculta.
 - **CA-3.** Las columnas sin cabecera visible (las de acciones) van al pie de la tarjeta, con los mismos botones que en la tabla.
 - **CA-4.** En el celular, el estado de carga y el mensaje de vacío se muestran igual que en la tabla.
