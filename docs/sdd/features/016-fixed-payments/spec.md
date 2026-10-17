@@ -1,6 +1,6 @@
 # F16 — Pagos de monto fijo · Spec
 
-- **Estado:** Borrador (pendiente de aprobación)
+- **Estado:** Aprobado (2026-10-17)
 - **Diseño:** `design.md` §2 (decisión 17), §3 (glosario), §5.5 (`provider_contracts.payment_mode`, `fixed_payments`), §5.7 (`v_expense_ledger`, `v_contract_month_totals`)
 - **Depende de:** F04 (pagos de honorarios), F05 (libro y matriz de egresos), F10 (monto mensual de referencia), F12 (auditoría atómica)
 
