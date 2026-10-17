@@ -19,7 +19,7 @@
 
 ## Cierre
 
-- [ ] F15-T004 Verificación completa (`pnpm format:check && pnpm lint && pnpm typecheck && pnpm test`), Definición de Hecho y notas de implementación en `plan.md`.
+- [x] F15-T004 Verificación completa (`pnpm format:check && pnpm lint && pnpm typecheck && pnpm test`), Definición de Hecho y notas de implementación en `plan.md`.
       Depende de: F15-T002, F15-T003
 - [ ] F15-T005 Verificación visual a 360–390 px (CA-10): Agenda, notificaciones, Credenciales, Clic Kiu y Egresos. La hace el usuario en el celular, o Claude en el navegador con su autorización. Después, `roadmap.md`.
       Depende de: F15-T004
