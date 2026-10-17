@@ -36,6 +36,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-14 | Las credenciales auditan también crear y borrar (`credential.create`, `credential.delete`), sin la contraseña. §5.9 lista además `credential.update`, que ya se auditaba desde F06. | Eran el único módulo sensible sin rastro de quién creó o quitó un acceso; `created_by` y `deleted_by` guardan solo el último actor, sin valores. |
 | 2026-10-14 | **Agenda de pagos a entidades** (F13): `payment_obligations` y `obligation_due_dates`, un solo vencimiento pendiente por obligación (índice único) y vencimientos completados inmutables (trigger). Estado calculado con la fecha de Bogotá; alertas solo dentro de la app. | La empresa debe cumplir obligaciones periódicas con la DIAN, Fontur y otras entidades, y necesita que AndERP le avise antes de cada fecha límite. Sin correo ni tareas programadas: Render Free se duerme y no correría un cron confiable. |
 | 2026-10-15 | **Panel de notificaciones** (F14): campana en la cabecera con un punto si hay algo sin revisar. Las notificaciones se calculan de la Agenda; solo se guarda por usuario lo visto y lo descartado (`notification_states`, §5.12), sin borrado lógico ni auditoría. | El contador del menú dice cuántas alertas hay, pero no si hay algo nuevo, y no permite apartar lo ya atendido. Calcularlas en vez de guardarlas evita una tarea programada y una segunda fuente de verdad sobre los estados. |
+| 2026-10-17 | **Pagos de monto fijo** (F16): `provider_contracts.payment_mode` (`daily` / `fixed`) y tabla `fixed_payments` (contrato, mes trabajado, fecha de pago, valor). Entran en `v_expense_ledger` (categoría `FEES`) y en `v_contract_month_totals`. En la interfaz, "Prestadores" → "Personal" y "Honorarios" → "Pagos"; el código conserva sus nombres (§3). | A la empresa ahora también le trabajan personas con pago fijo por periodo (empleados); solo se registra lo pagado, sin calcular nómina. Una tabla aparte evita romper las invariantes de F04 (semana, días, un pago por semana). El renombrado del código se pospone a una feature de solo refactor (decisión del usuario). |
 | 2026-10-15 | **Vistas para el celular** (F15): por debajo de 768 px las tablas se muestran como tarjetas generadas de sus mismas columnas, sin ocultar ninguna (§8). | El usuario consulta la Agenda, las credenciales y Clic Kiu, y registra movimientos, desde el teléfono; con tablas había que desplazarse de lado para ver columnas y acciones. Generar las tarjetas de las columnas evita mantener dos maquetaciones por pantalla. |
 
 ---
@@ -81,6 +82,7 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 | 14 | Responsables | Personas de contacto, independientes de los usuarios de la app. |
 | 15 | Clic Kiu | Módulo aparte: las recargas **no** entran en la matriz de Egresos. Una venta resta saldo esté en Crédito (el cliente debe) o Completado (ya pagó). El saldo total nunca queda negativo (F11). |
 | 16 | Agenda de pagos | Registra obligaciones y sus fechas límite, **no los pagos**. Las fechas las ingresa el usuario: AndERP no calcula el calendario tributario. Alertas solo dentro de la app (F13). |
+| 17 | Forma de pago | El contrato se paga **por días trabajados** (F04) o con un **monto fijo** por mes trabajado (F16), nunca de las dos formas. AndERP registra lo pagado; **no calcula nómina** (seguridad social, prestaciones, retenciones). |
 
 ---
 
@@ -93,10 +95,12 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 | Miembro de organización | `organization_members` |
 | Categoría de egreso (se muestra como "Departamento") | `expense_categories` |
 | Egreso | `expenses` |
-| Prestador de servicios | `service_providers` |
-| Contrato del prestador | `provider_contracts` |
-| Pago de honorarios | `fee_payments` |
-| Día de honorarios | `fee_payment_days` |
+| Personal (antes "Prestador de servicios") | `service_providers` |
+| Contrato | `provider_contracts` |
+| Forma de pago (Por días trabajados / Monto fijo) | `payment_mode` (`daily` / `fixed`) |
+| Pago por días (antes "Pago de honorarios") | `fee_payments` |
+| Día trabajado | `fee_payment_days` |
+| Pago de monto fijo | `fixed_payments` |
 | Responsable | `responsible_persons` |
 | Credencial de entidad | `entity_credentials` |
 | Banco / Tipo de cuenta / Tipo de documento | `banks` / `account_types` / `document_types` |
@@ -194,6 +198,7 @@ packages/
 | `user_status` | `active`, `locked`, `inactive` |
 | `member_role` | `admin` |
 | `payment_frequency` | `weekly`, `biweekly`, `monthly`, `bimonthly` |
+| `payment_mode` | `daily`, `fixed` |
 | `clickiu_movement_type` | `recharge`, `sale` |
 | `clickiu_sale_status` | `credit`, `completed` |
 | `obligation_frequency` | `once`, `monthly`, `bimonthly`, `quarterly`, `semiannual`, `annual` |
@@ -323,6 +328,7 @@ PK `(user_id, organization_id)`.
 | end_date | date NULL | NULL = sin fecha de fin |
 | work_agreement | text NOT NULL | acuerdo de trabajo |
 | payment_frequency | payment_frequency NOT NULL | informativo en la v1 |
+| payment_mode | payment_mode NOT NULL DEFAULT 'daily' | F16: `daily` admite solo `fee_payments`; `fixed`, solo `fixed_payments`. No cambia si hay pagos (trigger) |
 | monthly_amount | numeric(14,2) NOT NULL | Monto mensual de referencia (F10). `CHECK (monthly_amount > 0)` |
 | audit | | |
 
@@ -361,6 +367,21 @@ PK `(user_id, organization_id)`.
 - `UNIQUE (fee_payment_id, work_date)`.
 - **Trigger:** `work_date` debe estar dentro de `period_start..period_end` de la cabecera **y** dentro de las fechas del contrato.
 
+**`fixed_payments`** (F16: pago de monto fijo; varios por contrato y mes)
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | uuid PK | |
+| organization_id | uuid NOT NULL | |
+| contract_id | uuid NOT NULL | FK compuesta → provider_contracts |
+| period_year | smallint NOT NULL | `CHECK (period_year BETWEEN 2000 AND 2100)` |
+| period_month | smallint NOT NULL | `CHECK (period_month BETWEEN 1 AND 12)` |
+| payment_date | date NOT NULL | determina en qué mes y semana aparece en egresos |
+| amount | numeric(14,2) NOT NULL | `CHECK (amount > 0)` |
+| notes | text NULL | |
+| audit | | |
+
+- **Triggers:** el contrato debe ser `fixed` (y `fee_payments` exige `daily`); el mes trabajado debe cruzarse con las fechas del contrato; `contract_id`, `period_year` y `period_month` no cambian. Las reglas de contratos sobre pagos (no borrar con pagos, no excluir pagos al cambiar fechas) cubren también esta tabla.
+
 **Reglas de dominio (backend):**
 - Un pago de honorarios tiene al menos un día.
 - Al editar un pago, sus días se reemplazan dentro de una transacción.
@@ -389,9 +410,9 @@ PK `(user_id, organization_id)`.
 
 **`v_fee_payment_totals`**: por cada `fee_payments` no borrado: `fee_payment_id`, `organization_id`, `contract_id`, `total_amount = SUM(fee_payment_days.amount)`.
 
-**`v_contract_month_totals`** (F10, reemplaza a `v_contract_balances`): por contrato y mes trabajado: `organization_id`, `contract_id`, `period_year`, `period_month`, `paid_amount` (suma de pagos no borrados).
+**`v_contract_month_totals`** (F10, reemplaza a `v_contract_balances`): por contrato y mes trabajado: `organization_id`, `contract_id`, `period_year`, `period_month`, `paid_amount` (suma de pagos no borrados, por días y de monto fijo, F16).
 
-**`v_expense_ledger`**: libro unificado, `UNION ALL` de:
+**`v_expense_ledger`**: libro unificado, `UNION ALL` de egresos, pagos por días y pagos de monto fijo (F16: `source = 'fixed_payment'`, categoría `FEES`, concepto `'Pago – ' || persona || ' – ' || mes/año trabajado`, mes y semana de `payment_date`, `amount`). Los dos primeros:
 
 | Columna | Desde `expenses` | Desde `fee_payments` |
 |---|---|---|
