@@ -17,12 +17,12 @@ export function SummaryCards({
     { label: to ? `Saldo al ${formatDate(to)}` : 'Saldo actual', value: summary?.balanceAsOf },
   ];
   return (
-    <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
       {cards.map((c) => (
         <Card key={c.label}>
-          <CardHeader>
+          <CardHeader className="px-4 sm:px-6">
             <CardDescription>{c.label}</CardDescription>
-            <CardTitle className="text-2xl tabular-nums">
+            <CardTitle className="text-lg tabular-nums sm:text-2xl">
               {c.value === undefined ? '—' : formatCOP(c.value)}
             </CardTitle>
           </CardHeader>

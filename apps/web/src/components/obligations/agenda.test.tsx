@@ -97,6 +97,28 @@ describe('AgendaTable (F13 CA-18)', () => {
     fireEvent.click(within(overdue!).getByRole('button', { name: 'Completar' }));
     expect(onComplete).toHaveBeenCalledWith(rows[0]);
   });
+
+  it('en el celular muestra tarjetas con todos los datos y se completa desde la tarjeta (F15 HU1)', () => {
+    vi.stubGlobal('innerWidth', 375);
+    const onComplete = vi.fn();
+    render(
+      <AgendaTable
+        data={rows}
+        isLoading={false}
+        onComplete={onComplete}
+        onHistory={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole('table')).toBeNull();
+    const [overdue] = screen.getAllByRole('listitem');
+    expect(overdue).toHaveTextContent('Vencido');
+    expect(overdue).toHaveTextContent(/11\/10\/2026\s*hace 3 días/);
+    expect(overdue).toHaveTextContent('Bimestral');
+    fireEvent.click(within(overdue!).getByRole('button', { name: 'Completar' }));
+    expect(onComplete).toHaveBeenCalledWith(rows[0]);
+  });
 });
 
 describe('AgendaTabs (F13 CA-17)', () => {
