@@ -36,6 +36,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-14 | Las credenciales auditan también crear y borrar (`credential.create`, `credential.delete`), sin la contraseña. §5.9 lista además `credential.update`, que ya se auditaba desde F06. | Eran el único módulo sensible sin rastro de quién creó o quitó un acceso; `created_by` y `deleted_by` guardan solo el último actor, sin valores. |
 | 2026-10-14 | **Agenda de pagos a entidades** (F13): `payment_obligations` y `obligation_due_dates`, un solo vencimiento pendiente por obligación (índice único) y vencimientos completados inmutables (trigger). Estado calculado con la fecha de Bogotá; alertas solo dentro de la app. | La empresa debe cumplir obligaciones periódicas con la DIAN, Fontur y otras entidades, y necesita que AndERP le avise antes de cada fecha límite. Sin correo ni tareas programadas: Render Free se duerme y no correría un cron confiable. |
 | 2026-10-15 | **Panel de notificaciones** (F14): campana en la cabecera con un punto si hay algo sin revisar. Las notificaciones se calculan de la Agenda; solo se guarda por usuario lo visto y lo descartado (`notification_states`, §5.12), sin borrado lógico ni auditoría. | El contador del menú dice cuántas alertas hay, pero no si hay algo nuevo, y no permite apartar lo ya atendido. Calcularlas en vez de guardarlas evita una tarea programada y una segunda fuente de verdad sobre los estados. |
+| 2026-10-18 | **Documento del contrato** (F17): tabla `contract_documents` (un archivo vigente por contrato) y bucket privado `contract-documents` en Supabase Storage, usado por la API con su protocolo S3 (MinIO en local y en las pruebas). Lectura con URL firmada de 5 minutos. Reemplazar o eliminar no borra el objeto del bucket. Sale de §11 "adjuntar contratos". | El usuario quiere guardar el contrato firmado junto a su registro y abrirlo desde la app. Pasar el archivo por la API permite validar su tipo real y mantener las llaves fuera del navegador; conservar los objetos acota la falta de respaldo (riesgo aceptado). |
 | 2026-10-17 | **Pagos de monto fijo** (F16): `provider_contracts.payment_mode` (`daily` / `fixed`) y tabla `fixed_payments` (contrato, mes trabajado, fecha de pago, valor). Entran en `v_expense_ledger` (categoría `FEES`) y en `v_contract_month_totals`. En la interfaz, "Prestadores" → "Personal" y "Honorarios" → "Pagos"; el código conserva sus nombres (§3). | A la empresa ahora también le trabajan personas con pago fijo por periodo (empleados); solo se registra lo pagado, sin calcular nómina. Una tabla aparte evita romper las invariantes de F04 (semana, días, un pago por semana). El renombrado del código se pospone a una feature de solo refactor (decisión del usuario). |
 | 2026-10-15 | **Vistas para el celular** (F15): por debajo de 768 px las tablas se muestran como tarjetas generadas de sus mismas columnas, sin ocultar ninguna (§8). | El usuario consulta la Agenda, las credenciales y Clic Kiu, y registra movimientos, desde el teléfono; con tablas había que desplazarse de lado para ver columnas y acciones. Generar las tarjetas de las columnas evita mantener dos maquetaciones por pantalla. |
 
@@ -83,6 +84,7 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 | 15 | Clic Kiu | Módulo aparte: las recargas **no** entran en la matriz de Egresos. Una venta resta saldo esté en Crédito (el cliente debe) o Completado (ya pagó). El saldo total nunca queda negativo (F11). |
 | 16 | Agenda de pagos | Registra obligaciones y sus fechas límite, **no los pagos**. Las fechas las ingresa el usuario: AndERP no calcula el calendario tributario. Alertas solo dentro de la app (F13). |
 | 17 | Forma de pago | El contrato se paga **por días trabajados** (F04) o con un **monto fijo** por mes trabajado (F16), nunca de las dos formas. AndERP registra lo pagado; **no calcula nómina** (seguridad social, prestaciones, retenciones). |
+| 18 | Documento del contrato | Un archivo vigente por contrato (PDF, `.doc` o `.docx`, hasta 10 MB) en Supabase Storage. Se lee con URL firmada; nunca se borra del bucket (F17). Sin respaldo de archivos: riesgo aceptado por el usuario. |
 
 ---
 
@@ -101,6 +103,7 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 | Pago por días (antes "Pago de honorarios") | `fee_payments` |
 | Día trabajado | `fee_payment_days` |
 | Pago de monto fijo | `fixed_payments` |
+| Documento del contrato | `contract_documents` |
 | Responsable | `responsible_persons` |
 | Credencial de entidad | `entity_credentials` |
 | Banco / Tipo de cuenta / Tipo de documento | `banks` / `account_types` / `document_types` |
@@ -565,6 +568,24 @@ Las notificaciones **no se guardan**: son los vencimientos pendientes en estado 
 - **Excepciones a §5.1:** sin `created_by`, `updated_by` ni borrado lógico (el autor es siempre `user_id` y descartar no es borrar), y sin auditoría (§5.9).
 - Las filas de vencimientos completados o borrados se quedan: la consulta parte de las alertas activas y no las vuelve a leer.
 
+### 5.13 Documento del contrato (F17)
+
+**`contract_documents`** (un archivo por fila; el vigente es el no borrado)
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | uuid PK | |
+| organization_id | uuid NOT NULL | |
+| contract_id | uuid NOT NULL | FK compuesta → provider_contracts |
+| storage_key | text NOT NULL | `org/{organizationId}/contracts/{contractId}/{uuid}`; `UNIQUE` |
+| file_name | varchar(255) NOT NULL | nombre original, solo para mostrar y descargar |
+| content_type | varchar(100) NOT NULL | CHECK: PDF, `application/msword` o `.docx` |
+| size_bytes | integer NOT NULL | CHECK: 1 a 10 485 760 |
+| sha256 | char(64) NOT NULL | CHECK: hexadecimal |
+| audit | | |
+
+- `UNIQUE (contract_id) WHERE deleted_at IS NULL`: un solo archivo vigente por contrato.
+- Reemplazar marca como borrada la fila anterior e inserta la nueva en una transacción que bloquea el contrato. El objeto del bucket nunca se borra.
+
 ---
 
 ## 6. Seguridad
@@ -604,6 +625,13 @@ Las notificaciones **no se guardan**: son los vencimientos pendientes en estado 
 | Gestionar categorías de egreso de su organización | ✔ | ✔ |
 | Gestionar catálogos globales (bancos, tipos de cuenta, tipos de documento) | ✘ | ✔ |
 | Crear y suspender organizaciones | ✘ | ✔ |
+
+### 6.5 Almacenamiento de archivos (F17)
+
+- Bucket **privado** `contract-documents` en Supabase Storage, sin políticas para `anon` ni `authenticated`. Solo la API lo usa, con llaves S3 de servidor (`S3_*`), que nunca llegan a la web.
+- La API valida el tipo por los primeros bytes y la extensión, no por el `Content-Type` del navegador, y corta en 10 MB.
+- La lectura es con una URL firmada de 5 minutos, después de comprobar el contrato con `OrgScope`. Quien tenga la URL puede abrir el archivo hasta que caduque.
+- La ruta empieza por la organización y no incluye el nombre original.
 
 ---
 
@@ -680,7 +708,8 @@ La interfaz está en español y el formato de moneda es COP (`es-CO`).
 - **Despliegue de la API:** contenedor Docker en Render. Hoy en plan **Free** (se duerme tras inactividad, ~50 s al despertar); pasar a un plan de pago cuando el uso lo justifique.
 - **Base de datos en producción:** Supabase en plan **Free**: sin backups automáticos y se pausa tras una semana sin uso. El respaldo propio está pendiente (`roadmap.md`, F07).
 - **Despliegue de la web:** Cloudflare Worker con archivos estáticos; el Worker reenvía `/api/*` a la API agregando `X-Proxy-Secret`. La web y la API comparten origen: la cookie `SameSite=Strict` funciona y no hace falta CORS. El detalle está en `features/007-deployment/plan.md`.
-- **Secretos:** `DATABASE_URL`, `JWT_SECRET`, `CREDENTIALS_KEY_V*` y la configuración de correo para la recuperación de contraseña, como variables de entorno del proveedor.
+- **Archivos:** Supabase Storage (protocolo S3) en producción; MinIO en `docker compose` y en Testcontainers. Supabase Free no respalda Storage (riesgo aceptado, F17).
+- **Secretos:** `DATABASE_URL`, `JWT_SECRET`, `CREDENTIALS_KEY_V*`, `S3_*` y la configuración de correo para la recuperación de contraseña, como variables de entorno del proveedor.
 
 ---
 
@@ -690,7 +719,7 @@ La interfaz está en español y el formato de moneda es COP (`es-CO`).
 - Registro autoservicio de organizaciones y selector de organización en la interfaz (el modelo lo soporta; la v1 opera una sola organización).
 - Permisos granulares (tablas `permissions` y `role_permissions`) y roles adicionales.
 - Alertas por `payment_frequency`.
-- Adjuntar archivos (facturas, contratos).
+- Adjuntar facturas a los egresos (el documento del contrato llegó con F17).
 - Exportar a Excel o PDF.
 - Visor de `audit_logs` en la interfaz (los datos se capturan desde la v1).
 - Presupuestos y multimoneda.
