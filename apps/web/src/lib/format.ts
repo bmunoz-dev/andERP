@@ -22,3 +22,10 @@ export function formatMoneyPlain(money: string): string {
   // Solo presentación: 12 dígitos enteros + 2 decimales caben sin pérdida en un double.
   return formatter.format(Number(money));
 }
+
+/** F17: "01/01/2026 – sin fecha de fin". Lo usan la tabla de contratos y su panel de detalle. */
+export function formatContractPeriod(contract: { startDate: string; endDate: string | null }) {
+  return `${formatDate(contract.startDate)} – ${
+    contract.endDate ? formatDate(contract.endDate) : 'sin fecha de fin'
+  }`;
+}
