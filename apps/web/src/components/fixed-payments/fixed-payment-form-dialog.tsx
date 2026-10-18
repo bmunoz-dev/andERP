@@ -59,7 +59,7 @@ export function FixedPaymentFormDialog({
     enabled: validYear,
   });
   const contract = contracts.data?.find((c) => c.id === contractId);
-  const paidInMonth = contract ? sumMoney([contract.paidInMonth, amount ?? '0']) : null;
+  const paidInMonth = contract ? sumMoney([contract.paidInMonth, amount ?? '0.00']) : null;
 
   const save = useMutation({
     mutationFn: () => {

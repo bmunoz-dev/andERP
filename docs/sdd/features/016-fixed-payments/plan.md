@@ -107,3 +107,4 @@
   - `provider_contracts_protect_payments` solo consulta si hay pagos cuando se borra el contrato o cambia su forma de pago (antes, en cada `UPDATE`). Se editó `0028` en el lugar porque aún no se había aplicado fuera de las bases de prueba.
   - En la ficha de la persona, la columna "Pago" pasa a "Periodicidad", para no confundirla con "Forma de pago".
 - **Verificación tras la auditoría:** `format:check`, `lint`, `typecheck` y `test` en verde (66 archivos, 580 pruebas).
+- **Error en la verificación manual (2026-10-18):** al crear un pago fijo, la pantalla se caía con `Invalid money amount: "0"` al elegir la persona con el valor vacío. La vista previa del diálogo pasaba `'0'` a `sumMoney`, que exige `'0.00'`. Las pruebas solo cubrían la edición, donde el valor ya viene lleno; se agregó un caso con el valor vacío.

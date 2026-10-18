@@ -83,4 +83,13 @@ describe('FixedPaymentFormDialog (F16 CA-22)', () => {
       });
     });
   });
+
+  it('con el valor vacío, el resumen del mes no se rompe', async () => {
+    renderDialog(payment);
+    await screen.findByTestId('month-summary');
+    fireEvent.change(screen.getByLabelText('Valor'), { target: { value: '' } });
+    expect(await screen.findByTestId('month-summary')).toHaveTextContent(
+      /Pagado en agosto:\s*\$\s*1\.000\.000 de/,
+    );
+  });
 });
