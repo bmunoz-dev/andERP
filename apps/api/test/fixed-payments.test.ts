@@ -204,6 +204,26 @@ describe('Pagos de monto fijo', () => {
       before: { amount: '1000000.00' },
       after: { amount: '900000.00' },
     });
+    // El registro dice a qué contrato y mes pertenece el pago.
+    expect(rows.find((r) => r.action === 'fixed_payment.create')?.changes).toMatchObject({
+      after: { contractId: contract.id, periodYear: 2026, periodMonth: 8 },
+    });
+  });
+
+  it('CA-9 un PATCH sin campos o un filtro que no es uuid → 422, sin auditoría', async () => {
+    const p = (await api().post('/fixed-payments', fixedPayment()).expect(201))
+      .body as FixedPayment;
+    expect((await api().patch(`/fixed-payments/${p.id}`, {}).expect(422)).body).toMatchObject({
+      code: 'VALIDATION_ERROR',
+    });
+    const updates = await db
+      .select()
+      .from(auditLogs)
+      .where(and(eq(auditLogs.action, 'fixed_payment.update'), eq(auditLogs.entityId, p.id)));
+    expect(updates).toHaveLength(0);
+
+    await api().get('/fixed-payments?serviceProviderId=abc').expect(422);
+    await api().get('/fee-payments?serviceProviderId=abc').expect(422);
   });
 
   it('CA-13 el contrato con pagos fijos no se borra', async () => {

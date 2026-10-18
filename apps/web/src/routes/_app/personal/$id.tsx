@@ -94,7 +94,7 @@ function ProviderDetailPage() {
     },
     {
       id: 'frequency',
-      header: 'Pago',
+      header: 'Periodicidad',
       cell: ({ row }) => PAYMENT_FREQUENCY_LABELS[row.original.paymentFrequency],
     },
     {

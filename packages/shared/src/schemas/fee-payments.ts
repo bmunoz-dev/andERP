@@ -65,11 +65,15 @@ export const saveFixedPaymentSchema = z.object({
 });
 export type SaveFixedPayment = z.infer<typeof saveFixedPaymentSchema>;
 
-/** Contrato y mes trabajado no cambian (F16 CA-9): `.strict()` rechaza esos campos. */
+/**
+ * Contrato y mes trabajado no cambian (F16 CA-9): `.strict()` rechaza esos campos. Un cuerpo
+ * vacío no cambia nada y solo dejaría una auditoría sin cambios.
+ */
 export const updateFixedPaymentSchema = saveFixedPaymentSchema
   .pick({ paymentDate: true, amount: true, notes: true })
   .partial()
-  .strict();
+  .strict()
+  .refine((v) => Object.keys(v).length > 0, 'Indica al menos un campo para cambiar');
 export type UpdateFixedPayment = z.infer<typeof updateFixedPaymentSchema>;
 
 export const fixedPaymentSchema = z.object({

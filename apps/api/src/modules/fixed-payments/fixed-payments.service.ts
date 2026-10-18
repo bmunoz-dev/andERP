@@ -21,7 +21,14 @@ export interface FixedPaymentFilters {
 const notFound = () => new DomainError(ErrorCode.NOT_FOUND, 404);
 
 function auditable(p: FixedPayment) {
-  return { paymentDate: p.paymentDate, amount: p.amount, notes: p.notes };
+  return {
+    contractId: p.contractId,
+    periodYear: p.periodYear,
+    periodMonth: p.periodMonth,
+    paymentDate: p.paymentDate,
+    amount: p.amount,
+    notes: p.notes,
+  };
 }
 
 /**

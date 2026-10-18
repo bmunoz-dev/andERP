@@ -100,3 +100,10 @@
   - **Sin prueba automatizada:** CA-21 (pestañas) y CA-23 (refresco de lista, ficha y egresos). Quedan para la verificación manual.
   - Las migraciones se aplican desde cero en cada corrida (Testcontainers).
 - **T007 — Verificación completa:** `format:check`, `lint` y `typecheck` en verde. `test`: 64 de 66 archivos en verde; `auth.test.ts` y `fixed-payments.test.ts` cayeron por el cierre del trabajador de Vitest en Windows (`0xC0000409`, nota del entorno) y pasaron al repetirlos (33 pruebas). En total, 579 pruebas.
+- **Auditoría del código (2026-10-18), corregido en el mismo PR:**
+  - `serviceProviderId` mal formado en `GET /fixed-payments` y `GET /fee-payments` respondía 500 (Postgres `22P02` sin mapear; el fallo venía de F04). Ahora `ParseUUIDPipe` opcional → 422.
+  - `PATCH /fixed-payments/:id` con cuerpo vacío → 422 `VALIDATION_ERROR`; antes dejaba una auditoría sin cambios.
+  - La auditoría del pago fijo guarda también `contractId`, `periodYear` y `periodMonth`. F04 no se tocó.
+  - `provider_contracts_protect_payments` solo consulta si hay pagos cuando se borra el contrato o cambia su forma de pago (antes, en cada `UPDATE`). Se editó `0028` en el lugar porque aún no se había aplicado fuera de las bases de prueba.
+  - En la ficha de la persona, la columna "Pago" pasa a "Periodicidad", para no confundirla con "Forma de pago".
+- **Verificación tras la auditoría:** `format:check`, `lint`, `typecheck` y `test` en verde (66 archivos, 580 pruebas).

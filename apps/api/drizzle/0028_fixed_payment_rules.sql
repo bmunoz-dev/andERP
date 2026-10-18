@@ -67,18 +67,22 @@ CREATE TRIGGER "fee_payments_check_mode"
 CREATE OR REPLACE FUNCTION "anderp"."provider_contracts_protect_payments"() RETURNS trigger
 LANGUAGE plpgsql SET search_path = '' AS $$
 DECLARE
-  v_has_payments boolean := EXISTS (
-    SELECT 1 FROM "anderp"."fee_payments" fp WHERE fp.contract_id = OLD.id AND fp.deleted_at IS NULL
-  ) OR EXISTS (
-    SELECT 1 FROM "anderp"."fixed_payments" xp WHERE xp.contract_id = OLD.id AND xp.deleted_at IS NULL
-  );
+  v_has_payments boolean;
 BEGIN
-  IF NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL AND v_has_payments THEN
-    RAISE EXCEPTION 'CONTRACT_HAS_PAYMENTS';
-  END IF;
-
-  IF NEW.payment_mode IS DISTINCT FROM OLD.payment_mode AND v_has_payments THEN
-    RAISE EXCEPTION 'CONTRACT_PAYMENT_MODE_LOCKED';
+  -- Solo se consulta si el contrato tiene pagos cuando cambia algo que lo exige.
+  IF (NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL)
+     OR NEW.payment_mode IS DISTINCT FROM OLD.payment_mode THEN
+    v_has_payments := EXISTS (
+      SELECT 1 FROM "anderp"."fee_payments" fp WHERE fp.contract_id = OLD.id AND fp.deleted_at IS NULL
+    ) OR EXISTS (
+      SELECT 1 FROM "anderp"."fixed_payments" xp WHERE xp.contract_id = OLD.id AND xp.deleted_at IS NULL
+    );
+    IF v_has_payments AND NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL THEN
+      RAISE EXCEPTION 'CONTRACT_HAS_PAYMENTS';
+    END IF;
+    IF v_has_payments AND NEW.payment_mode IS DISTINCT FROM OLD.payment_mode THEN
+      RAISE EXCEPTION 'CONTRACT_PAYMENT_MODE_LOCKED';
+    END IF;
   END IF;
 
   IF (NEW.start_date IS DISTINCT FROM OLD.start_date OR NEW.end_date IS DISTINCT FROM OLD.end_date)

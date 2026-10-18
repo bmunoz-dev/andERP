@@ -38,7 +38,8 @@ export class FixedPaymentsController {
   list(
     @Query('periodYear') periodYear?: string,
     @Query('periodMonth') periodMonth?: string,
-    @Query('serviceProviderId') serviceProviderId?: string,
+    @Query('serviceProviderId', new ParseUUIDPipe({ optional: true, errorHttpStatusCode: 422 }))
+    serviceProviderId?: string,
   ): Promise<FixedPayment[]> {
     const filters = {
       periodYear: intQuery(periodYear),
