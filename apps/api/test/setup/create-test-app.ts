@@ -45,7 +45,16 @@ export async function createTestApp(options: TestAppOptions = {}): Promise<TestA
   const logStream = { write: (line: string) => void logs.push(line) };
   const mailer = new FakeMailer();
 
-  const env = loadEnv({ ...TEST_ENV, DATABASE_URL: inject('databaseUrl'), ...options.env });
+  const env = loadEnv({
+    ...TEST_ENV,
+    DATABASE_URL: inject('databaseUrl'),
+    S3_ENDPOINT: inject('s3Endpoint'),
+    S3_REGION: 'us-east-1',
+    S3_BUCKET: 'contract-documents',
+    S3_ACCESS_KEY_ID: inject('s3AccessKeyId'),
+    S3_SECRET_ACCESS_KEY: inject('s3SecretAccessKey'),
+    ...options.env,
+  });
 
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule.register({ env, logStream })],

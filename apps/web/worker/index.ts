@@ -48,12 +48,15 @@ export async function proxy(request: Request, env: Env): Promise<Response> {
   const hasBody = request.method !== 'GET' && request.method !== 'HEAD';
   let response: Response;
   try {
+    // F17 CA-16: el cuerpo va como stream, sin cargar el archivo en memoria (el plan gratuito
+    // limita la CPU por petición). `duplex: 'half'` lo exige fetch para cuerpos en stream.
     response = await fetch(`${env.API_ORIGIN ?? ''}${url.pathname}${url.search}`, {
       method: request.method,
       headers,
-      body: hasBody ? await request.arrayBuffer() : null,
+      body: hasBody ? request.body : null,
+      duplex: 'half',
       redirect: 'manual',
-    });
+    } as RequestInit);
   } catch {
     return problem('SERVICE_UNAVAILABLE', 'The API could not be reached');
   }

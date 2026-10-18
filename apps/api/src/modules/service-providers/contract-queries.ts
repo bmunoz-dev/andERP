@@ -1,6 +1,7 @@
-import type { ContractStatus } from '@anderp/shared';
+import type { ContractDocument, ContractStatus } from '@anderp/shared';
 import { and, eq, gte, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
 import {
+  contractDocuments,
   contractMonthTotals,
   feePaymentTotals,
   feePayments,
@@ -52,6 +53,16 @@ export function contractColumns(today: string) {
                where ${fixedPayments.contractId} = ${providerContracts.id} and ${fixedPayments.deletedAt} is null))`,
     status: contractStatusSql(today),
     paidThisMonth: paidOrZero(contractMonthTotals.paidAmount),
+    // F17 CA-8: subconsulta, para que ninguna consulta de contratos necesite otro JOIN.
+    document: sql<ContractDocument | null>`(
+      select json_build_object(
+        'fileName', ${contractDocuments.fileName},
+        'contentType', ${contractDocuments.contentType},
+        'sizeBytes', ${contractDocuments.sizeBytes},
+        'uploadedAt', ${contractDocuments.createdAt})
+        from ${contractDocuments}
+       where ${contractDocuments.contractId} = ${providerContracts.id}
+         and ${contractDocuments.deletedAt} is null)`,
   };
 }
 

@@ -13,6 +13,8 @@ export const REDACT_PATHS = [
   'req.headers["x-proxy-secret"]',
   'res.headers["set-cookie"]',
   '*.password',
+  // F17: por si un error del SDK de S3 incluye su configuración.
+  '*.secretAccessKey',
   '*.newPassword',
   '*.currentPassword',
   '*.token',

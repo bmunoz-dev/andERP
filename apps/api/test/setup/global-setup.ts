@@ -1,8 +1,10 @@
 import path from 'node:path';
+import { CreateBucketCommand, S3Client } from '@aws-sdk/client-s3';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
+import { GenericContainer, Wait } from 'testcontainers';
 import type { TestProject } from 'vitest/node';
 
 declare module 'vitest' {
@@ -11,6 +13,10 @@ declare module 'vitest' {
     databaseUrl: string;
     /** Conexión con el rol dueño del esquema (migraciones, TRUNCATE, verificaciones). */
     ownerDatabaseUrl: string;
+    /** F17: s3mock de pruebas, con el bucket `contract-documents` ya creado. */
+    s3Endpoint: string;
+    s3AccessKeyId: string;
+    s3SecretAccessKey: string;
   }
 }
 
@@ -68,7 +74,29 @@ export default async function setup(project: TestProject): Promise<() => Promise
   project.provide('databaseUrl', runtimeUrl.toString());
   project.provide('ownerDatabaseUrl', ownerUrl);
 
+  // F17: s3mock (MinIO ya no publica imágenes). No valida firmas: eso se prueba contra Supabase.
+  const s3mock = await new GenericContainer('adobe/s3mock:4.7.0')
+    .withExposedPorts(9090)
+    .withWaitStrategy(Wait.forListeningPorts())
+    .start();
+  const s3 = {
+    endpoint: `http://${s3mock.getHost()}:${String(s3mock.getMappedPort(9090))}`,
+    accessKeyId: 'test',
+    secretAccessKey: 'test',
+  };
+  const client = new S3Client({
+    endpoint: s3.endpoint,
+    region: 'us-east-1',
+    forcePathStyle: true,
+    credentials: { accessKeyId: s3.accessKeyId, secretAccessKey: s3.secretAccessKey },
+  });
+  await client.send(new CreateBucketCommand({ Bucket: 'contract-documents' }));
+  client.destroy();
+  project.provide('s3Endpoint', s3.endpoint);
+  project.provide('s3AccessKeyId', s3.accessKeyId);
+  project.provide('s3SecretAccessKey', s3.secretAccessKey);
+
   return async () => {
-    await container.stop();
+    await Promise.all([container.stop(), s3mock.stop()]);
   };
 }

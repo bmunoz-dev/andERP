@@ -29,6 +29,8 @@ export class ApiError extends Error {
 export interface ApiRequestInit extends Omit<RequestInit, 'body'> {
   /** Cuerpo que se serializa como JSON. */
   json?: unknown;
+  /** F17: archivos. El navegador pone el `Content-Type` con su `boundary`. */
+  formData?: FormData;
 }
 
 // ── Sesión ────────────────────────────────────────────────────────────────────────────────
@@ -94,7 +96,7 @@ export async function apiFetch<T>(path: string, init: ApiRequestInit = {}): Prom
 }
 
 async function send<T>(path: string, init: ApiRequestInit): Promise<T> {
-  const { json, headers, ...rest } = init;
+  const { json, formData, headers, ...rest } = init;
   const requestHeaders = new Headers(headers);
   requestHeaders.set('accept', 'application/json');
   if (json !== undefined) requestHeaders.set('content-type', 'application/json');
@@ -108,6 +110,7 @@ async function send<T>(path: string, init: ApiRequestInit): Promise<T> {
       headers: requestHeaders,
       credentials: 'include',
       ...(json !== undefined ? { body: JSON.stringify(json) } : {}),
+      ...(formData !== undefined ? { body: formData } : {}),
     });
   } catch {
     throw new ApiError(0, NETWORK_ERROR);

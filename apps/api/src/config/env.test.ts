@@ -10,6 +10,11 @@ const valid = {
   MAIL_FROM: 'AndERP <no-reply@anderp.local>',
   CREDENTIALS_KEYS: JSON.stringify({ '1': Buffer.alloc(32, 1).toString('base64') }),
   CREDENTIALS_ACTIVE_KEY_VERSION: '1',
+  S3_ENDPOINT: 'http://localhost:9000',
+  S3_REGION: 'us-east-1',
+  S3_BUCKET: 'contract-documents',
+  S3_ACCESS_KEY_ID: 'minio',
+  S3_SECRET_ACCESS_KEY: 'minio-secret',
 };
 
 describe('loadEnv', () => {
@@ -28,6 +33,11 @@ describe('loadEnv', () => {
       MAIL_FROM: valid.MAIL_FROM,
       CREDENTIALS_KEYS: new Map([[1, Buffer.alloc(32, 1)]]),
       CREDENTIALS_ACTIVE_KEY_VERSION: 1,
+      S3_ENDPOINT: valid.S3_ENDPOINT,
+      S3_REGION: valid.S3_REGION,
+      S3_BUCKET: valid.S3_BUCKET,
+      S3_ACCESS_KEY_ID: valid.S3_ACCESS_KEY_ID,
+      S3_SECRET_ACCESS_KEY: valid.S3_SECRET_ACCESS_KEY,
     });
   });
 
@@ -48,6 +58,11 @@ describe('loadEnv', () => {
     ['DATABASE_URL', 'mysql://localhost/anderp'],
     ['JWT_SECRET', 'too-short'],
     ['WEB_URL', 'ftp://example.com'],
+    // F17 CA-15: sin almacenamiento la API no arranca.
+    ['S3_ENDPOINT', 'not-a-url'],
+    ['S3_BUCKET', ''],
+    ['S3_ACCESS_KEY_ID', ''],
+    ['S3_SECRET_ACCESS_KEY', ''],
   ])('rechaza %s=%s', (key, value) => {
     expect(() => loadEnv({ ...valid, [key]: value })).toThrow(new RegExp(key));
   });

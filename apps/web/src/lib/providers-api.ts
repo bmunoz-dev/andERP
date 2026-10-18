@@ -1,5 +1,6 @@
 import type {
   Contract,
+  ContractDocument,
   CreateContract,
   CreateServiceProvider,
   ServiceProvider,
@@ -52,3 +53,20 @@ export const updateContract = (id: string, body: UpdateContract) =>
 
 export const deleteContract = (id: string) =>
   apiFetch<undefined>(`/contracts/${id}`, { method: 'DELETE' });
+
+// ── F17: documento del contrato ──────────────────────────────────────────────────────────
+
+export function uploadContractDocument(contractId: string, file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  return apiFetch<ContractDocument>(`/contracts/${contractId}/document`, {
+    method: 'POST',
+    formData,
+  });
+}
+
+export const contractDocumentUrl = (contractId: string) =>
+  apiFetch<{ url: string; expiresAt: string }>(`/contracts/${contractId}/document/url`);
+
+export const deleteContractDocument = (contractId: string) =>
+  apiFetch<undefined>(`/contracts/${contractId}/document`, { method: 'DELETE' });

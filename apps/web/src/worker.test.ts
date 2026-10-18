@@ -37,7 +37,7 @@ describe('Worker /api/* (F07 CA-10)', () => {
     const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe('https://anderp-api.onrender.com/api/v1/expenses?x=1');
     expect(init?.method).toBe('POST');
-    expect(new TextDecoder().decode(init?.body as ArrayBuffer)).toBe('{"amount":"10.00"}');
+    expect(await new Response(init?.body).text()).toBe('{"amount":"10.00"}');
     const headers = new Headers(init?.headers);
     expect(headers.get('authorization')).toBe('Bearer token');
     expect(headers.get('cookie')).toBe('anderp_refresh=abc');
@@ -46,6 +46,32 @@ describe('Worker /api/* (F07 CA-10)', () => {
     expect(headers.get('x-proxy-secret')).toBe(env.PROXY_SECRET);
     expect(headers.get('x-client-ip')).toBe('203.0.113.7');
     expect(headers.get('host')).toBeNull();
+  });
+
+  it('F17 CA-16 reenvía un multipart como stream, con su boundary', async () => {
+    const fetchMock = upstream(new Response('{}', { status: 201 }));
+    const form = new FormData();
+    form.append(
+      'file',
+      new Blob([new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d])]),
+      'Contratación.pdf',
+    );
+    const original = new Request('https://anderp.workers.dev/api/v1/contracts/x/document', {
+      method: 'POST',
+      body: form,
+    });
+    const expected = await original.clone().text();
+
+    await proxy(original, env);
+
+    const [, init] = fetchMock.mock.calls[0]!;
+    // Stream: el archivo no se carga en memoria del Worker.
+    expect(init?.body).toBeInstanceOf(ReadableStream);
+    expect((init as RequestInit & { duplex?: string }).duplex).toBe('half');
+    expect(new Headers(init?.headers).get('content-type')).toBe(
+      original.headers.get('content-type'),
+    );
+    expect(await new Response(init?.body).text()).toBe(expected);
   });
 
   it('GET va sin cuerpo', async () => {

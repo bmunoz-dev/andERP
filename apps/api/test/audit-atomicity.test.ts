@@ -15,7 +15,13 @@ import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DB, type Database } from '../src/db/database.module';
-import { auditLogs, documentTypes, obligationDueDates, passwordResets } from '../src/db/schema';
+import {
+  auditLogs,
+  contractDocuments,
+  documentTypes,
+  obligationDueDates,
+  passwordResets,
+} from '../src/db/schema';
 import { createTestApp, type TestApp } from './setup/create-test-app';
 import { as, createMember, seedTwoOrgs, type TwoOrgs } from './setup/fixtures';
 import { resetDb, withOwnerSql } from './setup/reset-db';
@@ -247,6 +253,28 @@ describe('Pagos de monto fijo', () => {
     await failAudit('fixed_payment.delete');
     await body(api().delete(`/fixed-payments/${p.id}`), 500);
     await body(api().get(`/fixed-payments/${p.id}`));
+  });
+});
+
+describe('Documento del contrato', () => {
+  const PDF = Buffer.from('%PDF-1.7 prueba');
+  const upload = (contractId: string, name: string) =>
+    api().post(`/contracts/${contractId}/document`).attach('file', PDF, name);
+
+  it('subir', async () => {
+    const contract = await newContract();
+    await failAudit('contract_document.upload');
+    await body(upload(contract.id, 'a.pdf'), 500);
+    expect(await db.select().from(contractDocuments)).toHaveLength(0);
+  });
+
+  it('reemplazar', async () => {
+    const contract = await newContract();
+    await body(upload(contract.id, 'a.pdf'), 201);
+    await failAudit('contract_document.replace');
+    await body(upload(contract.id, 'b.pdf'), 500);
+    const rows = await db.select().from(contractDocuments);
+    expect(rows.map((r) => [r.fileName, r.deletedAt])).toEqual([['a.pdf', null]]);
   });
 });
 

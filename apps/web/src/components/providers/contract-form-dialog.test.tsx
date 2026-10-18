@@ -16,6 +16,7 @@ const contract: Contract = {
   hasPayments: true,
   status: 'active',
   paidThisMonth: '0.00',
+  document: null,
 };
 
 function renderForm(c: Contract | null) {

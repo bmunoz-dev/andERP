@@ -37,6 +37,20 @@ describe('apiFetch', () => {
     expect(new Headers(init.headers).get('content-type')).toBe('application/json');
   });
 
+  it('F17 envía un FormData sin fijar el Content-Type (lo pone el navegador con el boundary)', async () => {
+    const fetchMock = stubFetch(
+      new Response('{}', { status: 201, headers: { 'content-type': 'application/json' } }),
+    );
+    const form = new FormData();
+    form.append('file', new Blob(['x']), 'c.pdf');
+
+    await apiFetch('/contracts/1/document', { method: 'POST', formData: form });
+
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(init.body).toBe(form);
+    expect(new Headers(init.headers).get('content-type')).toBeNull();
+  });
+
   it('devuelve undefined en 204', async () => {
     stubFetch(new Response(null, { status: 204 }));
     await expect(apiFetch('/things/1', { method: 'DELETE' })).resolves.toBeUndefined();

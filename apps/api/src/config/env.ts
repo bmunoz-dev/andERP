@@ -52,6 +52,14 @@ export const envSchema = z
     CREDENTIALS_KEYS: keyRing,
     CREDENTIALS_ACTIVE_KEY_VERSION: z.coerce.number().int().min(1).max(9999),
 
+    // F17 — almacenamiento de archivos (Supabase Storage por S3; s3mock en local y en pruebas).
+    // S3_ENDPOINT es la URL pública: las URLs firmadas se abren en el navegador con ese host.
+    S3_ENDPOINT: z.url({ protocol: /^https?$/ }),
+    S3_REGION: z.string().min(1),
+    S3_BUCKET: z.string().min(1),
+    S3_ACCESS_KEY_ID: z.string().min(1),
+    S3_SECRET_ACCESS_KEY: z.string().min(1),
+
     // F07 — secreto compartido con el proxy de la web. Vacío = sin proxy (desarrollo y pruebas).
     PROXY_SECRET: z
       .string()

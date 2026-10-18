@@ -83,6 +83,27 @@ export type CreateContract = z.infer<typeof createContractSchema>;
 export const updateContractSchema = createContractSchema.partial();
 export type UpdateContract = z.infer<typeof updateContractSchema>;
 
+// ── F17: documento del contrato ──────────────────────────────────────────────────────────
+
+export const CONTRACT_DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
+
+/** Extensión → tipo guardado. La API valida además los primeros bytes (CA-4). */
+export const CONTRACT_DOCUMENT_TYPES = {
+  '.pdf': 'application/pdf',
+  '.doc': 'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+} as const;
+export type ContractDocumentType =
+  (typeof CONTRACT_DOCUMENT_TYPES)[keyof typeof CONTRACT_DOCUMENT_TYPES];
+
+export const contractDocumentSchema = z.object({
+  fileName: z.string(),
+  contentType: z.enum(Object.values(CONTRACT_DOCUMENT_TYPES)),
+  sizeBytes: z.number(),
+  uploadedAt: z.string(),
+});
+export type ContractDocument = z.infer<typeof contractDocumentSchema>;
+
 export const contractSchema = z.object({
   id: z.uuid(),
   serviceProviderId: z.uuid(),
@@ -97,6 +118,8 @@ export const contractSchema = z.object({
   status: contractStatusSchema,
   /** F10 CA-5: lo pagado en el mes trabajado actual (Bogotá). Puede superar `monthlyAmount`. */
   paidThisMonth: z.string(),
+  /** F17 CA-8: el documento vigente, si lo hay. */
+  document: contractDocumentSchema.nullable(),
 });
 export type Contract = z.infer<typeof contractSchema>;
 

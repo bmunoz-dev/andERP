@@ -1,26 +1,38 @@
-import {
-  type Contract,
-  formatCOP,
-  PAYMENT_FREQUENCY_LABELS,
-  PAYMENT_MODE_LABELS,
-} from '@anderp/shared';
+import { type Contract, formatCOP, PAYMENT_MODE_LABELS } from '@anderp/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import type { ColumnDef } from '@tanstack/react-table';
-import { ArrowLeft, Pencil, Plus, Power, PowerOff, Trash2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Eye,
+  FileText,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Power,
+  PowerOff,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ContractStatusBadge } from '@/components/contract-status-badge';
 import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
+import { ContractDetailSheet } from '@/components/providers/contract-detail-sheet';
 import { ContractFormDialog } from '@/components/providers/contract-form-dialog';
 import { ProviderFormDialog } from '@/components/providers/provider-form-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Card, CardContent } from '@/components/ui/card';
 import { errorMessage } from '@/lib/error-messages.es';
-import { formatDate } from '@/lib/format';
+import { formatContractPeriod } from '@/lib/format';
 import {
   deleteContract,
   deleteProvider,
@@ -50,6 +62,9 @@ function ProviderDetailPage() {
   const [deactivating, setDeactivating] = useState(false);
   const [editingContract, setEditingContract] = useState<ContractEditing>(null);
   const [deletingContract, setDeletingContract] = useState<Contract | null>(null);
+  // El panel lee el contrato de la consulta: al cambiar su documento se actualiza (CA-17b).
+  const [viewingContractId, setViewingContractId] = useState<string | null>(null);
+  const viewingContract = contracts.data?.find((c) => c.id === viewingContractId) ?? null;
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: providerKeys.all });
   const onError = (error: unknown) => toast.error(errorMessage(error));
@@ -83,19 +98,17 @@ function ProviderDetailPage() {
     onError,
   });
 
+  // F17 CA-17: solo lo esencial; el resto del contrato y su documento van en el panel de detalle.
   const columns: ColumnDef<Contract>[] = [
     {
       id: 'period',
       header: 'Periodo',
-      cell: ({ row }) =>
-        `${formatDate(row.original.startDate)} – ${
-          row.original.endDate ? formatDate(row.original.endDate) : 'sin fecha de fin'
-        }`,
-    },
-    {
-      id: 'frequency',
-      header: 'Periodicidad',
-      cell: ({ row }) => PAYMENT_FREQUENCY_LABELS[row.original.paymentFrequency],
+      cell: ({ row }) => (
+        <span className="flex flex-wrap items-center gap-2">
+          {formatContractPeriod(row.original)}
+          <ContractStatusBadge status={row.original.status} />
+        </span>
+      ),
     },
     {
       id: 'mode',
@@ -103,28 +116,27 @@ function ProviderDetailPage() {
       cell: ({ row }) => PAYMENT_MODE_LABELS[row.original.paymentMode],
     },
     {
-      id: 'amount',
-      header: 'Monto mensual',
-      cell: ({ row }) => formatCOP(row.original.monthlyAmount),
-    },
-    {
-      id: 'paid',
-      header: 'Pagado este mes',
-      cell: ({ row }) => formatCOP(row.original.paidThisMonth),
-    },
-    {
-      id: 'status',
-      header: 'Estado',
-      cell: ({ row }) => <ContractStatusBadge status={row.original.status} />,
-    },
-    {
-      id: 'agreement',
-      header: 'Acuerdo',
+      id: 'month',
+      header: 'Este mes',
       cell: ({ row }) => (
-        <span className="line-clamp-2 max-w-xs text-sm text-muted-foreground">
-          {row.original.workAgreement}
+        <span className="tabular-nums">
+          {formatCOP(row.original.paidThisMonth)}
+          <span className="text-muted-foreground"> de {formatCOP(row.original.monthlyAmount)}</span>
         </span>
       ),
+    },
+    {
+      id: 'document',
+      header: 'Documento',
+      cell: ({ row }) =>
+        row.original.document ? (
+          <span title={row.original.document.fileName}>
+            <FileText className="size-4" aria-hidden="true" />
+            <span className="sr-only">{row.original.document.fileName}</span>
+          </span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
     },
     {
       id: 'actions',
@@ -134,23 +146,39 @@ function ProviderDetailPage() {
           <Button
             variant="ghost"
             size="icon"
-            aria-label="Editar contrato"
+            aria-label="Ver detalle del contrato"
             onClick={() => {
-              setEditingContract({ contract: row.original });
+              setViewingContractId(row.original.id);
             }}
           >
-            <Pencil />
+            <Eye />
           </Button>
-          <Button
-            variant="destructive-ghost"
-            size="icon"
-            aria-label="Eliminar contrato"
-            onClick={() => {
-              setDeletingContract(row.original);
-            }}
-          >
-            <Trash2 />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="Más acciones del contrato">
+                <MoreHorizontal />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onSelect={() => {
+                  setEditingContract({ contract: row.original });
+                }}
+              >
+                <Pencil />
+                Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onSelect={() => {
+                  setDeletingContract(row.original);
+                }}
+              >
+                <Trash2 />
+                Eliminar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ),
     },
@@ -275,6 +303,22 @@ function ProviderDetailPage() {
           onSaved={refresh}
         />
       )}
+      <ContractDetailSheet
+        contract={viewingContract}
+        onClose={() => {
+          setViewingContractId(null);
+        }}
+        onEdit={(c) => {
+          // Un modal a la vez: el formulario o la confirmación reemplazan al panel.
+          setViewingContractId(null);
+          setEditingContract({ contract: c });
+        }}
+        onDelete={(c) => {
+          setViewingContractId(null);
+          setDeletingContract(c);
+        }}
+        onChanged={refresh}
+      />
       {editingContract && (
         <ContractFormDialog
           providerId={id}
