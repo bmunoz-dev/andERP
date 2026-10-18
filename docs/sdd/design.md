@@ -631,7 +631,7 @@ Las notificaciones **no se guardan**: son los vencimientos pendientes en estado 
 - Bucket **privado** `contract-documents` en Supabase Storage, sin políticas para `anon` ni `authenticated`. Solo la API lo usa, con llaves S3 de servidor (`S3_*`), que nunca llegan a la web.
 - La API valida el tipo por los primeros bytes y la extensión, no por el `Content-Type` del navegador, y corta en 10 MB.
 - La lectura es con una URL firmada de 5 minutos, después de comprobar el contrato con `OrgScope`. Quien tenga la URL puede abrir el archivo hasta que caduque.
-- El `Content-Disposition` se guarda al subir (PDF `inline`, Word `attachment`): Supabase Storage no permite cambiarlo en la URL firmada.
+- El `Content-Disposition` se fija al firmar la URL (PDF `inline`, Word `attachment`): Supabase Storage descarta el que se envía al subir y respeta el de la URL firmada (comprobado en F17-T003).
 - Hay que activar la conexión S3 en *Settings → Storage* del proyecto de Supabase.
 - Las llaves S3 de Supabase son de máximo privilegio (todos los buckets, sin RLS): viven solo en Render y se rotan desde *Settings → Storage → S3 Access Keys*.
 - Cada usuario sube hasta 20 archivos por hora (`429`): el bucket solo crece y pasar el 1 GB gratuito restringe todo el proyecto.

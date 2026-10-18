@@ -1,6 +1,6 @@
 # F17 — Documento del contrato · Spec
 
-- **Estado:** Aprobado (2026-10-18; ajustado dos veces ese día, ver Historial)
+- **Estado:** Aprobado (2026-10-18; ajustado tres veces ese día, ver Historial)
 - **Diseño:** `design.md` §2 (decisión 18), §3 (glosario), §5.13 (`contract_documents`), §6.5 (almacenamiento de archivos), §10 y §11
 - **Depende de:** F03 (contratos), F12 (auditoría atómica), F15 (tablas como tarjetas en el celular)
 
@@ -53,9 +53,9 @@ Un contrato tiene **un solo archivo vigente**. Reemplazarlo o eliminarlo nunca b
 
 - **CA-8.** Las respuestas de contratos (`GET /service-providers/:id/contracts` y el contrato vigente de la persona) incluyen `document`: `null` o `{ fileName, contentType, sizeBytes, uploadedAt }`.
 - **CA-9.** `GET /contracts/:id/document/url` devuelve `{ url, expiresAt }`: una URL firmada válida por **5 minutos**. Si el contrato no tiene archivo, responde `404`.
-  - El `Content-Type` y el `Content-Disposition` se fijan **al subir** el objeto, según su tipo: un PDF se guarda como `inline` (se abre en el visor del navegador, que permite descargarlo) y un Word como `attachment` (se descarga con su nombre original).
-  - La URL firmada no cambia esas cabeceras: Supabase Storage no admite `response-content-disposition` en la lectura por S3.
-- **CA-10.** En el `Content-Disposition` que se guarda al subir, el nombre del archivo se escribe con `filename*` (RFC 5987) y con un `filename` alternativo sin comillas, barras ni caracteres de control.
+  - El `Content-Type` se guarda **al subir** el objeto.
+  - El `Content-Disposition` se fija **al firmar** la URL (`response-content-disposition`), según el tipo: un PDF va como `inline` (se abre en el visor del navegador, que permite descargarlo) y un Word como `attachment` (se descarga con su nombre original). Supabase Storage descarta el `Content-Disposition` que se envía al subir, pero respeta el de la URL firmada (comprobado en la prueba previa, CA-21b).
+- **CA-10.** En el `Content-Disposition` de la URL firmada, el nombre del archivo se escribe con `filename*` (RFC 5987) y con un `filename` alternativo sin comillas, barras ni caracteres de control.
 - **CA-11.** `DELETE /contracts/:id/document` hace un borrado lógico (`204`). El objeto sigue en el bucket. Si no hay archivo, responde `404`.
 - **CA-12.** Subir, reemplazar y eliminar generan `audit_logs` (`contract_document.upload`, `contract_document.replace` y `contract_document.delete`) en la misma transacción que el cambio (F12), con el nombre, el tamaño y el `sha256`. Ver y descargar no se auditan.
 - **CA-13.** Borrar un contrato que tiene archivo sigue permitido. El archivo queda ligado al contrato borrado y deja de verse.
@@ -80,7 +80,7 @@ Un contrato tiene **un solo archivo vigente**. Reemplazarlo o eliminarlo nunca b
 
 **Verificación**
 
-- **CA-21b.** Antes de implementar la API, una prueba en Supabase Storage confirma lo que el diseño supone de él: que una URL firmada por S3 abre el objeto y devuelve el `Content-Type` y el `Content-Disposition` guardados al subir. Si no lo hace, se detiene la feature y se ajusta el diseño.
+- **CA-21b.** Antes de implementar la API, una prueba en Supabase Storage confirma lo que el diseño supone de él: que una URL firmada por S3 abre el objeto y devuelve el `Content-Type` guardado y el `Content-Disposition` pedido al firmar. Si no lo hace, se detiene la feature y se ajusta el diseño.
 - **CA-22.** Verificación manual en local (s3mock) y en producción (Supabase Storage): subir un PDF y un Word, abrir el PDF (y descargarlo desde el visor), descargar el Word con su nombre, reemplazar y eliminar.
 
 ## Fuera de alcance
@@ -100,3 +100,4 @@ Un contrato tiene **un solo archivo vigente**. Reemplazarlo o eliminarlo nunca b
 |---|---|---|
 | 2026-10-18 | CA-9: un solo endpoint de URL firmada, sin `mode`; el `Content-Disposition` (`inline` para PDF, `attachment` para Word) se fija al subir. CA-10, CA-17, CA-19 y CA-22 ajustados ("Abrir" el PDF, "Descargar" el Word). | La documentación de Supabase ("S3 Compatibility") no admite `response-content-disposition` en `GetObject`: una URL con `mode` habría funcionado en MinIO y no en producción. Aprobado por el usuario. |
 | 2026-10-18 | Auditoría de la spec. Nuevos: CA-4b (nombre en UTF-8, sin ruta, hasta 255), CA-6b (contrato borrado y persona inactiva), CA-6c (20 subidas por hora), CA-15b (alcance y rotación de las llaves S3), CA-19b (descarga sin salir de la app) y CA-21b (prueba previa en Supabase). Ajustados: CA-4 (la extensión debe coincidir también en el PDF; límites aceptados), CA-16 (stream en el Worker) y CA-19 (`opener = null`). | El diseño suponía comportamientos de Supabase sin probarlos; multer decodifica los nombres como latin1; el Worker cargaba el archivo entero en memoria; el bucket solo crece y su cuota afecta a todo el proyecto. Aprobado por el usuario. |
+| 2026-10-18 | CA-9, CA-10 y CA-21b: el `Content-Disposition` se fija al firmar la URL, no al subir. | La prueba previa en Supabase (T003) mostró lo contrario de lo que se dedujo de su documentación: descarta el `Content-Disposition` de `PutObject` (no queda en `storage.objects.metadata` ni en `HeadObject`) y sí respeta `response-content-disposition` en la URL firmada. Aprobado por el usuario. |

@@ -21,8 +21,8 @@ No hace falta SQL a mano: no hay triggers, vistas ni permisos especiales (`app_r
 
 - **Dependencias** (en `apps/api`): `@aws-sdk/client-s3` y `@aws-sdk/s3-request-presigner`. Las pruebas usan `GenericContainer` de `testcontainers` (ya instalado).
 - **`apps/api/src/modules/contract-documents/object-storage.ts`:** un `ObjectStorage` inyectable con dos métodos.
-  - `put(key, body, { contentType, contentDisposition })` sube el objeto con `PutObject`.
-  - `signedUrl(key, ttlSeconds)` firma un `GetObject` con `getSignedUrl`.
+  - `put(key, body, contentType)` sube el objeto con `PutObject`.
+  - `signedUrl(key, ttlSeconds, contentDisposition)` firma un `GetObject` con `ResponseContentDisposition` usando `getSignedUrl`. Supabase descarta el `Content-Disposition` de `PutObject` y respeta el de la URL firmada (T003).
 
   Usa un `S3Client` con `forcePathStyle: true`, que exige Supabase. No hay interfaz ni implementación falsa: las pruebas usan un servidor S3 en un contenedor.
 - **Variables** (`env.ts`): `S3_ENDPOINT` (URL), `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID` y `S3_SECRET_ACCESS_KEY`, todas obligatorias. El entorno validado nunca se registra en los logs; se añade `*.secretAccessKey` a `REDACT_PATHS` por si un error del SDK incluye su configuración.
@@ -69,7 +69,7 @@ Antes de escribir la API se confirma en el proyecto real lo que el diseño supon
      - auditar `contract_document.upload` o `.replace` (con `before` y `after`: nombre, tamaño y `sha256`) con `AuditService` dentro de la transacción (F12).
 
   Si la transacción falla, el objeto queda huérfano (CA-7), con un comentario `ponytail:` que lo explica.
-- **URL firmada:** con el contrato verificado por `OrgScope` y la fila vigente (404 si no hay), `signedUrl(key, 300)` devuelve `{ url, expiresAt }`.
+- **URL firmada:** con el contrato verificado por `OrgScope` y la fila vigente (404 si no hay), `signedUrl(key, 300, contentDisposition(contentType, fileName))` devuelve `{ url, expiresAt }`.
 - **Borrado:** marca la fila como borrada y audita `contract_document.delete`, en la misma transacción. Nunca llama al bucket.
 - **Campo `document` del contrato:** en `contractColumns` (`contract-queries.ts`) se agrega como subconsulta `json_build_object(...)` sobre la fila vigente. Así ninguna consulta de contratos necesita otro `JOIN`. El JSON lo convierte `postgres` en un objeto.
 
@@ -102,9 +102,9 @@ Antes de escribir la API se confirma en el proyecto real lo que el diseño supon
   - el nombre: latin1 → UTF-8, nombre base sin ruta, vacío y más de 255 caracteres;
   - el `Content-Disposition` con nombres con tildes, comillas y barras.
 - **`test/contract-documents.test.ts`** (s3mock en un contenedor):
-  - subir los tres tipos y comprobar que el objeto existe con su `Content-Type` y `Content-Disposition` (`HeadObject`);
+  - subir los tres tipos y comprobar que el objeto existe con su `Content-Type` (`HeadObject`);
   - el error de tipo, el de más de 10 MB, el archivo vacío y la falta del campo;
-  - "Contratación.pdf" subido con su tilde vuelve igual en `document.fileName` y en el `Content-Disposition`;
+  - "Contratación.pdf" subido con su tilde vuelve igual en `document.fileName` y en el `Content-Disposition` de la URL firmada;
   - un contrato borrado (`404`), el contrato de una persona inactiva (se acepta) y la subida 21 de la hora (`429`);
   - **reemplazar**: hay dos objetos en el bucket y una sola fila vigente;
   - **eliminar**: el objeto sigue en el bucket;
@@ -130,5 +130,6 @@ Antes de escribir la API se confirma en el proyecto real lo que el diseño supon
 
 ## Notas de implementación
 
-- **T002 — s3mock:** se verificó con Testcontainers que `COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS` crea el bucket al arrancar (la usa `docker-compose.yml`); en las pruebas se crea con `CreateBucket`. La prueba del adaptador comprueba que la URL firmada devuelve los bytes, el `Content-Type` y el `Content-Disposition` guardados.
+- **T002 — s3mock:** se verificó con Testcontainers que `COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS` crea el bucket al arrancar (la usa `docker-compose.yml`); en las pruebas se crea con `CreateBucket`. La prueba del adaptador comprueba que la URL firmada devuelve los bytes, el `Content-Type` guardado y el `Content-Disposition` pedido al firmar.
 - **Entorno local:** las variables `S3_*` son obligatorias, así que `apps/api/.env` necesita las de `.env.example` para que `pnpm dev` arranque.
+- **T003 — Prueba en Supabase Storage (2026-10-18):** con el bucket privado `contract-documents` y llaves S3 creadas por el usuario. Resultado: la URL firmada abre el objeto (200, mismos bytes), devuelve el `Content-Type` guardado y sin firma responde 403. **No** devuelve el `Content-Disposition` enviado en `PutObject`: Supabase lo descarta (en `storage.objects.metadata` solo quedan `mimetype` y `cacheControl`) y `HeadObject` tampoco lo trae. En cambio, `ResponseContentDisposition` en la URL firmada **sí** funciona, aunque la tabla de compatibilidad no lo menciona. Se cambió el diseño: la disposición se fija al firmar. Quedaron dos objetos de prueba con el prefijo `spike/` (22 y 15 bytes). Los scripts no se commitearon y se borraron.

@@ -26,27 +26,26 @@ export class ObjectStorage implements OnModuleDestroy {
     });
   }
 
-  /** Las cabeceras quedan guardadas con el objeto: la URL firmada no puede cambiarlas en Supabase. */
-  async put(
-    key: string,
-    body: Buffer,
-    headers: { contentType: string; contentDisposition: string },
-  ): Promise<void> {
+  async put(key: string, body: Buffer, contentType: string): Promise<void> {
     await this.client.send(
-      new PutObjectCommand({
-        Bucket: this.bucket,
-        Key: key,
-        Body: body,
-        ContentType: headers.contentType,
-        ContentDisposition: headers.contentDisposition,
-      }),
+      new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: body, ContentType: contentType }),
     );
   }
 
-  signedUrl(key: string, ttlSeconds: number): Promise<string> {
-    return getSignedUrl(this.client, new GetObjectCommand({ Bucket: this.bucket, Key: key }), {
-      expiresIn: ttlSeconds,
-    });
+  /**
+   * La disposición va en la URL firmada: Supabase descarta el `Content-Disposition` de
+   * `PutObject` y respeta `response-content-disposition` (comprobado en F17-T003).
+   */
+  signedUrl(key: string, ttlSeconds: number, contentDisposition: string): Promise<string> {
+    return getSignedUrl(
+      this.client,
+      new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        ResponseContentDisposition: contentDisposition,
+      }),
+      { expiresIn: ttlSeconds },
+    );
   }
 
   onModuleDestroy(): void {
