@@ -14,6 +14,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ContractStatusBadge } from '@/components/contract-status-badge';
 import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
+import { ContractDocumentCell } from '@/components/providers/contract-document-cell';
 import { ContractFormDialog } from '@/components/providers/contract-form-dialog';
 import { ProviderFormDialog } from '@/components/providers/provider-form-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -125,6 +126,11 @@ function ProviderDetailPage() {
           {row.original.workAgreement}
         </span>
       ),
+    },
+    {
+      id: 'document',
+      header: 'Documento',
+      cell: ({ row }) => <ContractDocumentCell contract={row.original} onChanged={refresh} />,
     },
     {
       id: 'actions',

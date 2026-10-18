@@ -87,7 +87,7 @@ Antes de escribir la API se confirma en el proyecto real lo que el diseño supon
   - las acciones "Subir", "Abrir" (PDF) o "Descargar" (Word), "Reemplazar" y "Eliminar", con `ConfirmDialog` para las dos últimas.
 - **"Abrir" y "Descargar":**
   - "Abrir" hace `window.open('', '_blank')` en el clic, pone `tab.opener = null` y le asigna `location` cuando llega la URL; si la petición falla, cierra la pestaña y muestra el error (CA-19);
-  - "Descargar" pide la URL y la asigna a un `<iframe>` oculto que se quita al rato; si la petición falla, muestra el error y la página no se mueve (CA-19b).
+  - "Descargar" pide la URL y hace clic en un `<a>` temporal hacia ella; si la petición falla, muestra el error y la página no se mueve (CA-19b). No es un `<iframe>`: la CSP (`default-src 'self'`) lo bloquearía en producción.
 - **`routes/_app/personal/$id.tsx`:** la columna "Documento" usa la celda. Al subir o eliminar se invalida `providerKeys.all`.
 
 ## Proxy del Worker
@@ -111,7 +111,7 @@ Antes de escribir la API se confirma en el proyecto real lo que el diseño supon
   - la URL firmada (`fetch` devuelve los mismos bytes y las cabeceras guardadas);
   - `document` en el contrato, la auditoría, el aislamiento (`404`) y OpenAPI.
 - **`test/audit-atomicity.test.ts`:** subir, reemplazar y eliminar, con la auditoría fallida, no dejan fila.
-- **Web:** `contract-document-cell.test.tsx` cubre la validación previa, la confirmación al reemplazar, "Abrir" (la pestaña se abre antes de la respuesta y queda con `opener = null`) y "Descargar" (un `<iframe>` con la URL, sin mover la página).
+- **Web:** `contract-document-cell.test.tsx` cubre la validación previa, la confirmación al reemplazar, "Abrir" (la pestaña se abre antes de la respuesta y queda con `opener = null`) y "Descargar" (un enlace temporal con la URL).
 
 ## Despliegue (T008, con confirmación del usuario en cada paso)
 
@@ -139,3 +139,8 @@ Antes de escribir la API se confirma en el proyecto real lo que el diseño supon
   - La prueba con "Contratación firmada.pdf" confirma que multer 2.4 entrega el nombre en latin1 y que `normalizeFileName` lo corrige.
   - Las pruebas de la API se escribieron y se vieron fallar (404) antes del controlador. Las de auditoría atómica se agregaron después del servicio y pasaron al primer intento.
 - **T006:** el campo `document` sale de `json_build_object` en `contractColumns`, así que llega también en el contrato vigente de la persona sin tocar sus consultas. Su `uploadedAt` viene en el formato JSON de Postgres (con zona horaria), no en el ISO con `Z` de la respuesta de subida; los dos son fechas válidas para la web.
+- **T007 — Web y Worker:**
+  - `apiFetch` suma la opción `formData`; con ella no fija `Content-Type`, y el reintento con el token renovado reenvía el mismo `FormData`.
+  - El Worker reenvía `request.body` como stream con `duplex: 'half'`. Que el runtime de Cloudflare lo acepte se confirma con la subida de 10 MB en producción (T009); la prueba local solo cubre el comportamiento estándar de `fetch`.
+  - "Descargar" usa un enlace temporal y no el `<iframe>` del plan: la CSP de `_headers` (`default-src 'self'`, sin `frame-src`) lo habría bloqueado en producción, y en local no se notaba porque Vite no aplica `_headers` (spec CA-19b actualizada).
+  - En el celular, la columna "Documento" aparece en la tarjeta del contrato como cualquier otra columna con cabecera (F15), sin código propio (CA-21).

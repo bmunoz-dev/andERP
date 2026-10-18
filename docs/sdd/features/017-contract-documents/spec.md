@@ -1,6 +1,6 @@
 # F17 — Documento del contrato · Spec
 
-- **Estado:** Aprobado (2026-10-18; ajustado tres veces ese día, ver Historial)
+- **Estado:** Aprobado (2026-10-18; ajustado cuatro veces ese día, ver Historial)
 - **Diseño:** `design.md` §2 (decisión 18), §3 (glosario), §5.13 (`contract_documents`), §6.5 (almacenamiento de archivos), §10 y §11
 - **Depende de:** F03 (contratos), F12 (auditoría atómica), F15 (tablas como tarjetas en el celular)
 
@@ -74,7 +74,7 @@ Un contrato tiene **un solo archivo vigente**. Reemplazarlo o eliminarlo nunca b
   - con archivo, su nombre y las acciones **Abrir** (PDF) o **Descargar** (Word), **Reemplazar** y **Eliminar**.
 - **CA-18.** Antes de subir, la web rechaza un tipo o un tamaño no permitidos con un mensaje en español, sin llamar a la API. Reemplazar y eliminar piden confirmación.
 - **CA-19.** "Abrir" abre una pestaña en el mismo clic y le asigna la URL firmada cuando llega, para que no la detenga el bloqueador de ventanas. Antes de asignarla corta la referencia a la pestaña de origen (`opener = null`), para que la página abierta no pueda cambiar la URL de AndERP. Si la petición falla, cierra la pestaña y muestra el error.
-- **CA-19b.** "Descargar" usa la URL firmada en un `<iframe>` oculto: como el Word se guardó con `attachment`, el navegador lo descarga sin salir de la ficha. Si la API no entrega la URL, se muestra el error y la página no se mueve.
+- **CA-19b.** "Descargar" pide la URL firmada y hace clic en un enlace temporal hacia ella: como la URL se firmó con `attachment`, el navegador descarga el Word sin salir de la ficha. Si la API no entrega la URL, se muestra el error y la página no se mueve. (No se usa un `<iframe>`: la CSP de la web, `default-src 'self'` sin `frame-src`, lo bloquearía en producción.)
 - **CA-20.** Cada código de error nuevo tiene su mensaje en español en `error-messages.es.ts`.
 - **CA-21.** En el celular, las acciones del documento aparecen en la tarjeta del contrato (F15).
 
@@ -101,3 +101,4 @@ Un contrato tiene **un solo archivo vigente**. Reemplazarlo o eliminarlo nunca b
 | 2026-10-18 | CA-9: un solo endpoint de URL firmada, sin `mode`; el `Content-Disposition` (`inline` para PDF, `attachment` para Word) se fija al subir. CA-10, CA-17, CA-19 y CA-22 ajustados ("Abrir" el PDF, "Descargar" el Word). | La documentación de Supabase ("S3 Compatibility") no admite `response-content-disposition` en `GetObject`: una URL con `mode` habría funcionado en MinIO y no en producción. Aprobado por el usuario. |
 | 2026-10-18 | Auditoría de la spec. Nuevos: CA-4b (nombre en UTF-8, sin ruta, hasta 255), CA-6b (contrato borrado y persona inactiva), CA-6c (20 subidas por hora), CA-15b (alcance y rotación de las llaves S3), CA-19b (descarga sin salir de la app) y CA-21b (prueba previa en Supabase). Ajustados: CA-4 (la extensión debe coincidir también en el PDF; límites aceptados), CA-16 (stream en el Worker) y CA-19 (`opener = null`). | El diseño suponía comportamientos de Supabase sin probarlos; multer decodifica los nombres como latin1; el Worker cargaba el archivo entero en memoria; el bucket solo crece y su cuota afecta a todo el proyecto. Aprobado por el usuario. |
 | 2026-10-18 | CA-9, CA-10 y CA-21b: el `Content-Disposition` se fija al firmar la URL, no al subir. | La prueba previa en Supabase (T003) mostró lo contrario de lo que se dedujo de su documentación: descarta el `Content-Disposition` de `PutObject` (no queda en `storage.objects.metadata` ni en `HeadObject`) y sí respeta `response-content-disposition` en la URL firmada. Aprobado por el usuario. |
+| 2026-10-18 | CA-19b: "Descargar" usa un enlace temporal, no un `<iframe>`. | La CSP de `apps/web/public/_headers` (`default-src 'self'`, sin `frame-src`) bloquearía el `<iframe>` hacia Supabase en producción; en local no se nota porque Vite no aplica `_headers`. Navegar por un enlace no lo limita la CSP y no hace falta abrirla a otro dominio. |
