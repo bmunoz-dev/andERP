@@ -15,5 +15,5 @@
       Depende de: F16-T003 · Verificación: CA-19, CA-20
 - [x] F16-T006 [TDD] Web: pestaña "Monto fijo", diálogo de crear y editar, enlace desde el libro de egresos e invalidación de consultas.
       Depende de: F16-T004, F16-T005 · Verificación: CA-21–CA-23
-- [ ] F16-T007 `design.md` (si la implementación cambió algo), notas de implementación, verificación completa (`format:check`, `lint`, `typecheck`, `test`), verificación manual del usuario y `roadmap.md`.
+- [x] F16-T007 `design.md` (si la implementación cambió algo), notas de implementación, verificación completa (`format:check`, `lint`, `typecheck`, `test`), verificación manual del usuario y `roadmap.md`.
       Depende de: F16-T006
