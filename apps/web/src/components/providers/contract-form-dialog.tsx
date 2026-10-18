@@ -2,7 +2,9 @@ import {
   type Contract,
   isoDateSchema,
   PAYMENT_FREQUENCY_LABELS,
+  PAYMENT_MODE_LABELS,
   paymentFrequencySchema,
+  paymentModeSchema,
   positiveMoneySchema,
 } from '@anderp/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,6 +28,7 @@ const contractForm = z
     // Vacío = contrato sin fecha de fin.
     endDate: z.union([z.literal(''), isoDateSchema]),
     paymentFrequency: paymentFrequencySchema,
+    paymentMode: paymentModeSchema,
     monthlyAmount: positiveMoneySchema
       .nullable()
       .refine((v) => v !== null, 'Ingresa un valor válido'),
@@ -43,6 +46,7 @@ const frequencyOptions = Object.entries(PAYMENT_FREQUENCY_LABELS).map(([value, l
   value,
   label,
 }));
+const modeOptions = Object.entries(PAYMENT_MODE_LABELS).map(([value, label]) => ({ value, label }));
 
 export function ContractFormDialog({
   providerId,
@@ -64,6 +68,7 @@ export function ContractFormDialog({
       startDate: contract?.startDate ?? '',
       endDate: contract?.endDate ?? '',
       paymentFrequency: contract?.paymentFrequency ?? 'weekly',
+      paymentMode: contract?.paymentMode ?? 'daily',
       monthlyAmount: contract?.monthlyAmount ?? null,
       workAgreement: contract?.workAgreement ?? '',
     },
@@ -76,6 +81,7 @@ export function ContractFormDialog({
         startDate: values.startDate,
         endDate: values.endDate === '' ? null : values.endDate,
         paymentFrequency: values.paymentFrequency,
+        paymentMode: values.paymentMode,
         monthlyAmount: values.monthlyAmount,
         workAgreement: values.workAgreement,
       };
@@ -159,6 +165,29 @@ export function ContractFormDialog({
             <p className="text-sm text-destructive">{errors.monthlyAmount.message}</p>
           )}
         </div>
+      </div>
+      <div className="grid gap-2">
+        <Controller
+          control={form.control}
+          name="paymentMode"
+          render={({ field }) => (
+            <SelectField
+              label="Forma de pago"
+              placeholder="Elige"
+              value={field.value}
+              onChange={(v) => {
+                field.onChange(v);
+              }}
+              options={modeOptions}
+              disabled={contract?.hasPayments ?? false}
+            />
+          )}
+        />
+        {contract?.hasPayments && (
+          <p className="text-sm text-muted-foreground">
+            El contrato ya tiene pagos: su forma de pago no se cambia.
+          </p>
+        )}
       </div>
       <div className="grid gap-2">
         <Label htmlFor={agreementId}>Acuerdo de trabajo</Label>

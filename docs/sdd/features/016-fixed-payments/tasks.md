@@ -11,7 +11,7 @@
       Depende de: F16-T001 · Verificación: CA-2, CA-3, CA-12–CA-14, CA-24
 - [x] F16-T004 [TDD] Módulo `fixed-payments`: CRUD con `OrgScope`, auditoría atómica, aislamiento y OpenAPI.
       Depende de: F16-T003 · Verificación: CA-4–CA-11, CA-18
-- [ ] F16-T005 [TDD] Web: renombrado a "Personal" y "Pagos" (rutas, menú, textos, enlaces) y "Forma de pago" en el contrato.
+- [x] F16-T005 [TDD] Web: renombrado a "Personal" y "Pagos" (rutas, menú, textos, enlaces) y "Forma de pago" en el contrato.
       Depende de: F16-T003 · Verificación: CA-19, CA-20
 - [ ] F16-T006 [TDD] Web: pestaña "Monto fijo", diálogo de crear y editar, enlace desde el libro de egresos e invalidación de consultas.
       Depende de: F16-T004, F16-T005 · Verificación: CA-21–CA-23

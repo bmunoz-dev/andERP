@@ -90,3 +90,5 @@
 - **`hasPayments`** se agregó a la respuesta del contrato (se calcula con `exists` sobre las dos tablas) para deshabilitar la forma de pago en la web.
 - **`paidInMonth`** (`GET /contracts?overlaps=`) suma también los pagos fijos del mes y acepta su id en `excludePayment`; el formulario de monto fijo reutiliza el mismo dato que el de F04.
 - **T004:** las pruebas de la API se escribieron antes del módulo, pero no se ejecutaron en rojo antes de implementarlo (los endpoints no existían: habrían respondido 404).
+- **El formulario de pago por días (F04) solo ofrece contratos `daily`** (`select` de TanStack Query sobre `GET /contracts?overlaps=`). Sin el filtro, elegir a una persona de monto fijo terminaba en `CONTRACT_PAYMENT_MODE_MISMATCH`.
+- **Textos:** "prestador" pasa a "persona" en pantallas, toasts y mensajes de error; la categoría de sistema `FEES` conserva su nombre ("Honorarios"), que es dato de cada organización. El `routeTree` se regenera con `vite build` (`tsc` corre antes en `pnpm build`). La prueba E2E (`e2e/tests/smoke.spec.ts`) usa `/pagos/nuevo`.

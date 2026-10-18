@@ -13,18 +13,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { listProviders, providerKeys, type ProviderFilters } from '@/lib/providers-api';
 
-export const Route = createFileRoute('/_app/prestadores/')({
+export const Route = createFileRoute('/_app/personal/')({
   component: ProvidersPage,
 });
 
 const columns: ColumnDef<ServiceProvider>[] = [
   {
     accessorKey: 'name',
-    header: 'Prestador',
+    header: 'Persona',
     cell: ({ row }) => (
       <span className="flex items-center gap-2">
         <Link
-          to="/prestadores/$id"
+          to="/personal/$id"
           params={{ id: row.original.id }}
           className="font-medium underline-offset-4 hover:underline"
         >
@@ -89,8 +89,8 @@ function ProvidersPage() {
   return (
     <>
       <PageHeader
-        title="Prestadores de servicios"
-        description="Personas y empresas a las que se pagan honorarios, con sus contratos."
+        title="Personal"
+        description="Personas y empresas a las que se les paga, con sus contratos."
         actions={
           <Button
             onClick={() => {
@@ -98,7 +98,7 @@ function ProvidersPage() {
             }}
           >
             <Plus />
-            Nuevo prestador
+            Nueva persona
           </Button>
         }
       />
@@ -134,7 +134,7 @@ function ProvidersPage() {
         data={providers.data}
         isLoading={providers.isPending}
         emptyMessage={
-          search ? 'Ningún prestador coincide con la búsqueda.' : 'Aún no hay prestadores.'
+          search ? 'Ninguna persona coincide con la búsqueda.' : 'Aún no hay personal registrado.'
         }
         getRowId={(p) => p.id}
       />
@@ -146,7 +146,7 @@ function ProvidersPage() {
           }}
           onSaved={async (saved) => {
             await queryClient.invalidateQueries({ queryKey: providerKeys.all });
-            await navigate({ to: '/prestadores/$id', params: { id: saved.id } });
+            await navigate({ to: '/personal/$id', params: { id: saved.id } });
           }}
         />
       )}

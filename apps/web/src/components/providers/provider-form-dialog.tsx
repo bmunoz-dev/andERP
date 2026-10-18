@@ -108,7 +108,7 @@ export function ProviderFormDialog({
       return provider ? updateProvider(provider.id, body) : createProvider(body);
     },
     onSuccess: async (saved) => {
-      toast.success(provider ? 'Cambios guardados' : 'Prestador creado');
+      toast.success(provider ? 'Cambios guardados' : 'Persona creada');
       await onSaved(saved);
       onClose();
     },
@@ -123,7 +123,7 @@ export function ProviderFormDialog({
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      title={provider ? 'Editar prestador' : 'Nuevo prestador'}
+      title={provider ? 'Editar persona' : 'Nueva persona'}
       error={error}
       submitLabel="Guardar"
       isSubmitting={save.isPending}

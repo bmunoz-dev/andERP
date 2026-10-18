@@ -28,8 +28,8 @@ const operation: NavGroup = {
   label: 'Operación',
   items: [
     { label: 'Egresos', to: '/egresos', icon: Receipt },
-    { label: 'Honorarios', to: '/honorarios', icon: HandCoins },
-    { label: 'Prestadores', to: '/prestadores', icon: FileText },
+    { label: 'Pagos', to: '/pagos', icon: HandCoins },
+    { label: 'Personal', to: '/personal', icon: FileText },
     { label: 'Credenciales', to: '/credenciales', icon: KeyRound },
     { label: 'Responsables', to: '/responsables', icon: UserRound },
     { label: 'Clic Kiu', to: '/clic-kiu', icon: Wallet },

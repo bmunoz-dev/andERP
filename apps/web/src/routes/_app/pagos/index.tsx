@@ -17,7 +17,7 @@ import { deleteFeePayment, feePaymentKeys, listFeePayments, MONTHS } from '@/lib
 import { formatDate } from '@/lib/format';
 import { providerKeys } from '@/lib/providers-api';
 
-export const Route = createFileRoute('/_app/honorarios/')({
+export const Route = createFileRoute('/_app/pagos/')({
   component: FeePaymentsPage,
 });
 
@@ -49,7 +49,7 @@ function FeePaymentsPage() {
   const columns: ColumnDef<FeePayment>[] = [
     {
       id: 'provider',
-      header: 'Prestador',
+      header: 'Persona',
       cell: ({ row }) => <span className="font-medium">{row.original.serviceProvider.name}</span>,
     },
     {
@@ -71,7 +71,7 @@ function FeePaymentsPage() {
       cell: ({ row }) => (
         <div className="flex justify-end gap-1">
           <Button asChild variant="ghost" size="icon" aria-label="Editar pago">
-            <Link to="/honorarios/$id" params={{ id: row.original.id }}>
+            <Link to="/pagos/$id" params={{ id: row.original.id }}>
               <Pencil />
             </Link>
           </Button>
@@ -93,11 +93,11 @@ function FeePaymentsPage() {
   return (
     <>
       <PageHeader
-        title="Pagos de honorarios"
-        description="Pagos semanales a prestadores, con el valor de cada día trabajado."
+        title="Pagos"
+        description="Pagos al personal: por días trabajados o de monto fijo."
         actions={
           <Button asChild>
-            <Link to="/honorarios/nuevo">
+            <Link to="/pagos/nuevo">
               <Plus />
               Nuevo pago
             </Link>

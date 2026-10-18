@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/page-header';
 import { errorMessage } from '@/lib/error-messages.es';
 import { feePaymentKeys, getFeePayment } from '@/lib/fee-payments-api';
 
-export const Route = createFileRoute('/_app/honorarios/$id')({
+export const Route = createFileRoute('/_app/pagos/$id')({
   component: EditFeePaymentPage,
 });
 
@@ -20,12 +20,12 @@ function EditFeePaymentPage() {
   return (
     <>
       <PageHeader
-        title="Editar pago de honorarios"
+        title="Editar pago por días"
         {...(payment.data ? { description: payment.data.serviceProvider.name } : {})}
       />
       {payment.isError && <p className="text-muted-foreground">{errorMessage(payment.error)}</p>}
       {payment.data && (
-        <FeePaymentForm payment={payment.data} onSaved={() => navigate({ to: '/honorarios' })} />
+        <FeePaymentForm payment={payment.data} onSaved={() => navigate({ to: '/pagos' })} />
       )}
     </>
   );

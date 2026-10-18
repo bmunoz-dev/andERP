@@ -19,7 +19,7 @@ import { formatDate } from '@/lib/format';
 
 /**
  * Detalle del libro de una celda de la matriz (F05 CA-14): los egresos manuales se editan y
- * borran aquí; los honorarios enlazan a su pago.
+ * borran aquí; los pagos al personal enlazan a su pago.
  */
 export function LedgerSheet({
   year,
@@ -105,8 +105,8 @@ export function LedgerSheet({
                   </>
                 ) : (
                   <Button asChild variant="link" size="sm">
-                    <Link to="/honorarios/$id" params={{ id: entry.sourceId }}>
-                      Ver pago de honorarios
+                    <Link to="/pagos/$id" params={{ id: entry.sourceId }}>
+                      Ver pago por días
                     </Link>
                   </Button>
                 )}

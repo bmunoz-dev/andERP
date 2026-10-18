@@ -1,4 +1,9 @@
-import { type Contract, formatCOP, PAYMENT_FREQUENCY_LABELS } from '@anderp/shared';
+import {
+  type Contract,
+  formatCOP,
+  PAYMENT_FREQUENCY_LABELS,
+  PAYMENT_MODE_LABELS,
+} from '@anderp/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -25,7 +30,7 @@ import {
   updateProvider,
 } from '@/lib/providers-api';
 
-export const Route = createFileRoute('/_app/prestadores/$id')({
+export const Route = createFileRoute('/_app/personal/$id')({
   component: ProviderDetailPage,
 });
 
@@ -52,18 +57,18 @@ function ProviderDetailPage() {
   const removeProvider = useMutation({
     mutationFn: () => deleteProvider(id),
     onSuccess: async () => {
-      toast.success('Prestador eliminado');
+      toast.success('Persona eliminada');
       await refresh();
-      await navigate({ to: '/prestadores' });
+      await navigate({ to: '/personal' });
     },
     onError,
   });
 
-  // F09: un prestador inactivo no recibe contratos nuevos; los triggers aplican las reglas.
+  // F09: una persona inactiva no recibe contratos nuevos; los triggers aplican las reglas.
   const setActive = useMutation({
     mutationFn: (isActive: boolean) => updateProvider(id, { isActive }),
     onSuccess: (saved) => {
-      toast.success(saved.isActive ? 'Prestador activado' : 'Prestador desactivado');
+      toast.success(saved.isActive ? 'Persona activada' : 'Persona desactivada');
       return refresh();
     },
     onError,
@@ -91,6 +96,11 @@ function ProviderDetailPage() {
       id: 'frequency',
       header: 'Pago',
       cell: ({ row }) => PAYMENT_FREQUENCY_LABELS[row.original.paymentFrequency],
+    },
+    {
+      id: 'mode',
+      header: 'Forma de pago',
+      cell: ({ row }) => PAYMENT_MODE_LABELS[row.original.paymentMode],
     },
     {
       id: 'amount',
@@ -149,7 +159,7 @@ function ProviderDetailPage() {
   if (provider.isError) {
     return (
       <>
-        <PageHeader title="Prestador" />
+        <PageHeader title="Persona" />
         <p className="text-muted-foreground">{errorMessage(provider.error)}</p>
       </>
     );
@@ -159,15 +169,15 @@ function ProviderDetailPage() {
   return (
     <>
       <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
-        <Link to="/prestadores">
+        <Link to="/personal">
           <ArrowLeft />
-          Prestadores
+          Personal
         </Link>
       </Button>
       <PageHeader
         title={
           <span className="flex flex-wrap items-center gap-2">
-            {p?.name ?? 'Prestador'}
+            {p?.name ?? 'Persona'}
             {p && !p.isActive && <Badge variant="secondary">Inactivo</Badge>}
           </span>
         }
@@ -244,15 +254,15 @@ function ProviderDetailPage() {
       </div>
       {p && !p.isActive && (
         <p className="mb-4 text-sm text-muted-foreground">
-          Prestador inactivo: no se le pueden crear contratos nuevos. Sus contratos y pagos se
-          conservan, y se pueden registrar pagos atrasados. Actívalo para crear un contrato.
+          Persona inactiva: no se le pueden crear contratos nuevos. Sus contratos y pagos se
+          conservan, y se pueden registrar pagos atrasados. Actívala para crear un contrato.
         </p>
       )}
       <DataTable
         columns={columns}
         data={contracts.data}
         isLoading={contracts.isPending}
-        emptyMessage="Este prestador aún no tiene contratos."
+        emptyMessage="Esta persona aún no tiene contratos."
         getRowId={(c) => c.id}
       />
 
@@ -278,8 +288,8 @@ function ProviderDetailPage() {
       <ConfirmDialog
         open={deletingProvider}
         onOpenChange={setDeletingProvider}
-        title={`¿Eliminar a ${p?.name ?? 'este prestador'}?`}
-        description="Solo se puede eliminar un prestador sin contratos."
+        title={`¿Eliminar a ${p?.name ?? 'esta persona'}?`}
+        description="Solo se puede eliminar una persona sin contratos."
         confirmLabel="Eliminar"
         destructive
         onConfirm={() => {
@@ -290,7 +300,7 @@ function ProviderDetailPage() {
       <ConfirmDialog
         open={deactivating}
         onOpenChange={setDeactivating}
-        title={`¿Desactivar a ${p?.name ?? 'este prestador'}?`}
+        title={`¿Desactivar a ${p?.name ?? 'esta persona'}?`}
         description="No se le podrán crear contratos nuevos. Su historial se conserva y se puede volver a activar."
         confirmLabel="Desactivar"
         onConfirm={() => {

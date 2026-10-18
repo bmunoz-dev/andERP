@@ -102,7 +102,7 @@ export function ExpenseFormDialog({
         if (!open) onClose();
       }}
       title={expense ? 'Editar egreso' : 'Nuevo egreso'}
-      description="Los honorarios se registran en su propia sección."
+      description="Los pagos al personal se registran en la sección Pagos."
       error={error}
       submitLabel="Guardar"
       isSubmitting={save.isPending}

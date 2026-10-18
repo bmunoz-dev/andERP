@@ -2,8 +2,8 @@ import { todayIn, weekOfMonth } from '@anderp/shared';
 import { type APIRequestContext, expect, type Page, test } from '@playwright/test';
 
 /**
- * F07 CA-15: login → nuevo egreso → verlo en la matriz → nuevo pago de honorarios → verlo en
- * Honorarios → revelar una credencial → logout.
+ * F07 CA-15: login → nuevo egreso → verlo en la matriz → nuevo pago por días → verlo en
+ * Pagos → revelar una credencial → logout.
  *
  * Usa un admin existente (`E2E_EMAIL` y `E2E_PASSWORD`). Prestador, contrato y credencial se crean
  * por la API con nombres únicos, así la prueba se puede repetir sobre la misma base de datos.
@@ -81,12 +81,12 @@ test('flujo de humo', async ({ page, request }) => {
   await expect(page.getByRole('dialog').getByText(concept)).toBeVisible();
   await page.keyboard.press('Escape');
 
-  // Nuevo pago de honorarios y verlo en Honorarios
-  await page.goto('/honorarios/nuevo');
-  await choose(page, 'Prestador (contrato vigente en esa semana)', new RegExp(run));
+  // Nuevo pago por días y verlo en Pagos
+  await page.goto('/pagos/nuevo');
+  await choose(page, 'Persona (contrato por días vigente en esa semana)', new RegExp(run));
   await page.getByRole('textbox', { name: new RegExp(` ${shortDate}$`) }).fill('150.000');
   await page.getByRole('button', { name: 'Registrar pago' }).click();
-  await expect(page).toHaveURL(/\/honorarios$/);
+  await expect(page).toHaveURL(/\/pagos$/);
   await expect(page.getByText(`Prestador E2E ${run}`)).toBeVisible();
 
   // Revelar una credencial
