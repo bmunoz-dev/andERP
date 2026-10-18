@@ -11,7 +11,7 @@
       Depende de: F17-T002 · Verificación: CA-21b
 - [x] F17-T004 [TDD] Reglas puras: detección de tipo con extensión, nombre (latin1 → UTF-8, nombre base, longitud) y `Content-Disposition`. Shared: esquema del documento, límites y códigos de error con sus mensajes.
       Verificación: CA-4, CA-4b, CA-10, CA-20
-- [ ] F17-T005 [TDD] API de subida y reemplazo: multer con límite, orden comprobar → límite por hora → tipo → subir → transacción con bloqueo, auditoría atómica.
+- [x] F17-T005 [TDD] API de subida y reemplazo: multer con límite, orden comprobar → límite por hora → tipo → subir → transacción con bloqueo, auditoría atómica.
       Depende de: F17-T003, F17-T004 · Verificación: CA-2–CA-7, CA-12
 - [ ] F17-T006 [TDD] API de URL firmada y borrado, campo `document` en el contrato, aislamiento y OpenAPI.
       Depende de: F17-T005 · Verificación: CA-8, CA-9, CA-11–CA-14
