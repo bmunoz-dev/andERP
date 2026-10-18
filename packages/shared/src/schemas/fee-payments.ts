@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isoDateSchema, nonNegativeMoneySchema } from './common';
+import { isoDateSchema, nonNegativeMoneySchema, positiveMoneySchema } from './common';
 import { paymentModeSchema } from './service-providers';
 
 export const feePaymentDaySchema = z.object({
@@ -52,3 +52,34 @@ export const contractOptionSchema = z.object({
   paymentMode: paymentModeSchema,
 });
 export type ContractOption = z.infer<typeof contractOptionSchema>;
+
+// ── F16: pagos de monto fijo ──────────────────────────────────────────────────────────────
+
+export const saveFixedPaymentSchema = z.object({
+  contractId: z.uuid(),
+  periodYear: z.number().int().min(2000).max(2100),
+  periodMonth: z.number().int().min(1).max(12),
+  paymentDate: isoDateSchema,
+  amount: positiveMoneySchema,
+  notes: z.string().trim().max(1000).nullable().optional(),
+});
+export type SaveFixedPayment = z.infer<typeof saveFixedPaymentSchema>;
+
+/** Contrato y mes trabajado no cambian (F16 CA-9): `.strict()` rechaza esos campos. */
+export const updateFixedPaymentSchema = saveFixedPaymentSchema
+  .pick({ paymentDate: true, amount: true, notes: true })
+  .partial()
+  .strict();
+export type UpdateFixedPayment = z.infer<typeof updateFixedPaymentSchema>;
+
+export const fixedPaymentSchema = z.object({
+  id: z.uuid(),
+  contractId: z.uuid(),
+  serviceProvider: z.object({ id: z.uuid(), name: z.string() }),
+  periodYear: z.number(),
+  periodMonth: z.number(),
+  paymentDate: z.string(),
+  amount: z.string(),
+  notes: z.string().nullable(),
+});
+export type FixedPayment = z.infer<typeof fixedPaymentSchema>;

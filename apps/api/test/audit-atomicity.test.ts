@@ -5,6 +5,7 @@ import type {
   Expense,
   ExpenseCategory,
   FeePayment,
+  FixedPayment,
   Member,
   Obligation,
   Organization,
@@ -201,6 +202,51 @@ describe('Pagos de honorarios', () => {
     await failAudit('fee_payment.delete');
     await body(api().delete(`/fee-payments/${p.id}`), 500);
     await body(api().get(`/fee-payments/${p.id}`));
+  });
+});
+
+describe('Pagos de monto fijo', () => {
+  async function fixedContract(): Promise<Contract> {
+    const contract = await newContract();
+    return body<Contract>(api().patch(`/contracts/${contract.id}`, { paymentMode: 'fixed' }));
+  }
+  const fixedPayment = (contractId: string) => ({
+    contractId,
+    periodYear: 2026,
+    periodMonth: 8,
+    paymentDate: '2026-09-02',
+    amount: '50000.00',
+  });
+
+  it('crear', async () => {
+    const contract = await fixedContract();
+    await failAudit('fixed_payment.create');
+    await body(api().post('/fixed-payments', fixedPayment(contract.id)), 500);
+    expect(await body<FixedPayment[]>(api().get('/fixed-payments'))).toHaveLength(0);
+  });
+
+  it('editar', async () => {
+    const contract = await fixedContract();
+    const p = await body<FixedPayment>(
+      api().post('/fixed-payments', fixedPayment(contract.id)),
+      201,
+    );
+    await failAudit('fixed_payment.update');
+    await body(api().patch(`/fixed-payments/${p.id}`, { amount: '1.00' }), 500);
+    expect((await body<FixedPayment>(api().get(`/fixed-payments/${p.id}`))).amount).toBe(
+      '50000.00',
+    );
+  });
+
+  it('borrar', async () => {
+    const contract = await fixedContract();
+    const p = await body<FixedPayment>(
+      api().post('/fixed-payments', fixedPayment(contract.id)),
+      201,
+    );
+    await failAudit('fixed_payment.delete');
+    await body(api().delete(`/fixed-payments/${p.id}`), 500);
+    await body(api().get(`/fixed-payments/${p.id}`));
   });
 });
 

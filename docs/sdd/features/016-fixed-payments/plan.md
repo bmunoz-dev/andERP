@@ -88,3 +88,5 @@
 - **Reglas de modo solo en la base de datos.** `CONTRACT_PAYMENT_MODE_LOCKED`, `CONTRACT_PAYMENT_MODE_MISMATCH` (en `POST /fee-payments`) y las reglas de contrato con pagos fijos llegan a la API desde los triggers (`P0001` → `code`), igual que `CONTRACT_HAS_PAYMENTS` y `CONTRACT_DATES_EXCLUDE_PAYMENTS` en F04. Repetirlas en el servicio no cambiaría la respuesta.
 - **`paymentMode` sin valor por defecto en Zod.** `updateContractSchema` es el `partial()` del de crear: con un `.default('daily')`, un `PATCH` sin el campo podría cambiar un contrato de monto fijo a por días. El valor por defecto lo pone la base de datos.
 - **`hasPayments`** se agregó a la respuesta del contrato (se calcula con `exists` sobre las dos tablas) para deshabilitar la forma de pago en la web.
+- **`paidInMonth`** (`GET /contracts?overlaps=`) suma también los pagos fijos del mes y acepta su id en `excludePayment`; el formulario de monto fijo reutiliza el mismo dato que el de F04.
+- **T004:** las pruebas de la API se escribieron antes del módulo, pero no se ejecutaron en rojo antes de implementarlo (los endpoints no existían: habrían respondido 404).

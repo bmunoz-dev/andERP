@@ -9,7 +9,7 @@
       Depende de: F16-T001 · Verificación: CA-15–CA-17
 - [x] F16-T003 [TDD] Shared (esquemas, `LedgerEntry.source`, códigos y mensajes) y API de contratos: `paymentMode`, `CONTRACT_PAYMENT_MODE_LOCKED`, borrado y fechas con pagos fijos, regla de modo en `POST /fee-payments`.
       Depende de: F16-T001 · Verificación: CA-2, CA-3, CA-12–CA-14, CA-24
-- [ ] F16-T004 [TDD] Módulo `fixed-payments`: CRUD con `OrgScope`, auditoría atómica, aislamiento y OpenAPI.
+- [x] F16-T004 [TDD] Módulo `fixed-payments`: CRUD con `OrgScope`, auditoría atómica, aislamiento y OpenAPI.
       Depende de: F16-T003 · Verificación: CA-4–CA-11, CA-18
 - [ ] F16-T005 [TDD] Web: renombrado a "Personal" y "Pagos" (rutas, menú, textos, enlaces) y "Forma de pago" en el contrato.
       Depende de: F16-T003 · Verificación: CA-19, CA-20

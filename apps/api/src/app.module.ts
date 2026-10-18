@@ -13,6 +13,7 @@ import { CredentialsModule } from './modules/credentials/credentials.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
 import { ResponsiblePersonsModule } from './modules/responsible-persons/responsible-persons.module';
 import { FeePaymentsModule } from './modules/fee-payments/fee-payments.module';
+import { FixedPaymentsModule } from './modules/fixed-payments/fixed-payments.module';
 import { CatalogsModule } from './modules/catalogs/catalogs.module';
 import { HealthController } from './modules/health/health.controller';
 import { MailModule } from './modules/mail/mailer';
@@ -45,6 +46,7 @@ export class AppModule {
         OrganizationsModule,
         ServiceProvidersModule,
         FeePaymentsModule,
+        FixedPaymentsModule,
         ExpensesModule,
         ResponsiblePersonsModule,
         CredentialsModule,
