@@ -5,7 +5,7 @@
 
 - [x] F16-T001 [TDD] Migraciones: enum y columna `payment_mode`, tabla `fixed_payments`, triggers (modo en las dos tablas, cruce de fechas, inmutabilidad, protección del contrato) y Drizzle. Pruebas en SQL de cada regla.
       Verificación: CA-1, CA-3, CA-5–CA-7, CA-9, CA-12–CA-14 (en la base de datos)
-- [ ] F16-T002 [TDD] Vistas `v_contract_month_totals` y `v_expense_ledger` con la tercera fuente. Pruebas en SQL: sin doble conteo, mes y semana de `payment_date`, mes trabajado, borrados.
+- [x] F16-T002 [TDD] Vistas `v_contract_month_totals` y `v_expense_ledger` con la tercera fuente. Pruebas en SQL: sin doble conteo, mes y semana de `payment_date`, mes trabajado, borrados.
       Depende de: F16-T001 · Verificación: CA-15–CA-17
 - [ ] F16-T003 [TDD] Shared (esquemas, `LedgerEntry.source`, códigos y mensajes) y API de contratos: `paymentMode`, `CONTRACT_PAYMENT_MODE_LOCKED`, borrado y fechas con pagos fijos, regla de modo en `POST /fee-payments`.
       Depende de: F16-T001 · Verificación: CA-2, CA-3, CA-12–CA-14, CA-24

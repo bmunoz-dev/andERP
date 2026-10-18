@@ -7,6 +7,7 @@ import { resetDb, withRuntimeSql } from './setup/reset-db';
 describe('F16 en la base de datos', () => {
   let org: string;
   let docType: string;
+  let legal: string;
 
   /** Contrato de 2026-03-01 a 2026-05-31 (o sin fin). */
   async function contract(
@@ -29,10 +30,11 @@ describe('F16 en la base de datos', () => {
     contractId: string,
     [year, month]: [number, number],
     amount = '100.00',
+    paymentDate = '2026-04-15',
   ) {
     const id = randomUUID();
     await sql`insert into fixed_payments (id, organization_id, contract_id, period_year, period_month, payment_date, amount)
-      values (${id}, ${org}, ${contractId}, ${year}, ${month}, '2026-04-15', ${amount})`;
+      values (${id}, ${org}, ${contractId}, ${year}, ${month}, ${paymentDate}, ${amount})`;
     return id;
   }
 
@@ -48,9 +50,11 @@ describe('F16 en la base de datos', () => {
   beforeAll(async () => {
     await resetDb();
     await withRuntimeSql(async (sql) => {
-      [org, docType] = [randomUUID(), randomUUID()];
+      [org, docType, legal] = [randomUUID(), randomUUID(), randomUUID()];
       await sql`insert into organizations (id, name, tax_id) values (${org}, 'Org', ${org.slice(0, 20)})`;
       await sql`insert into document_types (id, code, name) values (${docType}, 'CC', 'Cédula')`;
+      await sql`insert into expense_categories (id, organization_id, name, system_code, sort_order)
+        values (${randomUUID()}, ${org}, 'Honorarios', 'FEES', 1), (${legal}, ${org}, 'Jurídico', null, 2)`;
     });
   });
 
@@ -144,6 +148,42 @@ describe('F16 en la base de datos', () => {
       ).rejects.toThrow('CONTRACT_DATES_EXCLUDE_PAYMENTS');
       // Mayo sigue cruzándose con un contrato que termina el 2026-05-01.
       await sql`update provider_contracts set end_date = '2026-05-01' where id = ${c}`;
+    });
+  });
+
+  it('CA-15 a CA-17 los pagos fijos suman en el libro por fecha de pago y en el mes trabajado, sin doble conteo', async () => {
+    await withRuntimeSql(async (sql) => {
+      const [expense] = await sql<{ id: string }[]>`
+        insert into expenses (id, organization_id, category_id, concept, payment_date, amount)
+        values (${randomUUID()}, ${org}, ${legal}, 'Papelería', '2026-04-20', '100000.00') returning id`;
+      const d = await contract(sql, 'daily');
+      const dailyPayment = await daily(sql, d);
+      await sql`update fee_payment_days set amount = '50000.00' where fee_payment_id = ${dailyPayment}`;
+      const f = await contract(sql, 'fixed');
+      // Marzo trabajado, pagado el 22 de abril: en el libro cae en abril, semana 4.
+      const fixedPayment = await fixed(sql, f, [2026, 3], '30000.00', '2026-04-22');
+      const deleted = await fixed(sql, f, [2026, 3], '999.00', '2026-04-22');
+      await sql`update fixed_payments set deleted_at = now() where id = ${deleted}`;
+
+      const ids = [expense!.id, dailyPayment, fixedPayment, deleted];
+      const [total] = await sql<{ total: string }[]>`
+        select sum(amount)::text as total from v_expense_ledger where source_id in ${sql(ids)}`;
+      expect(total?.total).toBe('180000.00');
+
+      const [row] = await sql`
+        select source, concept, payment_date::text, week_of_month, amount::text
+          from v_expense_ledger where source_id = ${fixedPayment}`;
+      expect(row).toEqual({
+        source: 'fixed_payment',
+        concept: 'Pago – Ana – 03/2026',
+        payment_date: '2026-04-22',
+        week_of_month: 4,
+        amount: '30000.00',
+      });
+
+      expect(
+        await sql`select period_year, period_month, paid_amount::text from v_contract_month_totals where contract_id = ${f}`,
+      ).toEqual([{ period_year: 2026, period_month: 3, paid_amount: '30000.00' }]);
     });
   });
 });

@@ -82,4 +82,6 @@
 
 ## Notas de implementación
 
-_(Se completan al implementar.)_
+- **Una sola migración a mano para T001 y T002.** Los triggers y las vistas están en `0028_fixed_payment_rules.sql`. Por eso la prueba de las vistas (T002) pasó en verde desde que se escribió; se comprobó que falla sin la tercera rama del libro (el total daría $150.000).
+- **Bloqueo del contrato.** Los triggers de pagos leen el contrato con `FOR SHARE`. Así, un cambio simultáneo de la forma de pago o de las fechas espera a que se confirme el pago y lo ve; sin el bloqueo, las dos transacciones podían pasar sus validaciones a la vez.
+- **`provider_contracts_protect_payments`** se reemplazó con `SET search_path = ''`; las demás funciones de F04 siguen en el pendiente 3 de F07.
