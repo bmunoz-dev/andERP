@@ -30,21 +30,38 @@ No hace falta SQL a mano: no hay triggers, vistas ni permisos especiales (`app_r
 - **Local:** `docker-compose.yml` suma `minio` (API en `:9000`, consola en `:9001`) y `minio-init`, que crea el bucket `contract-documents` y termina. Las dos imágenes van con versión fija. `apps/api/.env.example` suma las variables `S3_*`.
 - **Pruebas:** `test/setup/global-setup.ts` levanta también un `MinioContainer`, crea el bucket con `CreateBucket` y provee `s3Endpoint`, `s3AccessKeyId` y `s3SecretAccessKey`. `create-test-app.ts` los agrega al entorno. Para comprobar el bucket, las pruebas usan un `S3Client` propio (`ListObjectsV2` y `HeadObject`); el adaptador no necesita esos métodos.
 
+## Prueba previa en Supabase Storage (T003, CA-21b)
+
+Antes de escribir la API se confirma en el proyecto real lo que el diseño supone:
+
+1. El usuario activa la conexión S3 en *Settings → Storage*, crea el bucket privado `contract-documents` y genera un par de llaves S3.
+2. El usuario guarda las llaves en `apps/api/.env.storage` (lo ignora `.gitignore` por `.env.*`). Las llaves no pasan por el chat.
+3. Un script desechable, que no se commitea, lee ese archivo y hace cuatro cosas:
+   - sube un PDF con `ContentType: application/pdf` y `ContentDisposition: inline; filename*=UTF-8''Contrataci%C3%B3n.pdf`;
+   - firma un `GetObject` de 5 minutos;
+   - descarga la URL con `fetch`;
+   - imprime el estado, `content-type`, `content-disposition` y si los bytes coinciden.
+
+   Repite lo mismo con un `.docx` en `attachment`.
+4. **Si las cabeceras no vuelven como se guardaron, o la URL no abre, la feature se detiene** y se ajusta el diseño. Los objetos de prueba quedan con el prefijo `spike/` (nunca se borra nada del bucket).
+
 ## API (módulo `contract-documents`)
 
 - **`contract-document-rules.ts`** contiene funciones puras con prueba unitaria:
   - `detectDocumentType(bytes, fileName)` devuelve el `content_type`, o `null`, a partir de los primeros bytes y la extensión (CA-4).
   - `contentDisposition(contentType, fileName)` arma `inline` o `attachment` con `filename*=UTF-8''…` y un `filename` ASCII sin `"`, `\`, `/` ni caracteres de control (CA-10).
+- **Nombre del archivo (CA-4b):** multer entrega `originalname` decodificado como latin1. Se corrige con `Buffer.from(originalname, 'latin1').toString('utf8')`, se toma el nombre base (lo que sigue a la última `/` o `\`) y se rechaza si queda vacío o pasa de 255 caracteres. Va en `contract-document-rules.ts`, con su prueba ("Contratación.pdf" y `C:\fakepath\x.pdf`).
 - **Controlador** (`contract-documents.module.ts`):
   - `POST /contracts/:id/document` con `FileInterceptor('file', { limits: { fileSize: 10 MB, files: 1 } })` y `memoryStorage`. El error `LIMIT_FILE_SIZE` de multer (413) se traduce a `422 DOCUMENT_TOO_LARGE`. Sin campo `file`, o con un archivo vacío, responde `422 VALIDATION_ERROR`.
   - `GET /contracts/:id/document/url`.
   - `DELETE /contracts/:id/document`.
 - **Subida en el servicio**, en este orden:
-  1. Comprobar el contrato con `OrgScope` (404), antes de tocar el bucket, para no dejar objetos huérfanos por un 404.
-  2. Detectar el tipo (422).
-  3. Calcular `sha256` con `node:crypto`.
-  4. `put` al bucket con la llave `org/{org}/contracts/{contract}/{randomUUID()}`.
-  5. Transacción:
+  1. Comprobar el contrato con `OrgScope` (404, también si está borrado), antes de tocar el bucket, para no dejar objetos huérfanos por un 404. No se mira si la persona está activa (CA-6b).
+  2. **Límite de subidas (CA-6c):** contar las filas de `contract_documents` con `created_by` = usuario y `created_at` de la última hora, incluidas las borradas. Si hay 20 o más, `429 TOO_MANY_REQUESTS`. Se cuenta en la base de datos y no con `@nestjs/throttler`: es por usuario y no por IP, sobrevive a un reinicio de Render y no toca la configuración del throttler de login. Dos subidas simultáneas pueden pasar el límite por una (`ponytail:`, se acepta).
+  3. Detectar el tipo (422).
+  4. Calcular `sha256` con `node:crypto`.
+  5. `put` al bucket con la llave `org/{org}/contracts/{contract}/{randomUUID()}`.
+  6. Transacción:
      - `SELECT … FOR UPDATE` del contrato;
      - marcar como borrada la fila vigente, si existe;
      - insertar la nueva;
@@ -68,34 +85,47 @@ No hace falta SQL a mano: no hay triggers, vistas ni permisos especiales (`app_r
   - la validación previa de la extensión y del tamaño (CA-18);
   - las acciones "Subir", "Abrir" (PDF) o "Descargar" (Word), "Reemplazar" y "Eliminar", con `ConfirmDialog` para las dos últimas.
 - **"Abrir" y "Descargar":**
-  - "Abrir" hace `window.open('', '_blank')` en el clic y le asigna `location` cuando llega la URL; si la petición falla, cierra la pestaña y muestra el error;
-  - "Descargar" usa `window.location.assign(url)` (CA-19).
+  - "Abrir" hace `window.open('', '_blank')` en el clic, pone `tab.opener = null` y le asigna `location` cuando llega la URL; si la petición falla, cierra la pestaña y muestra el error (CA-19);
+  - "Descargar" pide la URL y la asigna a un `<iframe>` oculto que se quita al rato; si la petición falla, muestra el error y la página no se mueve (CA-19b).
 - **`routes/_app/personal/$id.tsx`:** la columna "Documento" usa la celda. Al subir o eliminar se invalida `providerKeys.all`.
 
 ## Proxy del Worker
 
-`apps/web/worker/index.ts` ya reenvía el cuerpo como `ArrayBuffer` y el `Content-Type` (con su `boundary`). `worker.test.ts` suma un caso de `multipart` para comprobar que el cuerpo y la cabecera llegan sin cambios (CA-16). El plan gratuito de Cloudflare admite cuerpos de hasta 100 MB.
+`apps/web/worker/index.ts` reenvía hoy el cuerpo con `await request.arrayBuffer()`, que carga el archivo entero en memoria y gasta CPU, limitada en el plan gratuito de Workers. Pasa a `body: request.body` (stream), con `duplex: 'half'` si el tipo lo pide. `worker.test.ts` suma un caso de `multipart` que comprueba que el cuerpo y el `Content-Type` (con su `boundary`) llegan sin cambios (CA-16). El plan gratuito admite cuerpos de hasta 100 MB. La subida de 10 MB se prueba en producción (CA-22).
 
 ## Pruebas
 
 - **`test/contract-documents.db.test.ts`:** los CHECK y el índice de un solo archivo vigente.
-- **`src/modules/contract-documents/contract-document-rules.test.ts`:** la detección de tipo (PDF, `.docx`, `.doc`, un ejecutable renombrado y un ZIP con extensión `.pdf`) y el `Content-Disposition` con nombres con tildes, comillas y barras.
+- **`src/modules/contract-documents/contract-document-rules.test.ts`:**
+  - la detección de tipo: PDF, `.docx` y `.doc`, extensión en mayúsculas, un ejecutable renombrado, un ZIP con extensión `.pdf` y un PDF con extensión `.docx`;
+  - el nombre: latin1 → UTF-8, nombre base sin ruta, vacío y más de 255 caracteres;
+  - el `Content-Disposition` con nombres con tildes, comillas y barras.
 - **`test/contract-documents.test.ts`** (MinIO real):
   - subir los tres tipos y comprobar que el objeto existe con su `Content-Type` y `Content-Disposition` (`HeadObject`);
   - el error de tipo, el de más de 10 MB, el archivo vacío y la falta del campo;
+  - "Contratación.pdf" subido con su tilde vuelve igual en `document.fileName` y en el `Content-Disposition`;
+  - un contrato borrado (`404`), el contrato de una persona inactiva (se acepta) y la subida 21 de la hora (`429`);
   - **reemplazar**: hay dos objetos en el bucket y una sola fila vigente;
   - **eliminar**: el objeto sigue en el bucket;
   - la URL firmada (`fetch` devuelve los mismos bytes y las cabeceras guardadas);
   - `document` en el contrato, la auditoría, el aislamiento (`404`) y OpenAPI.
 - **`test/audit-atomicity.test.ts`:** subir, reemplazar y eliminar, con la auditoría fallida, no dejan fila.
-- **Web:** `contract-document-cell.test.tsx` cubre la validación previa, la confirmación al reemplazar y "Abrir" con la pestaña abierta antes de la respuesta.
+- **Web:** `contract-document-cell.test.tsx` cubre la validación previa, la confirmación al reemplazar, "Abrir" (la pestaña se abre antes de la respuesta y queda con `opener = null`) y "Descargar" (un `<iframe>` con la URL, sin mover la página).
 
-## Despliegue (T007, con confirmación del usuario en cada paso)
+## Despliegue (T008, con confirmación del usuario en cada paso)
 
-1. **Supabase**, en *Settings → Storage*: activar la conexión S3 y crear las llaves S3. Las crea el usuario en el panel; las llaves no pasan por el chat.
-2. **Supabase:** crear el bucket privado `contract-documents`, sin políticas. Se puede hacer desde el panel, o con SQL sobre `storage.buckets` con confirmación del usuario.
-3. **Render:** cargar las cinco variables `S3_*`. Lo hace el usuario, por la misma razón que el paso 1. Tiene que ir **antes** del despliegue: sin ellas, la API nueva no arranca.
-4. Merge, pipeline (migración y despliegue) y verificación manual en producción (CA-22).
+1. La conexión S3, el bucket y las llaves ya existen desde la prueba previa (T003). Se revisa que el bucket siga privado y sin políticas.
+2. **Render:** cargar las cinco variables `S3_*`. Lo hace el usuario, por la misma razón que el paso 1. Tiene que ir **antes** del despliegue: sin ellas, la API nueva no arranca.
+3. Merge, pipeline (migración y despliegue) y verificación manual en producción (CA-22), incluida una subida de 10 MB.
+
+## Operación
+
+- **Recuperar un archivo reemplazado o eliminado:**
+  1. En Supabase (*SQL Editor*): `select storage_key, file_name, deleted_at from anderp.contract_documents where contract_id = '<id>' order by created_at desc;`
+  2. En *Storage → contract-documents*, abrir la ruta `storage_key` y descargar el objeto.
+  3. Para volver a dejarlo vigente, subirlo de nuevo desde la app (queda auditado).
+- **Uso del bucket:** revisar el tamaño en *Settings → Usage* de Supabase. El límite gratuito es 1 GB y, al pasarlo, se restringe todo el proyecto.
+- **Rotar las llaves S3 (CA-15b):** crear un par nuevo en *Settings → Storage → S3 Access Keys*, actualizar las variables en Render, esperar el despliegue y revocar el par anterior.
 
 ## Notas de implementación
 
