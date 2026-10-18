@@ -1,6 +1,6 @@
 # F16 — Pagos de monto fijo · Plan
 
-- **Estado:** Borrador (pendiente de aprobación)
+- **Estado:** Aprobado (2026-10-17)
 - **Spec:** [spec.md](spec.md)
 
 ## Datos (dos migraciones)
