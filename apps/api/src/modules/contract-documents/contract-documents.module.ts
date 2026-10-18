@@ -2,6 +2,9 @@ import { CONTRACT_DOCUMENT_MAX_BYTES, type ContractDocument, ErrorCode } from '@
 import {
   type CallHandler,
   Controller,
+  Delete,
+  Get,
+  HttpCode,
   type ExecutionContext,
   Injectable,
   Module,
@@ -61,6 +64,17 @@ export class ContractDocumentsController {
     @UploadedFile() file: File | undefined,
   ): Promise<ContractDocument> {
     return this.documents.upload(id, file);
+  }
+
+  @Get('url')
+  signedUrl(@Param('id', ParseUUIDPipe) id: string): Promise<{ url: string; expiresAt: string }> {
+    return this.documents.signedUrl(id);
+  }
+
+  @Delete()
+  @HttpCode(204)
+  remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    return this.documents.remove(id);
   }
 }
 

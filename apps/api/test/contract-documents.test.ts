@@ -209,3 +209,97 @@ describe('Subir', () => {
     expect(await objectsOf(contract.id)).toHaveLength(0);
   });
 });
+
+describe('Ver y eliminar', () => {
+  const documentOf = async (c: Contract) =>
+    (
+      (await api().get(`/service-providers/${c.serviceProviderId}/contracts`).expect(200))
+        .body as Contract[]
+    )[0]?.document;
+
+  it('CA-8 el contrato trae su documento vigente, también como contrato vigente de la persona', async () => {
+    expect(await documentOf(contract)).toBeNull();
+    await upload(contract.id, PDF, 'contrato.pdf').expect(201);
+    const document = await documentOf(contract);
+    expect(document).toMatchObject({
+      fileName: 'contrato.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: PDF.length,
+    });
+    expect(Number.isNaN(Date.parse(document?.uploadedAt ?? ''))).toBe(false);
+    const provider = (
+      await api().get(`/service-providers/${contract.serviceProviderId}`).expect(200)
+    ).body as ServiceProvider;
+    expect(provider.activeContract?.document?.fileName).toBe('contrato.pdf');
+  });
+
+  it('CA-9 y CA-10 la URL firmada abre el PDF en línea y descarga el Word con su nombre', async () => {
+    await upload(contract.id, PDF, 'Contratación.pdf').expect(201);
+    const signed = (await api().get(`/contracts/${contract.id}/document/url`).expect(200)).body as {
+      url: string;
+      expiresAt: string;
+    };
+    const expiresIn = Date.parse(signed.expiresAt) - Date.now();
+    expect(expiresIn).toBeGreaterThan(4 * 60 * 1000);
+    expect(expiresIn).toBeLessThanOrEqual(5 * 60 * 1000);
+    const file = await fetch(signed.url);
+    expect(file.headers.get('content-type')).toBe('application/pdf');
+    expect(file.headers.get('content-disposition')).toBe(
+      'inline; filename="Contratacion.pdf"; filename*=UTF-8\'\'Contrataci%C3%B3n.pdf',
+    );
+    expect(Buffer.from(await file.arrayBuffer())).toEqual(PDF);
+
+    await upload(contract.id, DOCX, 'contrato.docx').expect(201);
+    const word = await fetch(
+      (
+        (await api().get(`/contracts/${contract.id}/document/url`).expect(200)).body as {
+          url: string;
+        }
+      ).url,
+    );
+    expect(word.headers.get('content-disposition')).toMatch(/^attachment; /);
+  });
+
+  it('CA-9 y CA-11 sin documento → 404; eliminar conserva el objeto y queda auditado', async () => {
+    await api().get(`/contracts/${contract.id}/document/url`).expect(404);
+    await api().delete(`/contracts/${contract.id}/document`).expect(404);
+
+    await upload(contract.id, PDF, 'contrato.pdf').expect(201);
+    await api().delete(`/contracts/${contract.id}/document`).expect(204);
+    expect(await documentOf(contract)).toBeNull();
+    await api().get(`/contracts/${contract.id}/document/url`).expect(404);
+    expect(await objectsOf(contract.id)).toHaveLength(1);
+
+    const [audit] = await db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.action, 'contract_document.delete'));
+    expect(audit?.changes).toMatchObject({ before: { fileName: 'contrato.pdf' } });
+  });
+
+  it('CA-13 un contrato con documento se puede borrar', async () => {
+    await upload(contract.id, PDF, 'contrato.pdf').expect(201);
+    await api().delete(`/contracts/${contract.id}`).expect(204);
+    await api().get(`/contracts/${contract.id}/document/url`).expect(404);
+  });
+
+  it('CA-14 otra organización no ve ni elimina el documento', async () => {
+    await upload(contract.id, PDF, 'contrato.pdf').expect(201);
+    const other = () => as(t, s.orgB.admin.token);
+    await other().get(`/contracts/${contract.id}/document/url`).expect(404);
+    await other().delete(`/contracts/${contract.id}/document`).expect(404);
+    expect(await documentOf(contract)).not.toBeNull();
+  });
+});
+
+it('los endpoints del documento aparecen en OpenAPI', async () => {
+  const { paths } = (await t.http.get('/api/docs-json').expect(200)).body as {
+    paths: Record<string, unknown>;
+  };
+  expect(Object.keys(paths)).toEqual(
+    expect.arrayContaining([
+      '/api/v1/contracts/{id}/document',
+      '/api/v1/contracts/{id}/document/url',
+    ]),
+  );
+});

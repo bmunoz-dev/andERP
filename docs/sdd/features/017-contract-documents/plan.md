@@ -138,3 +138,4 @@ Antes de escribir la API se confirma en el proyecto real lo que el diseño supon
   - `DocumentUploadInterceptor` extiende `FileInterceptor` y traduce su `PayloadTooLargeException` a `422 DOCUMENT_TOO_LARGE`.
   - La prueba con "Contratación firmada.pdf" confirma que multer 2.4 entrega el nombre en latin1 y que `normalizeFileName` lo corrige.
   - Las pruebas de la API se escribieron y se vieron fallar (404) antes del controlador. Las de auditoría atómica se agregaron después del servicio y pasaron al primer intento.
+- **T006:** el campo `document` sale de `json_build_object` en `contractColumns`, así que llega también en el contrato vigente de la persona sin tocar sus consultas. Su `uploadedAt` viene en el formato JSON de Postgres (con zona horaria), no en el ISO con `Z` de la respuesta de subida; los dos son fechas válidas para la web.

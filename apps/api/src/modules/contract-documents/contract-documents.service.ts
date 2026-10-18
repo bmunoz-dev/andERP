@@ -12,8 +12,15 @@ import { contractDocuments, providerContracts } from '../../db/schema';
 import { OrgScope } from '../../shared/db/org-scope';
 import { DomainError } from '../../shared/errors/domain-error';
 import { AUDIT_LOGGER, type AuditLogger } from '../audit/audit.service';
-import { detectDocumentType, normalizeFileName } from './contract-document-rules';
+import {
+  contentDisposition,
+  detectDocumentType,
+  normalizeFileName,
+} from './contract-document-rules';
 import { ObjectStorage } from './object-storage';
+
+/** F17 CA-9: la URL firmada dura 5 minutos. */
+const URL_TTL_SECONDS = 300;
 
 /** F17 CA-6c: el bucket solo crece y pasar el 1 GB gratuito restringe todo el proyecto. */
 const UPLOADS_PER_HOUR = 20;
@@ -110,6 +117,56 @@ export class ContractDocumentsService {
         uploadedAt: row.createdAt.toISOString(),
       };
     });
+  }
+
+  /** CA-9: la disposición (abrir el PDF, descargar el Word) va en la URL firmada. */
+  async signedUrl(contractId: string): Promise<{ url: string; expiresAt: string }> {
+    const document = await this.current(contractId);
+    const expiresAt = new Date(Date.now() + URL_TTL_SECONDS * 1000).toISOString();
+    const url = await this.storage.signedUrl(
+      document.storageKey,
+      URL_TTL_SECONDS,
+      contentDisposition(document.contentType as ContractDocumentType, document.fileName),
+    );
+    return { url, expiresAt };
+  }
+
+  /** CA-11: solo marca la fila; el objeto se queda en el bucket. */
+  async remove(contractId: string): Promise<void> {
+    await this.assertContract(contractId);
+    await this.db.transaction(async (tx) => {
+      // Si otro borrado confirmó primero, la fila ya no cumple el WHERE: 404 y sin auditoría.
+      const [before] = await tx
+        .update(contractDocuments)
+        .set(this.scope.forSoftDelete())
+        .where(
+          and(this.scope.where(contractDocuments), eq(contractDocuments.contractId, contractId)),
+        )
+        .returning();
+      if (!before) throw notFound();
+      await this.audit.log(
+        {
+          action: 'contract_document.delete',
+          entityType: 'contract_document',
+          entityId: before.id,
+          changes: { before: auditable(before) },
+        },
+        tx,
+      );
+    });
+  }
+
+  /** El documento vigente de un contrato vigente de la organización (CA-13, CA-14). */
+  private async current(contractId: string) {
+    await this.assertContract(contractId);
+    const [document] = await this.db
+      .select()
+      .from(contractDocuments)
+      .where(
+        and(this.scope.where(contractDocuments), eq(contractDocuments.contractId, contractId)),
+      );
+    if (!document) throw notFound();
+    return document;
   }
 
   private async assertContract(contractId: string): Promise<void> {

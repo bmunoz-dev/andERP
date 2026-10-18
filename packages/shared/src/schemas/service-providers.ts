@@ -83,38 +83,6 @@ export type CreateContract = z.infer<typeof createContractSchema>;
 export const updateContractSchema = createContractSchema.partial();
 export type UpdateContract = z.infer<typeof updateContractSchema>;
 
-export const contractSchema = z.object({
-  id: z.uuid(),
-  serviceProviderId: z.uuid(),
-  startDate: z.string(),
-  endDate: z.string().nullable(),
-  workAgreement: z.string(),
-  paymentFrequency: paymentFrequencySchema,
-  monthlyAmount: z.string(),
-  paymentMode: paymentModeSchema,
-  /** F16 CA-20: con pagos no borrados, la forma de pago ya no cambia. */
-  hasPayments: z.boolean(),
-  status: contractStatusSchema,
-  /** F10 CA-5: lo pagado en el mes trabajado actual (Bogotá). Puede superar `monthlyAmount`. */
-  paidThisMonth: z.string(),
-});
-export type Contract = z.infer<typeof contractSchema>;
-
-export const serviceProviderSchema = z.object({
-  id: z.uuid(),
-  name: z.string(),
-  documentType: z.object({ id: z.uuid(), code: z.string() }),
-  documentNumber: z.string(),
-  description: z.string().nullable(),
-  bank: z.object({ id: z.uuid(), name: z.string() }).nullable(),
-  accountType: z.object({ id: z.uuid(), name: z.string() }).nullable(),
-  accountNumber: z.string().nullable(),
-  isActive: z.boolean(),
-  /** Contrato vigente hoy (en Bogotá), si lo hay. */
-  activeContract: contractSchema.nullable(),
-});
-export type ServiceProvider = z.infer<typeof serviceProviderSchema>;
-
 // ── F17: documento del contrato ──────────────────────────────────────────────────────────
 
 export const CONTRACT_DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
@@ -135,3 +103,37 @@ export const contractDocumentSchema = z.object({
   uploadedAt: z.string(),
 });
 export type ContractDocument = z.infer<typeof contractDocumentSchema>;
+
+export const contractSchema = z.object({
+  id: z.uuid(),
+  serviceProviderId: z.uuid(),
+  startDate: z.string(),
+  endDate: z.string().nullable(),
+  workAgreement: z.string(),
+  paymentFrequency: paymentFrequencySchema,
+  monthlyAmount: z.string(),
+  paymentMode: paymentModeSchema,
+  /** F16 CA-20: con pagos no borrados, la forma de pago ya no cambia. */
+  hasPayments: z.boolean(),
+  status: contractStatusSchema,
+  /** F10 CA-5: lo pagado en el mes trabajado actual (Bogotá). Puede superar `monthlyAmount`. */
+  paidThisMonth: z.string(),
+  /** F17 CA-8: el documento vigente, si lo hay. */
+  document: contractDocumentSchema.nullable(),
+});
+export type Contract = z.infer<typeof contractSchema>;
+
+export const serviceProviderSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  documentType: z.object({ id: z.uuid(), code: z.string() }),
+  documentNumber: z.string(),
+  description: z.string().nullable(),
+  bank: z.object({ id: z.uuid(), name: z.string() }).nullable(),
+  accountType: z.object({ id: z.uuid(), name: z.string() }).nullable(),
+  accountNumber: z.string().nullable(),
+  isActive: z.boolean(),
+  /** Contrato vigente hoy (en Bogotá), si lo hay. */
+  activeContract: contractSchema.nullable(),
+});
+export type ServiceProvider = z.infer<typeof serviceProviderSchema>;
