@@ -16,3 +16,5 @@ export const paymentFrequency = anderp.enum('payment_frequency', [
   'monthly',
   'bimonthly',
 ]);
+/** F16: el contrato se paga por días trabajados (`fee_payments`) o con monto fijo (`fixed_payments`). */
+export const paymentMode = anderp.enum('payment_mode', ['daily', 'fixed']);

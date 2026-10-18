@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { FeePaymentForm } from '@/components/fee-payments/fee-payment-form';
 import { PageHeader } from '@/components/page-header';
 
-export const Route = createFileRoute('/_app/honorarios/nuevo')({
+export const Route = createFileRoute('/_app/pagos/nuevo')({
   component: NewFeePaymentPage,
 });
 
@@ -11,10 +11,10 @@ function NewFeePaymentPage() {
   return (
     <>
       <PageHeader
-        title="Nuevo pago de honorarios"
-        description="Elige la semana, el prestador y el valor de cada día trabajado."
+        title="Nuevo pago por días"
+        description="Elige la semana, la persona y el valor de cada día trabajado."
       />
-      <FeePaymentForm onSaved={() => navigate({ to: '/honorarios' })} />
+      <FeePaymentForm onSaved={() => navigate({ to: '/pagos' })} />
     </>
   );
 }

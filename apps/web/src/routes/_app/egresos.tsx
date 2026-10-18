@@ -56,7 +56,7 @@ function ExpensesPage() {
     <>
       <PageHeader
         title="Egresos"
-        description="Egresos del mes por departamento y semana, incluidos los honorarios pagados."
+        description="Egresos del mes por departamento y semana, incluidos los pagos al personal."
         actions={
           <Button
             onClick={() => {

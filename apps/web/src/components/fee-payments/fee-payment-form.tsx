@@ -63,6 +63,8 @@ export function FeePaymentForm({
   const contracts = useQuery({
     queryKey: feePaymentKeys.contracts(range?.start ?? '', range?.end ?? '', payment?.id),
     queryFn: () => listOverlappingContracts(range?.start ?? '', range?.end ?? '', payment?.id),
+    // F16: los contratos de monto fijo se pagan en la otra pestaña.
+    select: (all) => all.filter((c) => c.paymentMode === 'daily'),
     enabled: range !== null,
   });
   const contract = contracts.data?.find((c) => c.id === contractId);
@@ -167,14 +169,14 @@ export function FeePaymentForm({
       </section>
 
       <SelectField
-        label="Prestador (contrato vigente en esa semana)"
+        label="Persona (contrato por días vigente en esa semana)"
         disabled={editing || noContracts}
         placeholder={
           contracts.isPending
             ? 'Cargando…'
             : noContracts
-              ? 'Ningún prestador tiene contrato vigente en esa semana'
-              : 'Elige un prestador'
+              ? 'Nadie tiene un contrato por días vigente en esa semana'
+              : 'Elige una persona'
         }
         value={contractId}
         onChange={setContractId}
@@ -185,8 +187,8 @@ export function FeePaymentForm({
       />
       {noContracts && (
         <p className="-mt-4 text-sm text-muted-foreground">
-          Solo aparecen prestadores cuyo contrato cubre algún día de la semana elegida. Revisa las
-          fechas del contrato en Prestadores o elige otra semana.
+          Solo aparecen personas con contrato por días que cubre algún día de la semana elegida.
+          Revisa las fechas del contrato en Personal o elige otra semana.
         </p>
       )}
       {editing && (

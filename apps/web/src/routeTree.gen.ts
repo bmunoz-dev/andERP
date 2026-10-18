@@ -23,13 +23,13 @@ import { Route as AppPlataformaRouteRouteImport } from './routes/_app/plataforma
 import { Route as AppResponsablesRouteImport } from './routes/_app/responsables'
 import { Route as AppConfiguracionCategoriasRouteImport } from './routes/_app/configuracion/categorias'
 import { Route as AppConfiguracionUsuariosRouteImport } from './routes/_app/configuracion/usuarios'
-import { Route as AppHonorariosIndexRouteImport } from './routes/_app/honorarios/index'
-import { Route as AppHonorariosIdRouteImport } from './routes/_app/honorarios/$id'
-import { Route as AppHonorariosNuevoRouteImport } from './routes/_app/honorarios/nuevo'
+import { Route as AppPagosIndexRouteImport } from './routes/_app/pagos/index'
+import { Route as AppPagosIdRouteImport } from './routes/_app/pagos/$id'
+import { Route as AppPagosNuevoRouteImport } from './routes/_app/pagos/nuevo'
+import { Route as AppPersonalIndexRouteImport } from './routes/_app/personal/index'
+import { Route as AppPersonalIdRouteImport } from './routes/_app/personal/$id'
 import { Route as AppPlataformaCatalogosRouteImport } from './routes/_app/plataforma/catalogos'
 import { Route as AppPlataformaOrganizacionesRouteImport } from './routes/_app/plataforma/organizaciones'
-import { Route as AppPrestadoresIndexRouteImport } from './routes/_app/prestadores/index'
-import { Route as AppPrestadoresIdRouteImport } from './routes/_app/prestadores/$id'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -102,19 +102,29 @@ const AppConfiguracionUsuariosRoute =
     path: '/configuracion/usuarios',
     getParentRoute: () => AppRoute,
   } as any)
-const AppHonorariosIndexRoute = AppHonorariosIndexRouteImport.update({
-  id: '/honorarios/',
-  path: '/honorarios/',
+const AppPagosIndexRoute = AppPagosIndexRouteImport.update({
+  id: '/pagos/',
+  path: '/pagos/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppHonorariosIdRoute = AppHonorariosIdRouteImport.update({
-  id: '/honorarios/$id',
-  path: '/honorarios/$id',
+const AppPagosIdRoute = AppPagosIdRouteImport.update({
+  id: '/pagos/$id',
+  path: '/pagos/$id',
   getParentRoute: () => AppRoute,
 } as any)
-const AppHonorariosNuevoRoute = AppHonorariosNuevoRouteImport.update({
-  id: '/honorarios/nuevo',
-  path: '/honorarios/nuevo',
+const AppPagosNuevoRoute = AppPagosNuevoRouteImport.update({
+  id: '/pagos/nuevo',
+  path: '/pagos/nuevo',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPersonalIndexRoute = AppPersonalIndexRouteImport.update({
+  id: '/personal/',
+  path: '/personal/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPersonalIdRoute = AppPersonalIdRouteImport.update({
+  id: '/personal/$id',
+  path: '/personal/$id',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPlataformaCatalogosRoute = AppPlataformaCatalogosRouteImport.update({
@@ -128,16 +138,6 @@ const AppPlataformaOrganizacionesRoute =
     path: '/organizaciones',
     getParentRoute: () => AppPlataformaRouteRoute,
   } as any)
-const AppPrestadoresIndexRoute = AppPrestadoresIndexRouteImport.update({
-  id: '/prestadores/',
-  path: '/prestadores/',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPrestadoresIdRoute = AppPrestadoresIdRouteImport.update({
-  id: '/prestadores/$id',
-  path: '/prestadores/$id',
-  getParentRoute: () => AppRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -153,13 +153,13 @@ export interface FileRoutesByFullPath {
   '/responsables': typeof AppResponsablesRoute
   '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
   '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
-  '/honorarios/$id': typeof AppHonorariosIdRoute
-  '/honorarios/nuevo': typeof AppHonorariosNuevoRoute
+  '/pagos/$id': typeof AppPagosIdRoute
+  '/pagos/nuevo': typeof AppPagosNuevoRoute
+  '/personal/$id': typeof AppPersonalIdRoute
   '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
   '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
-  '/prestadores/$id': typeof AppPrestadoresIdRoute
-  '/honorarios/': typeof AppHonorariosIndexRoute
-  '/prestadores/': typeof AppPrestadoresIndexRoute
+  '/pagos/': typeof AppPagosIndexRoute
+  '/personal/': typeof AppPersonalIndexRoute
 }
 export interface FileRoutesByTo {
   '/activar': typeof ActivarRoute
@@ -175,13 +175,13 @@ export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
   '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
   '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
-  '/honorarios/$id': typeof AppHonorariosIdRoute
-  '/honorarios/nuevo': typeof AppHonorariosNuevoRoute
+  '/pagos/$id': typeof AppPagosIdRoute
+  '/pagos/nuevo': typeof AppPagosNuevoRoute
+  '/personal/$id': typeof AppPersonalIdRoute
   '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
   '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
-  '/prestadores/$id': typeof AppPrestadoresIdRoute
-  '/honorarios': typeof AppHonorariosIndexRoute
-  '/prestadores': typeof AppPrestadoresIndexRoute
+  '/pagos': typeof AppPagosIndexRoute
+  '/personal': typeof AppPersonalIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -199,13 +199,13 @@ export interface FileRoutesById {
   '/_app/': typeof AppIndexRoute
   '/_app/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
   '/_app/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
-  '/_app/honorarios/$id': typeof AppHonorariosIdRoute
-  '/_app/honorarios/nuevo': typeof AppHonorariosNuevoRoute
+  '/_app/pagos/$id': typeof AppPagosIdRoute
+  '/_app/pagos/nuevo': typeof AppPagosNuevoRoute
+  '/_app/personal/$id': typeof AppPersonalIdRoute
   '/_app/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
   '/_app/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
-  '/_app/prestadores/$id': typeof AppPrestadoresIdRoute
-  '/_app/honorarios/': typeof AppHonorariosIndexRoute
-  '/_app/prestadores/': typeof AppPrestadoresIndexRoute
+  '/_app/pagos/': typeof AppPagosIndexRoute
+  '/_app/personal/': typeof AppPersonalIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -223,13 +223,13 @@ export interface FileRouteTypes {
     | '/responsables'
     | '/configuracion/categorias'
     | '/configuracion/usuarios'
-    | '/honorarios/$id'
-    | '/honorarios/nuevo'
+    | '/pagos/$id'
+    | '/pagos/nuevo'
+    | '/personal/$id'
     | '/plataforma/catalogos'
     | '/plataforma/organizaciones'
-    | '/prestadores/$id'
-    | '/honorarios/'
-    | '/prestadores/'
+    | '/pagos/'
+    | '/personal/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/activar'
@@ -245,13 +245,13 @@ export interface FileRouteTypes {
     | '/'
     | '/configuracion/categorias'
     | '/configuracion/usuarios'
-    | '/honorarios/$id'
-    | '/honorarios/nuevo'
+    | '/pagos/$id'
+    | '/pagos/nuevo'
+    | '/personal/$id'
     | '/plataforma/catalogos'
     | '/plataforma/organizaciones'
-    | '/prestadores/$id'
-    | '/honorarios'
-    | '/prestadores'
+    | '/pagos'
+    | '/personal'
   id:
     | '__root__'
     | '/_app'
@@ -268,13 +268,13 @@ export interface FileRouteTypes {
     | '/_app/'
     | '/_app/configuracion/categorias'
     | '/_app/configuracion/usuarios'
-    | '/_app/honorarios/$id'
-    | '/_app/honorarios/nuevo'
+    | '/_app/pagos/$id'
+    | '/_app/pagos/nuevo'
+    | '/_app/personal/$id'
     | '/_app/plataforma/catalogos'
     | '/_app/plataforma/organizaciones'
-    | '/_app/prestadores/$id'
-    | '/_app/honorarios/'
-    | '/_app/prestadores/'
+    | '/_app/pagos/'
+    | '/_app/personal/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -385,25 +385,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfiguracionUsuariosRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/honorarios/': {
-      id: '/_app/honorarios/'
-      path: '/honorarios'
-      fullPath: '/honorarios/'
-      preLoaderRoute: typeof AppHonorariosIndexRouteImport
+    '/_app/pagos/': {
+      id: '/_app/pagos/'
+      path: '/pagos'
+      fullPath: '/pagos/'
+      preLoaderRoute: typeof AppPagosIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/honorarios/$id': {
-      id: '/_app/honorarios/$id'
-      path: '/honorarios/$id'
-      fullPath: '/honorarios/$id'
-      preLoaderRoute: typeof AppHonorariosIdRouteImport
+    '/_app/pagos/$id': {
+      id: '/_app/pagos/$id'
+      path: '/pagos/$id'
+      fullPath: '/pagos/$id'
+      preLoaderRoute: typeof AppPagosIdRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/honorarios/nuevo': {
-      id: '/_app/honorarios/nuevo'
-      path: '/honorarios/nuevo'
-      fullPath: '/honorarios/nuevo'
-      preLoaderRoute: typeof AppHonorariosNuevoRouteImport
+    '/_app/pagos/nuevo': {
+      id: '/_app/pagos/nuevo'
+      path: '/pagos/nuevo'
+      fullPath: '/pagos/nuevo'
+      preLoaderRoute: typeof AppPagosNuevoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/personal/': {
+      id: '/_app/personal/'
+      path: '/personal'
+      fullPath: '/personal/'
+      preLoaderRoute: typeof AppPersonalIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/personal/$id': {
+      id: '/_app/personal/$id'
+      path: '/personal/$id'
+      fullPath: '/personal/$id'
+      preLoaderRoute: typeof AppPersonalIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/plataforma/catalogos': {
@@ -419,20 +433,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/plataforma/organizaciones'
       preLoaderRoute: typeof AppPlataformaOrganizacionesRouteImport
       parentRoute: typeof AppPlataformaRouteRoute
-    }
-    '/_app/prestadores/': {
-      id: '/_app/prestadores/'
-      path: '/prestadores'
-      fullPath: '/prestadores/'
-      preLoaderRoute: typeof AppPrestadoresIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/prestadores/$id': {
-      id: '/_app/prestadores/$id'
-      path: '/prestadores/$id'
-      fullPath: '/prestadores/$id'
-      preLoaderRoute: typeof AppPrestadoresIdRouteImport
-      parentRoute: typeof AppRoute
     }
   }
 }
@@ -460,11 +460,11 @@ interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppConfiguracionCategoriasRoute: typeof AppConfiguracionCategoriasRoute
   AppConfiguracionUsuariosRoute: typeof AppConfiguracionUsuariosRoute
-  AppHonorariosIdRoute: typeof AppHonorariosIdRoute
-  AppHonorariosNuevoRoute: typeof AppHonorariosNuevoRoute
-  AppPrestadoresIdRoute: typeof AppPrestadoresIdRoute
-  AppHonorariosIndexRoute: typeof AppHonorariosIndexRoute
-  AppPrestadoresIndexRoute: typeof AppPrestadoresIndexRoute
+  AppPagosIdRoute: typeof AppPagosIdRoute
+  AppPagosNuevoRoute: typeof AppPagosNuevoRoute
+  AppPersonalIdRoute: typeof AppPersonalIdRoute
+  AppPagosIndexRoute: typeof AppPagosIndexRoute
+  AppPersonalIndexRoute: typeof AppPersonalIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -477,11 +477,11 @@ const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
   AppConfiguracionCategoriasRoute: AppConfiguracionCategoriasRoute,
   AppConfiguracionUsuariosRoute: AppConfiguracionUsuariosRoute,
-  AppHonorariosIdRoute: AppHonorariosIdRoute,
-  AppHonorariosNuevoRoute: AppHonorariosNuevoRoute,
-  AppPrestadoresIdRoute: AppPrestadoresIdRoute,
-  AppHonorariosIndexRoute: AppHonorariosIndexRoute,
-  AppPrestadoresIndexRoute: AppPrestadoresIndexRoute,
+  AppPagosIdRoute: AppPagosIdRoute,
+  AppPagosNuevoRoute: AppPagosNuevoRoute,
+  AppPersonalIdRoute: AppPersonalIdRoute,
+  AppPagosIndexRoute: AppPagosIndexRoute,
+  AppPersonalIndexRoute: AppPersonalIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

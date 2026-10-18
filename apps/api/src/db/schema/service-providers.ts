@@ -14,7 +14,7 @@ import {
 import { auditColumns, id, organizationId } from '../columns';
 import { accountTypes, banks, documentTypes } from './catalogs';
 import { organizations } from './core';
-import { anderp, paymentFrequency } from './enums';
+import { anderp, paymentFrequency, paymentMode } from './enums';
 
 /** Prestadores de servicios (design.md §5.5). La cuenta bancaria va completa o no va. */
 export const serviceProviders = anderp.table(
@@ -64,6 +64,7 @@ export const providerContracts = anderp.table(
     paymentFrequency: paymentFrequency().notNull(),
     /** F10: monto mensual de referencia; no limita lo que se paga. */
     monthlyAmount: numeric({ precision: 14, scale: 2 }).notNull(),
+    paymentMode: paymentMode().notNull().default('daily'),
     ...auditColumns,
   },
   (t) => [

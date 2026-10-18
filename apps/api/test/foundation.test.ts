@@ -182,6 +182,7 @@ describe('CA-8 migración base', () => {
         'obligation_frequency',
         'organization_status',
         'payment_frequency',
+        'payment_mode',
         'user_status',
       ]);
     });

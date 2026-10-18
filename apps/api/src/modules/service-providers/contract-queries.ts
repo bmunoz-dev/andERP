@@ -4,6 +4,7 @@ import {
   contractMonthTotals,
   feePaymentTotals,
   feePayments,
+  fixedPayments,
   providerContracts,
 } from '../../db/schema';
 
@@ -43,6 +44,12 @@ export function contractColumns(today: string) {
     workAgreement: providerContracts.workAgreement,
     paymentFrequency: providerContracts.paymentFrequency,
     monthlyAmount: providerContracts.monthlyAmount,
+    paymentMode: providerContracts.paymentMode,
+    hasPayments: sql<boolean>`(
+      exists (select 1 from ${feePayments}
+               where ${feePayments.contractId} = ${providerContracts.id} and ${feePayments.deletedAt} is null)
+      or exists (select 1 from ${fixedPayments}
+               where ${fixedPayments.contractId} = ${providerContracts.id} and ${fixedPayments.deletedAt} is null))`,
     status: contractStatusSql(today),
     paidThisMonth: paidOrZero(contractMonthTotals.paidAmount),
   };
@@ -60,17 +67,27 @@ export function monthTotalsJoin(today: string): SQL {
 }
 
 /**
- * Lo pagado en un mes trabajado (F10 CA-6), opcionalmente sin un pago: al editarlo no se suma
- * dos veces. `v_fee_payment_totals` ya excluye los pagos borrados.
+ * Lo pagado en un mes trabajado (F10 CA-6), por días o de monto fijo (F16), opcionalmente sin un
+ * pago: al editarlo no se suma dos veces. `v_fee_payment_totals` ya excluye los pagos borrados.
  */
 export function paidInMonthSql(year: number, month: number, excludePayment?: string) {
   return paidOrZero(sql`(
-    select sum(${feePaymentTotals.totalAmount})
-      from ${feePaymentTotals}
-      join ${feePayments} on ${feePayments.id} = ${feePaymentTotals.feePaymentId}
-     where ${feePayments.contractId} = ${providerContracts.id}
-       and ${feePayments.periodYear} = ${year}
-       and ${feePayments.periodMonth} = ${month}
-       ${excludePayment ? sql`and ${feePayments.id} <> ${excludePayment}` : sql``}
+    select sum(amount) from (
+      select ${feePaymentTotals.totalAmount} as amount
+        from ${feePaymentTotals}
+        join ${feePayments} on ${feePayments.id} = ${feePaymentTotals.feePaymentId}
+       where ${feePayments.contractId} = ${providerContracts.id}
+         and ${feePayments.periodYear} = ${year}
+         and ${feePayments.periodMonth} = ${month}
+         ${excludePayment ? sql`and ${feePayments.id} <> ${excludePayment}` : sql``}
+      union all
+      select ${fixedPayments.amount}
+        from ${fixedPayments}
+       where ${fixedPayments.contractId} = ${providerContracts.id}
+         and ${fixedPayments.deletedAt} is null
+         and ${fixedPayments.periodYear} = ${year}
+         and ${fixedPayments.periodMonth} = ${month}
+         ${excludePayment ? sql`and ${fixedPayments.id} <> ${excludePayment}` : sql``}
+    ) paid
   )`);
 }

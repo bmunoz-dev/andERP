@@ -41,15 +41,15 @@ const MESSAGES = {
   CANNOT_DEACTIVATE_SELF: 'No puedes desactivar tu propio usuario.',
   LAST_ADMIN: 'La organización necesita al menos un administrador activo.',
   INVITE_NOT_PENDING: 'Esa persona ya activó su cuenta; no hace falta reenviar la invitación.',
-  // F03 — prestadores y contratos
+  // F03 — personal (prestadores) y contratos
   INCOMPLETE_BANK_ACCOUNT:
     'La cuenta bancaria va completa o no va: indica banco, tipo de cuenta y número, o deja los tres vacíos.',
-  DUPLICATE_DOCUMENT: 'Ya hay un prestador con ese tipo y número de documento.',
+  DUPLICATE_DOCUMENT: 'Ya hay una persona con ese tipo y número de documento.',
   INACTIVE_CATALOG_VALUE:
     'Uno de los valores elegidos (banco, tipo de cuenta o de documento) está desactivado.',
-  PROVIDER_HAS_CONTRACTS: 'Este prestador tiene contratos. Elimina primero sus contratos.',
+  PROVIDER_HAS_CONTRACTS: 'Esta persona tiene contratos. Elimina primero sus contratos.',
   INVALID_DATE_RANGE: 'La fecha de fin no puede ser anterior a la de inicio.',
-  CONTRACT_OVERLAP: 'Las fechas se cruzan con otro contrato de este prestador.',
+  CONTRACT_OVERLAP: 'Las fechas se cruzan con otro contrato de esta persona.',
   // F04 — pagos de honorarios
   FEE_PAYMENT_WITHOUT_DAYS: 'Ingresa el valor de al menos un día.',
   DUPLICATE_WORK_DATE: 'Hay una fecha repetida en el pago.',
@@ -59,10 +59,16 @@ const MESSAGES = {
     'Esa semana ya está pagada para este contrato. Edita el pago existente.',
   FEE_PAYMENT_PERIOD_IMMUTABLE:
     'El contrato y la semana de un pago no se cambian. Elimina el pago y créalo de nuevo.',
-  CONTRACT_HAS_PAYMENTS: 'Este contrato tiene pagos de honorarios. Elimina primero esos pagos.',
+  CONTRACT_HAS_PAYMENTS: 'Este contrato tiene pagos. Elimina primero esos pagos.',
   CONTRACT_DATES_EXCLUDE_PAYMENTS: 'Con esas fechas quedarían días ya pagados fuera del contrato.',
+  CONTRACT_PAYMENT_MODE_LOCKED:
+    'El contrato ya tiene pagos: su forma de pago no se cambia. Termina el contrato y crea otro.',
+  CONTRACT_PAYMENT_MODE_MISMATCH: 'Ese pago no corresponde a la forma de pago del contrato.',
+  FIXED_PAYMENT_OUTSIDE_CONTRACT: 'El mes trabajado no está dentro de las fechas del contrato.',
+  FIXED_PAYMENT_PERIOD_IMMUTABLE:
+    'El contrato y el mes de un pago no se cambian. Elimina el pago y créalo de nuevo.',
   FEES_CATEGORY_NOT_ALLOWED:
-    'Los honorarios se registran desde la sección Honorarios, no como egreso manual.',
+    'Los pagos al personal se registran desde la sección Pagos, no como egreso manual.',
   INACTIVE_CATEGORY: 'Ese departamento está inactivo. Elige otro o actívalo en Configuración.',
   CATEGORY_HAS_EXPENSES:
     'Ese departamento tiene egresos registrados y no se puede borrar. Puedes desactivarlo.',
@@ -77,9 +83,9 @@ const MESSAGES = {
   PROXY_MISCONFIGURED:
     'La web no está conectada con el servidor (falta configuración en Cloudflare). Avisa al administrador.',
   PROVIDER_INACTIVE:
-    'Este prestador está inactivo y no puede recibir contratos nuevos. Actívalo primero.',
+    'Esta persona está inactiva y no puede recibir contratos nuevos. Actívala primero.',
   PROVIDER_HAS_ACTIVE_CONTRACT:
-    'El prestador tiene un contrato vigente o futuro. Ponle una fecha de fin ya cumplida antes de desactivarlo.',
+    'La persona tiene un contrato vigente o futuro. Ponle una fecha de fin ya cumplida antes de desactivarlo.',
   CLICKIU_INSUFFICIENT_BALANCE: 'El saldo de Clic Kiu no alcanza para este movimiento.',
   CLICKIU_MOVEMENT_TYPE_IMMUTABLE:
     'Una recarga no se puede convertir en venta ni al revés. Borra el movimiento y créalo de nuevo.',

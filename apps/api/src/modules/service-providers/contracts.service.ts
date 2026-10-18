@@ -25,6 +25,7 @@ function auditable(c: Contract) {
     workAgreement: c.workAgreement,
     paymentFrequency: c.paymentFrequency,
     monthlyAmount: c.monthlyAmount,
+    paymentMode: c.paymentMode,
   };
 }
 
@@ -69,6 +70,7 @@ export class ContractsService {
         startDate: providerContracts.startDate,
         endDate: providerContracts.endDate,
         monthlyAmount: providerContracts.monthlyAmount,
+        paymentMode: providerContracts.paymentMode,
         paidInMonth: paidInMonthSql(
           Number(start.slice(0, 4)),
           Number(start.slice(5, 7)),
@@ -118,6 +120,7 @@ export class ContractsService {
             workAgreement: input.workAgreement,
             paymentFrequency: input.paymentFrequency,
             monthlyAmount: input.monthlyAmount,
+            ...(input.paymentMode !== undefined ? { paymentMode: input.paymentMode } : {}),
           }),
         )
         .returning({ id: providerContracts.id });
@@ -160,6 +163,8 @@ export class ContractsService {
             ...(changes.monthlyAmount !== undefined
               ? { monthlyAmount: changes.monthlyAmount }
               : {}),
+            // F16 CA-3: con pagos, el trigger `provider_contracts_protect_payments` lo rechaza.
+            ...(changes.paymentMode !== undefined ? { paymentMode: changes.paymentMode } : {}),
           }),
         )
         .where(and(this.scope.where(providerContracts), eq(providerContracts.id, id)));

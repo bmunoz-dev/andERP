@@ -7,8 +7,8 @@ describe('navigationFor (F02 CA-18)', () => {
     expect(groups.map((g) => g.label)).toEqual(['Operación', 'Configuración']);
     expect(groups[0]?.items.map((i) => i.label)).toEqual([
       'Egresos',
-      'Honorarios',
-      'Prestadores',
+      'Pagos',
+      'Personal',
       'Credenciales',
       'Responsables',
       'Clic Kiu',

@@ -18,6 +18,7 @@ const contract: ContractOption = {
   monthlyAmount: '1000000.00',
   // Lo ya pagado en agosto sin contar el pago que se edita.
   paidInMonth: '700000.00',
+  paymentMode: 'daily',
 };
 
 const payment: FeePayment = {

@@ -4,6 +4,7 @@ import {
   check,
   date,
   foreignKey,
+  index,
   numeric,
   smallint,
   text,
@@ -81,6 +82,34 @@ export const feePaymentDays = anderp.table(
     }).onDelete('cascade'),
     unique('fee_payment_days_date_uq').on(t.feePaymentId, t.workDate),
     check('fee_payment_days_amount_ck', sql`${t.amount} >= 0`),
+  ],
+);
+
+/** F16: pago de monto fijo por mes trabajado; varios por contrato y mes (quincenas, anticipos). */
+export const fixedPayments = anderp.table(
+  'fixed_payments',
+  {
+    id: id(),
+    organizationId: organizationId().references(() => organizations.id),
+    contractId: uuid().notNull(),
+    periodYear: smallint().notNull(),
+    periodMonth: smallint().notNull(),
+    paymentDate: date({ mode: 'string' }).notNull(),
+    amount: numeric({ precision: 14, scale: 2 }).notNull(),
+    notes: text(),
+    ...auditColumns,
+  },
+  (t) => [
+    unique('fixed_payments_org_id_uq').on(t.organizationId, t.id),
+    foreignKey({
+      name: 'fixed_payments_contract_fk',
+      columns: [t.organizationId, t.contractId],
+      foreignColumns: [providerContracts.organizationId, providerContracts.id],
+    }),
+    index('fixed_payments_contract_period_idx').on(t.contractId, t.periodYear, t.periodMonth),
+    check('fixed_payments_year_ck', sql`${t.periodYear} between 2000 and 2100`),
+    check('fixed_payments_month_ck', sql`${t.periodMonth} between 1 and 12`),
+    check('fixed_payments_amount_ck', sql`${t.amount} > 0`),
   ],
 );
 
