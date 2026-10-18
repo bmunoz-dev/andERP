@@ -8,3 +8,4 @@ export * from './credentials';
 export * from './clickiu';
 export * from './obligations';
 export * from './notifications';
+export * from './contract-documents';

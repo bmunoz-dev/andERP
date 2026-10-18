@@ -3,7 +3,7 @@
 - **Rama:** `feat/017-contract-documents`
 - **Plan:** [plan.md](plan.md)
 
-- [ ] F17-T001 [TDD] Migración de `contract_documents` (CHECK, índice de un archivo vigente y FK compuesta) y Drizzle. Pruebas en SQL.
+- [x] F17-T001 [TDD] Migración de `contract_documents` (CHECK, índice de un archivo vigente y FK compuesta) y Drizzle. Pruebas en SQL.
       Verificación: CA-1
 - [ ] F17-T002 [TDD] Almacenamiento: dependencias S3, `ObjectStorage` (`put` y `signedUrl`), variables `S3_*` con su validación y redacción, MinIO en `docker-compose` y en Testcontainers.
       Depende de: F17-T001 · Verificación: CA-15

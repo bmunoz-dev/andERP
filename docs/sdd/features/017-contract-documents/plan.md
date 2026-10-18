@@ -1,6 +1,6 @@
 # F17 — Documento del contrato · Plan
 
-- **Estado:** Borrador (pendiente de aprobación)
+- **Estado:** Aprobado (2026-10-18)
 - **Spec:** [spec.md](spec.md)
 
 ## Datos (una migración generada)
