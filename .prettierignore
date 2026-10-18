@@ -8,3 +8,6 @@ apps/web/src/routeTree.gen.ts
 *.md
 apps/web/src/components/ui
 apps/web/src/hooks/use-mobile.ts
+
+# Skills de terceros: se versionan tal como las publica su autor
+.claude/skills
