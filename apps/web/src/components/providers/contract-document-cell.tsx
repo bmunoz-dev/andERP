@@ -18,7 +18,7 @@ import {
 
 const ACCEPT = Object.keys(CONTRACT_DOCUMENT_TYPES).join(',');
 
-/** CA-18: el mismo límite que aplica la API, para responder sin subir nada. */
+/** CA-18: el mismo límite que aplica la API, para avisar (con un toast) sin subir nada. */
 function precheck(file: File): string | null {
   const dot = file.name.lastIndexOf('.');
   const extension = dot === -1 ? '' : file.name.slice(dot).toLowerCase();
@@ -37,7 +37,6 @@ export function ContractDocumentCell({
   onChanged: () => Promise<void>;
 }) {
   const input = useRef<HTMLInputElement>(null);
-  const [error, setError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<'replace' | 'delete' | null>(null);
   const document = contract.document;
 
@@ -99,8 +98,9 @@ export function ContractDocumentCell({
           e.target.value = '';
           if (!file) return;
           const problem = precheck(file);
-          setError(problem);
-          if (!problem) upload.mutate(file);
+          // Como los errores de la API: un toast, sin dejar texto en la tabla.
+          if (problem) toast.error(problem);
+          else upload.mutate(file);
         }}
       />
       {document ? (
@@ -155,11 +155,6 @@ export function ContractDocumentCell({
           <Upload />
           Subir
         </Button>
-      )}
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
       )}
       <ConfirmDialog
         open={confirm !== null}

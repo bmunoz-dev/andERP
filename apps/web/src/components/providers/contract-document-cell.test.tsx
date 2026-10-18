@@ -1,6 +1,7 @@
 import type { Contract } from '@anderp/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { toast } from 'sonner';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   contractDocumentUrl,
@@ -9,6 +10,7 @@ import {
 } from '@/lib/providers-api';
 import { ContractDocumentCell } from './contract-document-cell';
 
+vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/lib/providers-api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/providers-api')>()),
   uploadContractDocument: vi.fn(),
@@ -82,9 +84,9 @@ describe('ContractDocumentCell (F17)', () => {
     expect(screen.getByRole('button', { name: 'Subir' })).toBeVisible();
 
     choose(new File(['x'], 'foto.png', { type: 'image/png' }));
-    expect(screen.getByRole('alert')).toHaveTextContent(/PDF o Word/);
+    expect(toast.error).toHaveBeenLastCalledWith(expect.stringMatching(/PDF o Word/));
     choose(new File([new Uint8Array(10 * 1024 * 1024 + 1)], 'grande.pdf'));
-    expect(screen.getByRole('alert')).toHaveTextContent(/10 MB/);
+    expect(toast.error).toHaveBeenLastCalledWith(expect.stringMatching(/10 MB/));
     expect(uploadContractDocument).not.toHaveBeenCalled();
 
     const file = new File(['%PDF-1.7'], 'contrato.pdf', { type: 'application/pdf' });
