@@ -5,12 +5,15 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { z } from 'zod';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTable } from '@/components/data-table';
 import { FormField } from '@/components/form-field';
+import { FixedPaymentsTab } from '@/components/fixed-payments/fixed-payments-tab';
 import { PageHeader } from '@/components/page-header';
 import { SelectField } from '@/components/select-field';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { errorMessage } from '@/lib/error-messages.es';
 import { expenseKeys } from '@/lib/expenses-api';
 import { deleteFeePayment, feePaymentKeys, listFeePayments, MONTHS } from '@/lib/fee-payments-api';
@@ -18,10 +21,82 @@ import { formatDate } from '@/lib/format';
 import { providerKeys } from '@/lib/providers-api';
 
 export const Route = createFileRoute('/_app/pagos/')({
-  component: FeePaymentsPage,
+  // F16: `tab=fijo` abre la pestaña de monto fijo; `edit` abre ese pago (enlace del libro de egresos).
+  validateSearch: z.object({ tab: z.enum(['fijo']).optional(), edit: z.uuid().optional() }),
+  component: PaymentsPage,
 });
 
-function FeePaymentsPage() {
+/** F16 CA-21: pagos por días (F04) y de monto fijo, en dos pestañas. */
+function PaymentsPage() {
+  const { tab, edit } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const today = todayIn();
+  const [period, setPeriod] = useState({
+    year: Number(today.slice(0, 4)),
+    month: Number(today.slice(5, 7)),
+  });
+  const [creating, setCreating] = useState(false);
+  const fixed = tab === 'fijo';
+
+  return (
+    <>
+      <PageHeader
+        title="Pagos"
+        description="Pagos al personal: por días trabajados o de monto fijo."
+        actions={
+          fixed ? (
+            <Button
+              onClick={() => {
+                setCreating(true);
+              }}
+            >
+              <Plus />
+              Nuevo pago
+            </Button>
+          ) : (
+            <Button asChild>
+              <Link to="/pagos/nuevo">
+                <Plus />
+                Nuevo pago
+              </Link>
+            </Button>
+          )
+        }
+      />
+      <Tabs
+        className="mb-4"
+        value={fixed ? 'fijo' : 'dias'}
+        onValueChange={(next) => {
+          void navigate({ search: next === 'fijo' ? { tab: 'fijo' } : {} });
+        }}
+      >
+        <TabsList>
+          <TabsTrigger value="dias">Por días</TabsTrigger>
+          <TabsTrigger value="fijo">Monto fijo</TabsTrigger>
+        </TabsList>
+      </Tabs>
+      {fixed ? (
+        <FixedPaymentsTab
+          year={period.year}
+          month={period.month}
+          onPeriodChange={(year, month) => {
+            setPeriod({ year, month });
+          }}
+          creating={creating}
+          onCreatingChange={setCreating}
+          editId={edit}
+          onEditDone={() => {
+            void navigate({ search: { tab: 'fijo' } });
+          }}
+        />
+      ) : (
+        <DailyPaymentsTab />
+      )}
+    </>
+  );
+}
+
+function DailyPaymentsTab() {
   const queryClient = useQueryClient();
   const today = todayIn();
   const [year, setYear] = useState(Number(today.slice(0, 4)));
@@ -92,18 +167,6 @@ function FeePaymentsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Pagos"
-        description="Pagos al personal: por días trabajados o de monto fijo."
-        actions={
-          <Button asChild>
-            <Link to="/pagos/nuevo">
-              <Plus />
-              Nuevo pago
-            </Link>
-          </Button>
-        }
-      />
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
         <FormField
           label="Año"

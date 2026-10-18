@@ -103,10 +103,16 @@ export function LedgerSheet({
                       Eliminar
                     </Button>
                   </>
-                ) : (
+                ) : entry.source === 'fee_payment' ? (
                   <Button asChild variant="link" size="sm">
                     <Link to="/pagos/$id" params={{ id: entry.sourceId }}>
                       Ver pago por días
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button asChild variant="link" size="sm">
+                    <Link to="/pagos" search={{ tab: 'fijo', edit: entry.sourceId }}>
+                      Ver pago de monto fijo
                     </Link>
                   </Button>
                 )}
