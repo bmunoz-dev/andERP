@@ -13,6 +13,7 @@ import { FormDialog } from '@/components/form-dialog';
 import { FormField } from '@/components/form-field';
 import { MoneyInput } from '@/components/money-input';
 import { SelectField } from '@/components/select-field';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { errorMessage } from '@/lib/error-messages.es';
 import { feePaymentKeys, listOverlappingContracts, MONTHS } from '@/lib/fee-payments-api';
@@ -60,6 +61,10 @@ export function FixedPaymentFormDialog({
   });
   const contract = contracts.data?.find((c) => c.id === contractId);
   const paidInMonth = contract ? sumMoney([contract.paidInMonth, amount ?? '0.00']) : null;
+  // F10: superar el monto mensual avisa, no bloquea (igual que el formulario de F04).
+  const overBy =
+    contract && paidInMonth ? sumMoney([paidInMonth, `-${contract.monthlyAmount}`]) : null;
+  const exceeds = overBy !== null && !overBy.startsWith('-') && overBy !== '0.00';
 
   const save = useMutation({
     mutationFn: () => {
@@ -154,10 +159,20 @@ export function FixedPaymentFormDialog({
         error={errors.contractId}
       />
       {contract && paidInMonth && (
-        <p className="text-sm" data-testid="month-summary">
-          Pagado en {MONTHS[month - 1]}: <strong>{formatCOP(paidInMonth)}</strong> de{' '}
-          {formatCOP(contract.monthlyAmount)} (monto mensual del contrato)
-        </p>
+        <div className="grid gap-2 text-sm" data-testid="month-summary">
+          <p>
+            Pagado en {MONTHS[month - 1]}: <strong>{formatCOP(paidInMonth)}</strong> de{' '}
+            {formatCOP(contract.monthlyAmount)} (monto mensual del contrato)
+          </p>
+          {exceeds && overBy && (
+            <Alert className="border-amber-500/50 text-amber-700 dark:text-amber-400">
+              <AlertDescription className="text-inherit">
+                Supera el monto mensual en {formatCOP(overBy)}. Puedes registrarlo igual si así se
+                acordó.
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField

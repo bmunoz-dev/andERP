@@ -92,4 +92,13 @@ describe('FixedPaymentFormDialog (F16 CA-22)', () => {
       /Pagado en agosto:\s*\$\s*1\.000\.000 de/,
     );
   });
+
+  it('avisa si se supera el monto mensual y deja guardar (F10)', async () => {
+    renderDialog(payment);
+    await screen.findByTestId('month-summary');
+    expect(screen.queryByText(/Supera el monto mensual/)).toBeNull();
+    fireEvent.change(screen.getByLabelText('Valor'), { target: { value: '1.500.000' } });
+    expect(await screen.findByText(/Supera el monto mensual en\s*\$\s*500\.000/)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Guardar' })).toBeEnabled();
+  });
 });

@@ -80,7 +80,7 @@ El contrato decide la forma de pago: **por días trabajados** (como hoy) o **mon
   - valor;
   - notas.
 
-  Muestra además lo ya pagado en ese mes frente al monto mensual de referencia del contrato. Para editar se usa el mismo formulario, con el contrato y el mes bloqueados.
+  Muestra además lo ya pagado en ese mes, contando este pago, frente al monto mensual de referencia del contrato. Si lo supera, avisa en ámbar sin bloquear, como el formulario de F04 (F10: el monto mensual es una referencia, no un tope). Para editar se usa el mismo formulario, con el contrato y el mes bloqueados.
 - **CA-23.** Al crear, editar o borrar un pago de monto fijo se refrescan la lista, la ficha de la persona y los egresos.
 - **CA-24.** Cada código de error nuevo tiene su mensaje en español en `error-messages.es.ts`.
 
