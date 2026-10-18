@@ -1,6 +1,6 @@
 # F17 — Documento del contrato · Spec
 
-- **Estado:** Borrador (pendiente de aprobación)
+- **Estado:** Aprobado (2026-10-18; CA-9, CA-10, CA-17, CA-19 y CA-22 ajustados ese día, ver Historial)
 - **Diseño:** `design.md` §2 (decisión 18), §3 (glosario), §5.13 (`contract_documents`), §6.5 (almacenamiento de archivos), §10 y §11
 - **Depende de:** F03 (contratos), F12 (auditoría atómica), F15 (tablas como tarjetas en el celular)
 
@@ -45,12 +45,10 @@ Un contrato tiene **un solo archivo vigente**. Reemplazarlo o eliminarlo nunca b
 **Ver, descargar y eliminar**
 
 - **CA-8.** Las respuestas de contratos (`GET /service-providers/:id/contracts` y el contrato vigente de la persona) incluyen `document`: `null` o `{ fileName, contentType, sizeBytes, uploadedAt }`.
-- **CA-9.** `GET /contracts/:id/document/url?mode=view|download` devuelve `{ url, expiresAt }`: una URL firmada válida por **5 minutos**.
-  - Con `download`, el archivo se descarga con su nombre original (`Content-Disposition: attachment`).
-  - Con `view`, un PDF se abre en el navegador (`inline`). `view` sobre un Word responde `422 DOCUMENT_TYPE_NOT_ALLOWED`.
-  - En los dos casos, el `Content-Type` es el guardado.
-  - Si el contrato no tiene archivo, responde `404`.
-- **CA-10.** En el `Content-Disposition`, el nombre del archivo se escribe con `filename*` (RFC 5987) y con un `filename` alternativo sin comillas, barras ni caracteres de control.
+- **CA-9.** `GET /contracts/:id/document/url` devuelve `{ url, expiresAt }`: una URL firmada válida por **5 minutos**. Si el contrato no tiene archivo, responde `404`.
+  - El `Content-Type` y el `Content-Disposition` se fijan **al subir** el objeto, según su tipo: un PDF se guarda como `inline` (se abre en el visor del navegador, que permite descargarlo) y un Word como `attachment` (se descarga con su nombre original).
+  - La URL firmada no cambia esas cabeceras: Supabase Storage no admite `response-content-disposition` en la lectura por S3.
+- **CA-10.** En el `Content-Disposition` que se guarda al subir, el nombre del archivo se escribe con `filename*` (RFC 5987) y con un `filename` alternativo sin comillas, barras ni caracteres de control.
 - **CA-11.** `DELETE /contracts/:id/document` hace un borrado lógico (`204`). El objeto sigue en el bucket. Si no hay archivo, responde `404`.
 - **CA-12.** Subir, reemplazar y eliminar generan `audit_logs` (`contract_document.upload`, `contract_document.replace` y `contract_document.delete`) en la misma transacción que el cambio (F12), con el nombre, el tamaño y el `sha256`. Ver y descargar no se auditan.
 - **CA-13.** Borrar un contrato que tiene archivo sigue permitido. El archivo queda ligado al contrato borrado y deja de verse.
@@ -65,15 +63,15 @@ Un contrato tiene **un solo archivo vigente**. Reemplazarlo o eliminarlo nunca b
 
 - **CA-17.** La tabla de contratos de la ficha de la persona tiene la columna "Documento":
   - sin archivo, un botón **"Subir"** que abre el selector de archivos, limitado a `.pdf`, `.doc` y `.docx`;
-  - con archivo, su nombre y las acciones **Ver** (solo PDF), **Descargar**, **Reemplazar** y **Eliminar**.
+  - con archivo, su nombre y las acciones **Abrir** (PDF) o **Descargar** (Word), **Reemplazar** y **Eliminar**.
 - **CA-18.** Antes de subir, la web rechaza un tipo o un tamaño no permitidos con un mensaje en español, sin llamar a la API. Reemplazar y eliminar piden confirmación.
-- **CA-19.** "Ver" abre una pestaña en el mismo clic y le asigna la URL firmada cuando llega, para que no la detenga el bloqueador de ventanas. "Descargar" usa la URL de `download`.
+- **CA-19.** "Abrir" abre una pestaña en el mismo clic y le asigna la URL firmada cuando llega, para que no la detenga el bloqueador de ventanas. "Descargar" lleva la página a la URL firmada: como el Word se guardó con `attachment`, el navegador lo descarga sin salir de la ficha.
 - **CA-20.** Cada código de error nuevo tiene su mensaje en español en `error-messages.es.ts`.
 - **CA-21.** En el celular, las acciones del documento aparecen en la tarjeta del contrato (F15).
 
 **Verificación**
 
-- **CA-22.** Verificación manual en local (MinIO) y en producción (Supabase Storage): subir un PDF y un Word, ver el PDF, descargar los dos, reemplazar y eliminar.
+- **CA-22.** Verificación manual en local (MinIO) y en producción (Supabase Storage): subir un PDF y un Word, abrir el PDF (y descargarlo desde el visor), descargar el Word con su nombre, reemplazar y eliminar.
 
 ## Fuera de alcance
 
@@ -84,3 +82,9 @@ Un contrato tiene **un solo archivo vigente**. Reemplazarlo o eliminarlo nunca b
 - Auditar quién ve o descarga un archivo.
 - Respaldo de los archivos (riesgo aceptado, ver Objetivo).
 - Borrar objetos del bucket, incluidos los huérfanos.
+
+## Historial
+
+| Fecha | Cambio | Motivo |
+|---|---|---|
+| 2026-10-18 | CA-9: un solo endpoint de URL firmada, sin `mode`; el `Content-Disposition` (`inline` para PDF, `attachment` para Word) se fija al subir. CA-10, CA-17, CA-19 y CA-22 ajustados ("Abrir" el PDF, "Descargar" el Word). | La documentación de Supabase ("S3 Compatibility") no admite `response-content-disposition` en `GetObject`: una URL con `mode` habría funcionado en MinIO y no en producción. Aprobado por el usuario. |
