@@ -81,7 +81,7 @@ Un contrato tiene **un solo archivo vigente**. Reemplazarlo o eliminarlo nunca b
 **Verificación**
 
 - **CA-21b.** Antes de implementar la API, una prueba en Supabase Storage confirma lo que el diseño supone de él: que una URL firmada por S3 abre el objeto y devuelve el `Content-Type` y el `Content-Disposition` guardados al subir. Si no lo hace, se detiene la feature y se ajusta el diseño.
-- **CA-22.** Verificación manual en local (MinIO) y en producción (Supabase Storage): subir un PDF y un Word, abrir el PDF (y descargarlo desde el visor), descargar el Word con su nombre, reemplazar y eliminar.
+- **CA-22.** Verificación manual en local (s3mock) y en producción (Supabase Storage): subir un PDF y un Word, abrir el PDF (y descargarlo desde el visor), descargar el Word con su nombre, reemplazar y eliminar.
 
 ## Fuera de alcance
 

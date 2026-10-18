@@ -19,16 +19,17 @@ No hace falta SQL a mano: no hay triggers, vistas ni permisos especiales (`app_r
 
 ## Almacenamiento
 
-- **Dependencias** (en `apps/api`): `@aws-sdk/client-s3` y `@aws-sdk/s3-request-presigner`. En desarrollo, `@testcontainers/minio`.
+- **Dependencias** (en `apps/api`): `@aws-sdk/client-s3` y `@aws-sdk/s3-request-presigner`. Las pruebas usan `GenericContainer` de `testcontainers` (ya instalado).
 - **`apps/api/src/modules/contract-documents/object-storage.ts`:** un `ObjectStorage` inyectable con dos métodos.
   - `put(key, body, { contentType, contentDisposition })` sube el objeto con `PutObject`.
   - `signedUrl(key, ttlSeconds)` firma un `GetObject` con `getSignedUrl`.
 
-  Usa un `S3Client` con `forcePathStyle: true`, que exigen tanto Supabase como MinIO. No hay interfaz ni implementación falsa: las pruebas usan MinIO real.
+  Usa un `S3Client` con `forcePathStyle: true`, que exige Supabase. No hay interfaz ni implementación falsa: las pruebas usan un servidor S3 en un contenedor.
 - **Variables** (`env.ts`): `S3_ENDPOINT` (URL), `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID` y `S3_SECRET_ACCESS_KEY`, todas obligatorias. El entorno validado nunca se registra en los logs; se añade `*.secretAccessKey` a `REDACT_PATHS` por si un error del SDK incluye su configuración.
-- **URL firmada que el navegador pueda alcanzar:** `S3_ENDPOINT` es la URL pública del almacenamiento, `http://localhost:9000` en local y `https://<ref>.supabase.co/storage/v1/s3` en producción. Así la firma vale para el host que abre el navegador.
-- **Local:** `docker-compose.yml` suma `minio` (API en `:9000`, consola en `:9001`) y `minio-init`, que crea el bucket `contract-documents` y termina. Las dos imágenes van con versión fija. `apps/api/.env.example` suma las variables `S3_*`.
-- **Pruebas:** `test/setup/global-setup.ts` levanta también un `MinioContainer`, crea el bucket con `CreateBucket` y provee `s3Endpoint`, `s3AccessKeyId` y `s3SecretAccessKey`. `create-test-app.ts` los agrega al entorno. Para comprobar el bucket, las pruebas usan un `S3Client` propio (`ListObjectsV2` y `HeadObject`); el adaptador no necesita esos métodos.
+- **URL firmada que el navegador pueda alcanzar:** `S3_ENDPOINT` es la URL pública del almacenamiento, `http://localhost:9090` en local y `https://<ref>.supabase.co/storage/v1/s3` en producción. Así la firma vale para el host que abre el navegador.
+- **Servidor S3 local: `adobe/s3mock:4.7.0`** (decisión del usuario, 2026-10-18). MinIO dejó de publicar imágenes: `minio/minio` responde "denied" en Docker Hub y tampoco están las de `quay.io` ni Bitnami. s3mock guarda y devuelve el `Content-Type` y el `Content-Disposition` y atiende URLs firmadas, pero **no valida la firma ni las llaves**: un error de firma o de configuración solo se ve contra Supabase (T003 y la verificación en producción).
+- **Local:** `docker-compose.yml` suma `s3mock` en `:9090`, con el bucket `contract-documents` creado al arrancar (`COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS`). `apps/api/.env.example` suma las variables `S3_*`.
+- **Pruebas:** `test/setup/global-setup.ts` levanta también s3mock con `GenericContainer`, crea el bucket con `CreateBucket` y provee `s3Endpoint`, `s3AccessKeyId` y `s3SecretAccessKey`. `create-test-app.ts` los agrega al entorno. Para comprobar el bucket, las pruebas usan un `S3Client` propio (`ListObjectsV2` y `HeadObject`); el adaptador no necesita esos métodos.
 
 ## Prueba previa en Supabase Storage (T003, CA-21b)
 
@@ -100,7 +101,7 @@ Antes de escribir la API se confirma en el proyecto real lo que el diseño supon
   - la detección de tipo: PDF, `.docx` y `.doc`, extensión en mayúsculas, un ejecutable renombrado, un ZIP con extensión `.pdf` y un PDF con extensión `.docx`;
   - el nombre: latin1 → UTF-8, nombre base sin ruta, vacío y más de 255 caracteres;
   - el `Content-Disposition` con nombres con tildes, comillas y barras.
-- **`test/contract-documents.test.ts`** (MinIO real):
+- **`test/contract-documents.test.ts`** (s3mock en un contenedor):
   - subir los tres tipos y comprobar que el objeto existe con su `Content-Type` y `Content-Disposition` (`HeadObject`);
   - el error de tipo, el de más de 10 MB, el archivo vacío y la falta del campo;
   - "Contratación.pdf" subido con su tilde vuelve igual en `document.fileName` y en el `Content-Disposition`;
@@ -129,4 +130,5 @@ Antes de escribir la API se confirma en el proyecto real lo que el diseño supon
 
 ## Notas de implementación
 
-_(Se completan al implementar.)_
+- **T002 — s3mock:** se verificó con Testcontainers que `COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS` crea el bucket al arrancar (la usa `docker-compose.yml`); en las pruebas se crea con `CreateBucket`. La prueba del adaptador comprueba que la URL firmada devuelve los bytes, el `Content-Type` y el `Content-Disposition` guardados.
+- **Entorno local:** las variables `S3_*` son obligatorias, así que `apps/api/.env` necesita las de `.env.example` para que `pnpm dev` arranque.

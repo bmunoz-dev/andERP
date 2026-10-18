@@ -9,6 +9,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ClickiuModule } from './modules/clickiu/clickiu.module';
 import { ObligationsModule } from './modules/obligations/obligations.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ContractDocumentsModule } from './modules/contract-documents/contract-documents.module';
 import { CredentialsModule } from './modules/credentials/credentials.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
 import { ResponsiblePersonsModule } from './modules/responsible-persons/responsible-persons.module';
@@ -50,6 +51,7 @@ export class AppModule {
         ExpensesModule,
         ResponsiblePersonsModule,
         CredentialsModule,
+        ContractDocumentsModule,
         ClickiuModule,
         ObligationsModule,
         NotificationsModule,
