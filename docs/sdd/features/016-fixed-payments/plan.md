@@ -94,3 +94,9 @@
 - **Textos:** "prestador" pasa a "persona" en pantallas, toasts y mensajes de error; la categoría de sistema `FEES` conserva su nombre ("Honorarios"), que es dato de cada organización. El `routeTree` se regenera con `vite build` (`tsc` corre antes en `pnpm build`). La prueba E2E (`e2e/tests/smoke.spec.ts`) usa `/pagos/nuevo`.
 - **Enlace desde el libro de egresos:** abre `/pagos?tab=fijo&edit=<id>` y el diálogo de ese pago (`GET /fixed-payments/:id`). Filtrar por el mes no servía: el libro agrupa por fecha de pago y la pestaña por mes trabajado.
 - **Pruebas de la web en T006:** el diálogo (personas filtradas por modo, resumen del mes y cuerpo del `PATCH`). La pestaña y las pestañas de la página no tienen prueba propia; entran en la verificación manual.
+- **T007 — Definición de Hecho:**
+  - CA-1, CA-3, CA-5 a CA-7, CA-9, CA-12 a CA-17 están en `fixed-payments.db.test.ts`; CA-2 a CA-15 y CA-18 en `fixed-payments.test.ts` (API, aislamiento y OpenAPI); la auditoría atómica en `audit-atomicity.test.ts`.
+  - CA-19 (menú) en `navigation.test.ts` y las rutas por `typecheck`; CA-20 en `contract-form-dialog.test.tsx`; CA-22 en `fixed-payment-form-dialog.test.tsx`; CA-24 lo obliga el `satisfies` de `error-messages.es.ts`.
+  - **Sin prueba automatizada:** CA-21 (pestañas) y CA-23 (refresco de lista, ficha y egresos). Quedan para la verificación manual.
+  - Las migraciones se aplican desde cero en cada corrida (Testcontainers).
+- **T007 — Verificación completa:** `format:check`, `lint` y `typecheck` en verde. `test`: 64 de 66 archivos en verde; `auth.test.ts` y `fixed-payments.test.ts` cayeron por el cierre del trabajador de Vitest en Windows (`0xC0000409`, nota del entorno) y pasaron al repetirlos (33 pruebas). En total, 579 pruebas.
