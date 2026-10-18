@@ -61,6 +61,12 @@ const MESSAGES = {
     'El contrato y la semana de un pago no se cambian. Elimina el pago y créalo de nuevo.',
   CONTRACT_HAS_PAYMENTS: 'Este contrato tiene pagos de honorarios. Elimina primero esos pagos.',
   CONTRACT_DATES_EXCLUDE_PAYMENTS: 'Con esas fechas quedarían días ya pagados fuera del contrato.',
+  CONTRACT_PAYMENT_MODE_LOCKED:
+    'El contrato ya tiene pagos: su forma de pago no se cambia. Termina el contrato y crea otro.',
+  CONTRACT_PAYMENT_MODE_MISMATCH: 'Ese pago no corresponde a la forma de pago del contrato.',
+  FIXED_PAYMENT_OUTSIDE_CONTRACT: 'El mes trabajado no está dentro de las fechas del contrato.',
+  FIXED_PAYMENT_PERIOD_IMMUTABLE:
+    'El contrato y el mes de un pago no se cambian. Elimina el pago y créalo de nuevo.',
   FEES_CATEGORY_NOT_ALLOWED:
     'Los honorarios se registran desde la sección Honorarios, no como egreso manual.',
   INACTIVE_CATEGORY: 'Ese departamento está inactivo. Elige otro o actívalo en Configuración.',

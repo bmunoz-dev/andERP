@@ -4,6 +4,7 @@ import {
   contractMonthTotals,
   feePaymentTotals,
   feePayments,
+  fixedPayments,
   providerContracts,
 } from '../../db/schema';
 
@@ -43,6 +44,12 @@ export function contractColumns(today: string) {
     workAgreement: providerContracts.workAgreement,
     paymentFrequency: providerContracts.paymentFrequency,
     monthlyAmount: providerContracts.monthlyAmount,
+    paymentMode: providerContracts.paymentMode,
+    hasPayments: sql<boolean>`(
+      exists (select 1 from ${feePayments}
+               where ${feePayments.contractId} = ${providerContracts.id} and ${feePayments.deletedAt} is null)
+      or exists (select 1 from ${fixedPayments}
+               where ${fixedPayments.contractId} = ${providerContracts.id} and ${fixedPayments.deletedAt} is null))`,
     status: contractStatusSql(today),
     paidThisMonth: paidOrZero(contractMonthTotals.paidAmount),
   };

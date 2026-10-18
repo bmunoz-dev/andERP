@@ -7,7 +7,7 @@
       Verificación: CA-1, CA-3, CA-5–CA-7, CA-9, CA-12–CA-14 (en la base de datos)
 - [x] F16-T002 [TDD] Vistas `v_contract_month_totals` y `v_expense_ledger` con la tercera fuente. Pruebas en SQL: sin doble conteo, mes y semana de `payment_date`, mes trabajado, borrados.
       Depende de: F16-T001 · Verificación: CA-15–CA-17
-- [ ] F16-T003 [TDD] Shared (esquemas, `LedgerEntry.source`, códigos y mensajes) y API de contratos: `paymentMode`, `CONTRACT_PAYMENT_MODE_LOCKED`, borrado y fechas con pagos fijos, regla de modo en `POST /fee-payments`.
+- [x] F16-T003 [TDD] Shared (esquemas, `LedgerEntry.source`, códigos y mensajes) y API de contratos: `paymentMode`, `CONTRACT_PAYMENT_MODE_LOCKED`, borrado y fechas con pagos fijos, regla de modo en `POST /fee-payments`.
       Depende de: F16-T001 · Verificación: CA-2, CA-3, CA-12–CA-14, CA-24
 - [ ] F16-T004 [TDD] Módulo `fixed-payments`: CRUD con `OrgScope`, auditoría atómica, aislamiento y OpenAPI.
       Depende de: F16-T003 · Verificación: CA-4–CA-11, CA-18

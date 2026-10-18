@@ -33,7 +33,7 @@ export type Expense = z.infer<typeof expenseSchema>;
 
 /** Fila del libro de egresos: un egreso manual o un pago de honorarios (F05 CA-12). */
 export const ledgerEntrySchema = z.object({
-  source: z.enum(['manual', 'fee_payment']),
+  source: z.enum(['manual', 'fee_payment', 'fixed_payment']),
   sourceId: z.uuid(),
   categoryId: z.uuid(),
   concept: z.string(),

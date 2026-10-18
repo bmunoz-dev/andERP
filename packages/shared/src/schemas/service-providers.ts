@@ -56,6 +56,15 @@ export const PAYMENT_FREQUENCY_LABELS: Record<PaymentFrequency, string> = {
   bimonthly: 'Bimestral',
 };
 
+/** F16: por días trabajados (pagos de F04) o con monto fijo por mes trabajado. */
+export const paymentModeSchema = z.enum(['daily', 'fixed']);
+export type PaymentMode = z.infer<typeof paymentModeSchema>;
+
+export const PAYMENT_MODE_LABELS: Record<PaymentMode, string> = {
+  daily: 'Por días trabajados',
+  fixed: 'Monto fijo',
+};
+
 export const contractStatusSchema = z.enum(['upcoming', 'active', 'ended']);
 export type ContractStatus = z.infer<typeof contractStatusSchema>;
 
@@ -66,6 +75,8 @@ export const createContractSchema = z.object({
   paymentFrequency: paymentFrequencySchema,
   /** F10: monto mensual de referencia; no limita lo que se paga. */
   monthlyAmount: positiveMoneySchema,
+  /** F16: sin valor por defecto aquí, para que un PATCH sin el campo no lo cambie; la base de datos usa `daily`. */
+  paymentMode: paymentModeSchema.optional(),
 });
 export type CreateContract = z.infer<typeof createContractSchema>;
 
@@ -80,6 +91,9 @@ export const contractSchema = z.object({
   workAgreement: z.string(),
   paymentFrequency: paymentFrequencySchema,
   monthlyAmount: z.string(),
+  paymentMode: paymentModeSchema,
+  /** F16 CA-20: con pagos no borrados, la forma de pago ya no cambia. */
+  hasPayments: z.boolean(),
   status: contractStatusSchema,
   /** F10 CA-5: lo pagado en el mes trabajado actual (Bogotá). Puede superar `monthlyAmount`. */
   paidThisMonth: z.string(),

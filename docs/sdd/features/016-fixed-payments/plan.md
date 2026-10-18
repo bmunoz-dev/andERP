@@ -82,6 +82,9 @@
 
 ## Notas de implementación
 
-- **Una sola migración a mano para T001 y T002.** Los triggers y las vistas están en `0028_fixed_payment_rules.sql`. Por eso la prueba de las vistas (T002) pasó en verde desde que se escribió; se comprobó que falla sin la tercera rama del libro (el total daría $150.000).
+- **Una sola migración a mano para T001 y T002.** Los triggers y las vistas están en `0028_fixed_payment_rules.sql`. Por eso la prueba de las vistas (T002) pasó en verde desde que se escribió; sin la tercera rama del libro el total sería $150.000 y la prueba fallaría (razonado, no ejecutado).
 - **Bloqueo del contrato.** Los triggers de pagos leen el contrato con `FOR SHARE`. Así, un cambio simultáneo de la forma de pago o de las fechas espera a que se confirme el pago y lo ve; sin el bloqueo, las dos transacciones podían pasar sus validaciones a la vez.
 - **`provider_contracts_protect_payments`** se reemplazó con `SET search_path = ''`; las demás funciones de F04 siguen en el pendiente 3 de F07.
+- **Reglas de modo solo en la base de datos.** `CONTRACT_PAYMENT_MODE_LOCKED`, `CONTRACT_PAYMENT_MODE_MISMATCH` (en `POST /fee-payments`) y las reglas de contrato con pagos fijos llegan a la API desde los triggers (`P0001` → `code`), igual que `CONTRACT_HAS_PAYMENTS` y `CONTRACT_DATES_EXCLUDE_PAYMENTS` en F04. Repetirlas en el servicio no cambiaría la respuesta.
+- **`paymentMode` sin valor por defecto en Zod.** `updateContractSchema` es el `partial()` del de crear: con un `.default('daily')`, un `PATCH` sin el campo podría cambiar un contrato de monto fijo a por días. El valor por defecto lo pone la base de datos.
+- **`hasPayments`** se agregó a la respuesta del contrato (se calcula con `exists` sobre las dos tablas) para deshabilitar la forma de pago en la web.

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isoDateSchema, nonNegativeMoneySchema } from './common';
+import { paymentModeSchema } from './service-providers';
 
 export const feePaymentDaySchema = z.object({
   workDate: isoDateSchema,
@@ -48,5 +49,6 @@ export const contractOptionSchema = z.object({
   /** F10 CA-6: monto mensual de referencia y lo ya pagado en el mes del periodo consultado. */
   monthlyAmount: z.string(),
   paidInMonth: z.string(),
+  paymentMode: paymentModeSchema,
 });
 export type ContractOption = z.infer<typeof contractOptionSchema>;
