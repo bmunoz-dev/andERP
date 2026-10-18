@@ -67,6 +67,9 @@ const MESSAGES = {
   FIXED_PAYMENT_OUTSIDE_CONTRACT: 'El mes trabajado no está dentro de las fechas del contrato.',
   FIXED_PAYMENT_PERIOD_IMMUTABLE:
     'El contrato y el mes de un pago no se cambian. Elimina el pago y créalo de nuevo.',
+  DOCUMENT_TYPE_NOT_ALLOWED:
+    'Solo se admiten archivos PDF o Word (.doc, .docx), y la extensión debe corresponder al archivo.',
+  DOCUMENT_TOO_LARGE: 'El archivo supera los 10 MB.',
   FEES_CATEGORY_NOT_ALLOWED:
     'Los pagos al personal se registran desde la sección Pagos, no como egreso manual.',
   INACTIVE_CATEGORY: 'Ese departamento está inactivo. Elige otro o actívalo en Configuración.',

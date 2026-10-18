@@ -114,3 +114,24 @@ export const serviceProviderSchema = z.object({
   activeContract: contractSchema.nullable(),
 });
 export type ServiceProvider = z.infer<typeof serviceProviderSchema>;
+
+// ── F17: documento del contrato ──────────────────────────────────────────────────────────
+
+export const CONTRACT_DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
+
+/** Extensión → tipo guardado. La API valida además los primeros bytes (CA-4). */
+export const CONTRACT_DOCUMENT_TYPES = {
+  '.pdf': 'application/pdf',
+  '.doc': 'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+} as const;
+export type ContractDocumentType =
+  (typeof CONTRACT_DOCUMENT_TYPES)[keyof typeof CONTRACT_DOCUMENT_TYPES];
+
+export const contractDocumentSchema = z.object({
+  fileName: z.string(),
+  contentType: z.enum(Object.values(CONTRACT_DOCUMENT_TYPES)),
+  sizeBytes: z.number(),
+  uploadedAt: z.string(),
+});
+export type ContractDocument = z.infer<typeof contractDocumentSchema>;

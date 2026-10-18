@@ -9,7 +9,7 @@
       Depende de: F17-T001 · Verificación: CA-15
 - [ ] F17-T003 Prueba previa en Supabase Storage: conexión S3, bucket privado y llaves (las crea el usuario), script desechable que sube, firma y lee un PDF y un `.docx`. Si las cabeceras no vuelven como se guardaron, se detiene la feature.
       Depende de: F17-T002 · Verificación: CA-21b
-- [ ] F17-T004 [TDD] Reglas puras: detección de tipo con extensión, nombre (latin1 → UTF-8, nombre base, longitud) y `Content-Disposition`. Shared: esquema del documento, límites y códigos de error con sus mensajes.
+- [x] F17-T004 [TDD] Reglas puras: detección de tipo con extensión, nombre (latin1 → UTF-8, nombre base, longitud) y `Content-Disposition`. Shared: esquema del documento, límites y códigos de error con sus mensajes.
       Verificación: CA-4, CA-4b, CA-10, CA-20
 - [ ] F17-T005 [TDD] API de subida y reemplazo: multer con límite, orden comprobar → límite por hora → tipo → subir → transacción con bloqueo, auditoría atómica.
       Depende de: F17-T003, F17-T004 · Verificación: CA-2–CA-7, CA-12
