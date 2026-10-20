@@ -45,4 +45,4 @@
 ## Cierre
 
 - [x] F18-T009 Verificación completa (`pnpm format:check && pnpm lint && pnpm typecheck && pnpm test`), Definición de Hecho, notas de implementación en `plan.md`, F11 marcada como reemplazada en el roadmap y PR.
-- [ ] F18-T010 Antes del merge: consulta de solo lectura `SELECT count(*) FROM anderp.clickiu_movements` en producción, con confirmación del usuario (CA-34). Después del deploy: verificación manual del usuario.
+- [x] F18-T010 Antes del merge: consulta de solo lectura `SELECT count(*) FROM anderp.clickiu_movements` en producción, con confirmación del usuario (CA-34). Después del deploy: verificación manual del usuario.
