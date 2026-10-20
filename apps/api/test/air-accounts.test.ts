@@ -1,4 +1,11 @@
-import type { AirAccount, AirOperator, AirOperatorBalance } from '@anderp/shared';
+import {
+  type AirAccount,
+  type AirMovement,
+  type AirMovementSummary,
+  type AirOperator,
+  type AirOperatorBalance,
+  todayIn,
+} from '@anderp/shared';
 import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -223,5 +230,290 @@ describe('Cuentas aéreas', () => {
       .post('/air-accounts', { operatorId: randomUUID(), name: 'KIU', creditLimit: '0.00' })
       .expect(404);
     expect(res.body.code).toBe('NOT_FOUND');
+  });
+});
+
+describe('Movimientos de una cuenta aérea', () => {
+  const base = (account: AirAccount) => `/air-accounts/${account.id}/movements`;
+
+  const issueBody = (overrides: Record<string, unknown> = {}) => ({
+    type: 'issue',
+    movementDate: '2026-09-10',
+    pnr: 'k4j2ll',
+    ticketNumber: String(Math.floor(Math.random() * 1e13)).padStart(13, '0'),
+    passenger: 'Ana Pérez',
+    netFare: '120.00',
+    taxes: '30.00',
+    ...overrides,
+  });
+
+  async function post(account: AirAccount, body: Record<string, unknown>) {
+    return (await api().post(base(account), body).expect(201)).body as AirMovement;
+  }
+  const entry = (account: AirAccount, type: string, amount: string, movementDate = '2026-09-01') =>
+    post(account, { type, movementDate, amount });
+
+  /** Cuenta prepago (límite 0) o a crédito, con un operador nuevo. */
+  async function newAccount(creditLimit = '0.00') {
+    const o = await createOperator(`Operador ${randomUUID().slice(0, 8)}`);
+    return createAccount(o.id, 'KIU', creditLimit);
+  }
+
+  const list = async (account: AirAccount, query = '') =>
+    (
+      await api()
+        .get(`${base(account)}?${query}`)
+        .expect(200)
+    ).body as AirMovement[];
+  const summary = async (account: AirAccount, query = '') =>
+    (
+      await api()
+        .get(`${base(account)}/summary?${query}`)
+        .expect(200)
+    ).body as AirMovementSummary;
+
+  it('CA-6 y CA-9 crea cada tipo; la emisión calcula su monto, normaliza el PNR y queda Por cobrar', async () => {
+    const acc = await newAccount();
+    await entry(acc, 'opening_balance', '50.00');
+    for (const type of ['recharge', 'payment', 'refund']) {
+      expect(await entry(acc, type, '100.00')).toMatchObject({
+        type,
+        amount: '100.00',
+        pnr: null,
+        collectionStatus: null,
+      });
+    }
+    const issue = await post(acc, issueBody({ description: 'BOG-UIB' }));
+    expect(issue).toMatchObject({
+      accountId: acc.id,
+      amount: '150.00',
+      pnr: 'K4J2LL',
+      passenger: 'Ana Pérez',
+      netFare: '120.00',
+      taxes: '30.00',
+      collectionStatus: 'pending',
+      description: 'BOG-UIB',
+    });
+    expect(
+      (
+        await api()
+          .get(`${base(acc)}/${issue.id}`)
+          .expect(200)
+      ).body,
+    ).toEqual(issue);
+    expect((await api().get(`/air-accounts/${acc.id}`).expect(200)).body).toMatchObject({
+      balance: '200.00',
+      pendingCollection: '150.00',
+    });
+  });
+
+  it('CA-9 y CA-10 Zod rechaza una emisión incompleta o con monto, y una recarga con tiquete', async () => {
+    const acc = await newAccount('1000.00');
+    for (const body of [
+      issueBody({ pnr: undefined }),
+      issueBody({ amount: '150.00' }),
+      { type: 'recharge', movementDate: '2026-09-01', amount: '10.00', pnr: 'K4J2LL' },
+      { type: 'opening_balance', movementDate: '2026-09-01', amount: '0.00' },
+    ]) {
+      const res = await api().post(base(acc), body).expect(422);
+      expect(res.body.code).toBe('VALIDATION_ERROR');
+    }
+  });
+
+  it('CA-9 y CA-13 editar la tarifa o los impuestos recalcula el monto', async () => {
+    const acc = await newAccount('1000.00');
+    const issue = await post(acc, issueBody());
+    const taxes = await api()
+      .patch(`${base(acc)}/${issue.id}`, { taxes: '50.00' })
+      .expect(200);
+    expect(taxes.body).toMatchObject({ netFare: '120.00', taxes: '50.00', amount: '170.00' });
+    const both = await api()
+      .patch(`${base(acc)}/${issue.id}`, { netFare: '200.00', taxes: '0.00' })
+      .expect(200);
+    expect(both.body).toMatchObject({ amount: '200.00' });
+  });
+
+  it('CA-10 y CA-12 un PATCH incoherente responde con su code', async () => {
+    const acc = await newAccount('1000.00');
+    const recharge = await entry(acc, 'recharge', '100.00');
+    const issue = await post(acc, issueBody());
+    const cases: [string, object, string][] = [
+      [recharge.id, { pnr: 'K4J2LL' }, 'AIR_MOVEMENT_TICKET_FIELDS_MISMATCH'],
+      [recharge.id, { netFare: '10.00' }, 'AIR_MOVEMENT_TICKET_FIELDS_MISMATCH'],
+      [recharge.id, { type: 'payment' }, 'AIR_MOVEMENT_TYPE_IMMUTABLE'],
+      [issue.id, { amount: '1.00' }, 'AIR_MOVEMENT_AMOUNT_INVALID'],
+      [recharge.id, { amount: '-1.00' }, 'AIR_MOVEMENT_AMOUNT_INVALID'],
+    ];
+    for (const [id, body, code] of cases) {
+      const res = await api()
+        .patch(`${base(acc)}/${id}`, body)
+        .expect(422);
+      expect(res.body.code).toBe(code);
+    }
+  });
+
+  it('CA-8 y CA-11 un segundo saldo inicial o un tiquete repetido responden 409', async () => {
+    const acc = await newAccount('1000.00');
+    await entry(acc, 'opening_balance', '10.00');
+    const opening = await api()
+      .post(base(acc), { type: 'opening_balance', movementDate: '2026-09-01', amount: '5.00' })
+      .expect(409);
+    expect(opening.body.code).toBe('AIR_OPENING_BALANCE_EXISTS');
+    await post(acc, issueBody({ ticketNumber: '1234567890123' }));
+    const other = await newAccount('1000.00');
+    const ticket = await api()
+      .post(base(other), issueBody({ ticketNumber: '1234567890123' }))
+      .expect(409);
+    expect(ticket.body.code).toBe('AIR_TICKET_NUMBER_TAKEN');
+  });
+
+  it('CA-16 prepago: saldo insuficiente; crédito: cupo excedido; justo en 0 se acepta', async () => {
+    const prepaid = await newAccount();
+    await entry(prepaid, 'recharge', '150.00');
+    const over = await api()
+      .post(base(prepaid), issueBody({ netFare: '120.01' }))
+      .expect(422);
+    expect(over.body.code).toBe('AIR_ACCOUNT_INSUFFICIENT_BALANCE');
+    await post(prepaid, issueBody());
+    expect((await summary(prepaid)).available).toBe('0.00');
+
+    const credit = await newAccount('100.00');
+    const exceeded = await api().post(base(credit), issueBody()).expect(422);
+    expect(exceeded.body.code).toBe('AIR_ACCOUNT_CREDIT_LIMIT_EXCEEDED');
+    expect(await list(credit, 'from=2026-01-01')).toEqual([]);
+  });
+
+  it('CA-5 una cuenta inactiva no acepta movimientos nuevos, pero se editan los existentes', async () => {
+    const acc = await newAccount();
+    const r = await entry(acc, 'recharge', '100.00');
+    await api().patch(`/air-accounts/${acc.id}`, { isActive: false }).expect(200);
+    const res = await api()
+      .post(base(acc), { type: 'recharge', movementDate: '2026-09-01', amount: '1.00' })
+      .expect(422);
+    expect(res.body.code).toBe('AIR_ACCOUNT_INACTIVE');
+    await api()
+      .patch(`${base(acc)}/${r.id}`, { amount: '90.00' })
+      .expect(200);
+  });
+
+  it('CA-13, CA-14 y CA-23 marca como cobrado y vuelve, borra, y todo se audita', async () => {
+    const acc = await newAccount('1000.00');
+    const issue = await post(acc, issueBody());
+    const collected = await api()
+      .patch(`${base(acc)}/${issue.id}`, { collectionStatus: 'collected' })
+      .expect(200);
+    expect(collected.body.collectionStatus).toBe('collected');
+    await api()
+      .patch(`${base(acc)}/${issue.id}`, { collectionStatus: 'pending' })
+      .expect(200);
+    await api()
+      .delete(`${base(acc)}/${issue.id}`)
+      .expect(204);
+    await api()
+      .get(`${base(acc)}/${issue.id}`)
+      .expect(404);
+    expect(await list(acc, 'from=2026-01-01')).toEqual([]);
+    expect((await summary(acc)).currentBalance).toBe('0.00');
+
+    const logs = await db
+      .select({ action: auditLogs.action, changes: auditLogs.changes })
+      .from(auditLogs)
+      .where(
+        and(eq(auditLogs.entityType, 'air_account_movement'), eq(auditLogs.entityId, issue.id)),
+      )
+      .orderBy(auditLogs.createdAt);
+    expect(logs.map((l) => l.action)).toEqual([
+      'air_account_movement.create',
+      'air_account_movement.update',
+      'air_account_movement.update',
+      'air_account_movement.delete',
+    ]);
+    expect(logs[1]!.changes).toMatchObject({
+      before: { collectionStatus: 'pending' },
+      after: { collectionStatus: 'collected' },
+    });
+  });
+
+  it('un movimiento solo se alcanza por su propia cuenta', async () => {
+    const acc = await newAccount();
+    const other = await newAccount();
+    const r = await entry(acc, 'recharge', '100.00');
+    await api()
+      .get(`${base(other)}/${r.id}`)
+      .expect(404);
+    await api()
+      .patch(`${base(other)}/${r.id}`, { amount: '1.00' })
+      .expect(404);
+    await api()
+      .delete(`${base(other)}/${r.id}`)
+      .expect(404);
+    await api().get(`/air-accounts/${randomUUID()}/movements`).expect(404);
+  });
+
+  it('CA-21 filtra por fechas (bordes incluidos), tipo y estado de cobro, ordenado por fecha', async () => {
+    const acc = await newAccount('10000.00');
+    await entry(acc, 'recharge', '100.00', '2026-08-31');
+    await entry(acc, 'recharge', '200.00', '2026-09-01');
+    const pending = await post(acc, issueBody({ movementDate: '2026-09-15' }));
+    const done = await post(
+      acc,
+      issueBody({ movementDate: '2026-09-30', collectionStatus: 'collected' }),
+    );
+    await entry(acc, 'payment', '50.00', '2026-10-01');
+
+    const sept = await list(acc, 'from=2026-09-01&to=2026-09-30');
+    expect(sept.map((x) => x.movementDate)).toEqual(['2026-09-30', '2026-09-15', '2026-09-01']);
+    expect((await list(acc, 'from=2026-09-01&to=2026-09-30&type=issue')).map((x) => x.id)).toEqual([
+      done.id,
+      pending.id,
+    ]);
+    expect(
+      (await list(acc, 'from=2026-09-01&to=2026-09-30&collectionStatus=pending')).map((x) => x.id),
+    ).toEqual([pending.id]);
+    expect((await list(acc, 'from=2026-10-01')).map((x) => x.type)).toEqual(['payment']);
+    expect((await list(acc, 'to=2026-08-31')).map((x) => x.amount)).toEqual(['100.00']);
+    const bad = await api()
+      .get(`${base(acc)}?from=2026-09-02&to=2026-09-01`)
+      .expect(422);
+    expect(bad.body.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('CA-21 sin fechas lista el mes actual en Bogotá', async () => {
+    const acc = await newAccount();
+    const today = todayIn();
+    await entry(acc, 'recharge', '10.00', today);
+    await entry(acc, 'recharge', '20.00', '2020-01-01');
+    expect((await list(acc)).map((x) => x.movementDate)).toEqual([today]);
+  });
+
+  it('CA-22 el resumen suma lo filtrado, el saldo hasta la fecha final y el actual', async () => {
+    const acc = await newAccount('1000.00');
+    await entry(acc, 'opening_balance', '-100.00', '2026-08-01');
+    await entry(acc, 'recharge', '500.00', '2026-09-01');
+    await post(acc, issueBody({ movementDate: '2026-09-15' }));
+    await post(
+      acc,
+      issueBody({
+        movementDate: '2026-09-20',
+        netFare: '50.00',
+        taxes: '0.00',
+        collectionStatus: 'collected',
+      }),
+    );
+    await entry(acc, 'payment', '40.00', '2026-10-05');
+
+    expect(await summary(acc, 'from=2026-09-01&to=2026-09-30')).toEqual({
+      totalIn: '500.00',
+      totalIssued: '200.00',
+      pendingCollection: '150.00',
+      balanceAsOf: '200.00',
+      currentBalance: '240.00',
+      available: '1240.00',
+    });
+    expect(await summary(acc, 'from=2026-09-01&to=2026-09-30&type=issue')).toMatchObject({
+      totalIn: '0.00',
+      totalIssued: '200.00',
+      balanceAsOf: '200.00',
+    });
   });
 });

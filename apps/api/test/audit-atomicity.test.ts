@@ -1,4 +1,7 @@
 import type {
+  AirAccount,
+  AirMovement,
+  AirOperator,
   Contract,
   Credential,
   Expense,
@@ -83,6 +86,22 @@ const payment = (contractId: string, paymentDate = '2026-09-02') => ({
   days: [{ workDate: '2026-08-24', amount: '50000.00', isHoliday: false }],
 });
 
+/** Cuenta aérea prepago nueva; devuelve la ruta de sus movimientos. */
+async function newAirAccount(): Promise<string> {
+  const operator = await body<AirOperator>(
+    api().post('/air-operators', { name: `Operador ${randomUUID()}` }),
+    201,
+  );
+  const account = await body<AirAccount>(
+    api().post('/air-accounts', { operatorId: operator.id, name: 'KIU', creditLimit: '0.00' }),
+    201,
+  );
+  return `/air-accounts/${account.id}/movements`;
+}
+
+const recharge = (path: string, amount = '100.00') =>
+  api().post(path, { type: 'recharge', movementDate: '2026-09-01', amount });
+
 const contractsOf = (providerId: string) =>
   body<Contract[]>(api().get(`/service-providers/${providerId}/contracts`));
 
@@ -115,6 +134,50 @@ afterEach(async () => {
 afterAll(async () => {
   await withOwnerSql((sql) => sql`drop function if exists anderp.test_fail_audit()`);
   await t.close();
+});
+
+describe('Cuentas aéreas', () => {
+  it('crear una cuenta', async () => {
+    await failAudit('air_account.create');
+    await body(api().post('/air-operators', { name: 'Satena' }), 201);
+    const [operator] = await body<AirOperator[]>(api().get('/air-operators'));
+    await body(
+      api().post('/air-accounts', { operatorId: operator!.id, name: 'KIU', creditLimit: '0.00' }),
+      500,
+    );
+    expect(await body<AirAccount[]>(api().get('/air-accounts'))).toHaveLength(0);
+  });
+
+  it('editar una cuenta', async () => {
+    const path = await newAirAccount();
+    const accountPath = path.replace('/movements', '');
+    await failAudit('air_account.update');
+    await body(api().patch(accountPath, { creditLimit: '100.00' }), 500);
+    expect((await body<AirAccount>(api().get(accountPath))).creditLimit).toBe('0.00');
+  });
+
+  it('crear un movimiento', async () => {
+    const path = await newAirAccount();
+    await failAudit('air_account_movement.create');
+    await body(recharge(path), 500);
+    expect(await body<AirMovement[]>(api().get(`${path}?from=2026-09-01`))).toHaveLength(0);
+  });
+
+  it('editar un movimiento', async () => {
+    const path = await newAirAccount();
+    const m = await body<AirMovement>(recharge(path), 201);
+    await failAudit('air_account_movement.update');
+    await body(api().patch(`${path}/${m.id}`, { amount: '200.00' }), 500);
+    expect((await body<AirMovement>(api().get(`${path}/${m.id}`))).amount).toBe('100.00');
+  });
+
+  it('borrar un movimiento', async () => {
+    const path = await newAirAccount();
+    const m = await body<AirMovement>(recharge(path), 201);
+    await failAudit('air_account_movement.delete');
+    await body(api().delete(`${path}/${m.id}`), 500);
+    await body(api().get(`${path}/${m.id}`));
+  });
 });
 
 describe('Egresos', () => {
@@ -478,7 +541,20 @@ describe('Dos borrados simultáneos', () => {
     ).id;
   };
 
-  const cases: [string, string, string, () => Promise<string>][] = [
+  // La ruta de los movimientos aéreos depende de la cuenta que crea el caso.
+  let airMovementsPath = '';
+  const createAirMovement = async () => {
+    airMovementsPath = await newAirAccount();
+    return (await body<AirMovement>(recharge(airMovementsPath), 201)).id;
+  };
+
+  const cases: [string, string | (() => string), string, () => Promise<string>][] = [
+    [
+      'air_account_movements',
+      () => airMovementsPath,
+      'air_account_movement.delete',
+      createAirMovement,
+    ],
     ['expenses', '/expenses', 'expense.delete', createExpense],
     [
       'fee_payments',
@@ -506,7 +582,7 @@ describe('Dos borrados simultáneos', () => {
           statuses = Promise.all(
             [1, 2].map(() =>
               api()
-                .delete(`${path}/${id}`)
+                .delete(`${typeof path === 'function' ? path() : path}/${id}`)
                 .then((res) => res.status),
             ),
           );

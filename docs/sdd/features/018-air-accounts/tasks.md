@@ -30,7 +30,7 @@
 
 - [x] F18-T004 [TDD] Operadores y cuentas: escribir sus casos en `air-accounts.test.ts` y después crear el módulo `air-accounts` con `air-operators.service.ts`, `air-accounts.service.ts` y sus controladores (borrar `modules/clickiu/` y `clickiu.test.ts`): CRUD, `DUPLICATE_NAME`, operador inactivo, `byOperator`, saldo y disponible en el listado, bajar el límite rechazado, auditoría de cuentas.
       Depende de: F18-T001, F18-T003 · Verificación: CA-1–CA-5, CA-19, CA-20, CA-23 (cuentas), CA-24
-- [ ] F18-T005 [TDD] Movimientos: casos en `air-accounts.test.ts` y después `air-account-movements.service.ts` y su controlador: crear cada tipo, `discriminatedUnion`, monto calculado y recalculado, `PATCH` incoherente con su `code`, cuenta inactiva, marcar como cobrado, borrado lógico, filtros, mes por defecto, `from > to`, `summary`, errores de cupo con su `code`, auditoría. Pasar el caso de `audit-atomicity.test.ts` a `air_account_movement.create`.
+- [x] F18-T005 [TDD] Movimientos: casos en `air-accounts.test.ts` y después `air-account-movements.service.ts` y su controlador: crear cada tipo, `discriminatedUnion`, monto calculado y recalculado, `PATCH` incoherente con su `code`, cuenta inactiva, marcar como cobrado, borrado lógico, filtros, mes por defecto, `from > to`, `summary`, errores de cupo con su `code`, auditoría. Pasar el caso de `audit-atomicity.test.ts` a `air_account_movement.create`.
       Depende de: F18-T004 · Verificación: CA-6–CA-17, CA-21–CA-23
 - [ ] F18-T006 Pruebas de aislamiento con `seedTwoOrgs()`: A no lista, lee, edita ni usa operadores, cuentas ni movimientos de B (`404`), y lo de B no cambia saldos, totales ni el consolidado de A. Rutas en OpenAPI.
       Depende de: F18-T005 · Verificación: CA-25

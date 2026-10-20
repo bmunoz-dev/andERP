@@ -105,3 +105,6 @@ Se borran `routes/_app/clic-kiu.tsx`, `components/clickiu/` y `lib/clickiu-api.t
 - **Monto del saldo inicial (T003):** `-0.00` también se rechaza como 0.
 - **Por cobrar como subconsulta correlacionada (T004):** el listado, la ficha y el consolidado leen `pendingCollection` con una subconsulta por cuenta en lugar de un `LEFT JOIN` a un agregado; con un helper de uniones compartido, el tipado de Drizzle no aceptaba campos distintos. Las sumas siguen en SQL.
 - **Servicios (T004):** `AirOperatorsService` y `AirAccountsService`; los dos controladores van en `air-accounts.module.ts`, como hacía `clickiu.module.ts`.
+- **Cuerpo de `POST` de movimientos (T005):** `createZodDto` no admite una unión discriminada (no es una clase con miembros fijos). El controlador valida con `new ZodValidationPipe(createAirMovementSchema)` en el `@Body`; el error sigue siendo `422 VALIDATION_ERROR`.
+- **Recalcular el monto (T005):** solo si el movimiento guardado es una emisión. En otro tipo, un `PATCH` con `netFare` deja `amount` como estaba y el CHECK responde `AIR_MOVEMENT_TICKET_FIELDS_MISMATCH`, en vez de un `NOT NULL` sin `code`.
+- **Atomicidad (T005):** `audit-atomicity.test.ts` cubre crear y editar cuentas, crear, editar y borrar movimientos, y el borrado simultáneo de un movimiento.

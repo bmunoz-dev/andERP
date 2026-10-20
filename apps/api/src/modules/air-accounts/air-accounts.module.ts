@@ -1,18 +1,26 @@
 import {
   type AirAccount,
+  type AirMovement,
+  type AirMovementSummary,
+  type CreateAirMovement,
   type AirOperator,
   type AirOperatorBalance,
   airActiveFilterSchema,
+  airMovementFiltersSchema,
+  createAirMovementSchema,
   ErrorCode,
   saveAirAccountSchema,
   saveAirOperatorSchema,
   updateAirAccountSchema,
+  updateAirMovementSchema,
   updateAirOperatorSchema,
 } from '@anderp/shared';
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Module,
   Param,
   ParseUUIDPipe,
@@ -21,8 +29,9 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto, ZodValidationPipe } from 'nestjs-zod';
 import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
+import { AirAccountMovementsService } from './air-account-movements.service';
 import { AirAccountsService } from './air-accounts.service';
 import { AirOperatorsService } from './air-operators.service';
 
@@ -42,6 +51,8 @@ class SaveAirOperatorDto extends createZodDto(saveAirOperatorSchema) {}
 class UpdateAirOperatorDto extends createZodDto(updateAirOperatorSchema) {}
 class SaveAirAccountDto extends createZodDto(saveAirAccountSchema) {}
 class UpdateAirAccountDto extends createZodDto(updateAirAccountSchema) {}
+class UpdateAirMovementDto extends createZodDto(updateAirMovementSchema) {}
+class AirMovementFiltersDto extends createZodDto(airMovementFiltersSchema) {}
 
 /** F18: catálogo de operadores aéreos. */
 @ApiTags('air-accounts')
@@ -104,8 +115,67 @@ export class AirAccountsController {
   }
 }
 
+/** F18: libro de una cuenta (saldo inicial, recargas, pagos, reembolsos y emisiones). */
+@ApiTags('air-accounts')
+@Controller('air-accounts/:accountId/movements')
+export class AirAccountMovementsController {
+  constructor(private readonly movements: AirAccountMovementsService) {}
+
+  @Get()
+  list(
+    @Param('accountId', ParseUUIDPipe) accountId: string,
+    @Query() filters: AirMovementFiltersDto,
+  ): Promise<AirMovement[]> {
+    return this.movements.list(accountId, filters);
+  }
+
+  // Antes de `:id`, para que "summary" no se lea como un id.
+  @Get('summary')
+  summary(
+    @Param('accountId', ParseUUIDPipe) accountId: string,
+    @Query() filters: AirMovementFiltersDto,
+  ): Promise<AirMovementSummary> {
+    return this.movements.summary(accountId, filters);
+  }
+
+  @Post()
+  create(
+    @Param('accountId', ParseUUIDPipe) accountId: string,
+    // Un DTO de clase no admite una unión; se valida con el esquema directamente.
+    @Body(new ZodValidationPipe(createAirMovementSchema)) body: CreateAirMovement,
+  ): Promise<AirMovement> {
+    return this.movements.create(accountId, body);
+  }
+
+  @Get(':id')
+  get(
+    @Param('accountId', ParseUUIDPipe) accountId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<AirMovement> {
+    return this.movements.get(accountId, id);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('accountId', ParseUUIDPipe) accountId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: UpdateAirMovementDto,
+  ): Promise<AirMovement> {
+    return this.movements.update(accountId, id, body);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  remove(
+    @Param('accountId', ParseUUIDPipe) accountId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.movements.remove(accountId, id);
+  }
+}
+
 @Module({
-  controllers: [AirOperatorsController, AirAccountsController],
-  providers: [AirOperatorsService, AirAccountsService],
+  controllers: [AirOperatorsController, AirAccountsController, AirAccountMovementsController],
+  providers: [AirOperatorsService, AirAccountsService, AirAccountMovementsService],
 })
 export class AirAccountsModule {}
