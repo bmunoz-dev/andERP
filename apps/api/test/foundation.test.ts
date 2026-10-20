@@ -175,8 +175,8 @@ describe('CA-8 migración base', () => {
         select typname from pg_type
         where typnamespace = 'anderp'::regnamespace and typtype = 'e' order by typname`;
       expect(enums.map((e) => e.typname)).toEqual([
-        'clickiu_movement_type',
-        'clickiu_sale_status',
+        'air_collection_status',
+        'air_movement_type',
         'member_role',
         'notification_kind',
         'obligation_frequency',

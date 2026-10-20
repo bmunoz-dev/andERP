@@ -1,4 +1,5 @@
 import {
+  Building,
   Building2,
   CalendarClock,
   FileText,
@@ -6,11 +7,11 @@ import {
   KeyRound,
   Library,
   type LucideIcon,
+  Plane,
   Receipt,
   Tags,
   UserRound,
   Users,
-  Wallet,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -32,7 +33,7 @@ const operation: NavGroup = {
     { label: 'Personal', to: '/personal', icon: FileText },
     { label: 'Credenciales', to: '/credenciales', icon: KeyRound },
     { label: 'Responsables', to: '/responsables', icon: UserRound },
-    { label: 'Clic Kiu', to: '/clic-kiu', icon: Wallet },
+    { label: 'Cuentas aéreas', to: '/cuentas-aereas', icon: Plane },
     { label: 'Agenda', to: '/agenda', icon: CalendarClock },
   ],
 };
@@ -42,6 +43,7 @@ const settings: NavGroup = {
   items: [
     // En la interfaz las categorías de egreso se llaman "Departamentos" (design.md §3).
     { label: 'Departamentos', to: '/configuracion/categorias', icon: Tags },
+    { label: 'Operadores aéreos', to: '/configuracion/operadores-aereos', icon: Building },
     { label: 'Usuarios', to: '/configuracion/usuarios', icon: Users },
   ],
 };

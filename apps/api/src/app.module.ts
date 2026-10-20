@@ -6,7 +6,7 @@ import { ENV, type Env } from './config/env';
 import { DatabaseModule } from './db/database.module';
 import { AuditModule } from './modules/audit/audit.service';
 import { AuthModule } from './modules/auth/auth.module';
-import { ClickiuModule } from './modules/clickiu/clickiu.module';
+import { AirAccountsModule } from './modules/air-accounts/air-accounts.module';
 import { ObligationsModule } from './modules/obligations/obligations.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ContractDocumentsModule } from './modules/contract-documents/contract-documents.module';
@@ -52,7 +52,7 @@ export class AppModule {
         ResponsiblePersonsModule,
         CredentialsModule,
         ContractDocumentsModule,
-        ClickiuModule,
+        AirAccountsModule,
         ObligationsModule,
         NotificationsModule,
       ],

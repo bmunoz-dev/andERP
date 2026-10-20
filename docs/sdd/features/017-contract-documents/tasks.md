@@ -17,7 +17,7 @@
       Depende de: F17-T005 · Verificación: CA-8, CA-9, CA-11–CA-14
 - [x] F17-T007 [TDD] Web: columna "Documento" con sus acciones (`opener = null`, descarga por `<iframe>`) y validación previa. Worker: cuerpo como stream y prueba de `multipart`.
       Depende de: F17-T006 · Verificación: CA-16–CA-19b, CA-21
-- [ ] F17-T008 Despliegue: revisar que el bucket siga privado, cargar las variables en Render (el usuario), merge y pipeline.
+- [x] F17-T008 Despliegue: revisar que el bucket siga privado, cargar las variables en Render (el usuario), merge y pipeline.
       Depende de: F17-T007 · Verificación: CA-15, CA-15b
-- [ ] F17-T009 Notas de implementación, Definición de Hecho, verificación completa, verificación manual en local y en producción (incluida una subida de 10 MB) y `roadmap.md`.
+- [x] F17-T009 Notas de implementación, Definición de Hecho, verificación completa, verificación manual en local y en producción (incluida una subida de 10 MB) y `roadmap.md`.
       Depende de: F17-T008 · Verificación: CA-22

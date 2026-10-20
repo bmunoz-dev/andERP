@@ -16,13 +16,15 @@ import { Route as OlvideContrasenaRouteImport } from './routes/olvide-contrasena
 import { Route as RestablecerRouteImport } from './routes/restablecer'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAgendaRouteImport } from './routes/_app/agenda'
-import { Route as AppClicKiuRouteImport } from './routes/_app/clic-kiu'
 import { Route as AppCredencialesRouteImport } from './routes/_app/credenciales'
 import { Route as AppEgresosRouteImport } from './routes/_app/egresos'
 import { Route as AppPlataformaRouteRouteImport } from './routes/_app/plataforma/route'
 import { Route as AppResponsablesRouteImport } from './routes/_app/responsables'
 import { Route as AppConfiguracionCategoriasRouteImport } from './routes/_app/configuracion/categorias'
+import { Route as AppConfiguracionOperadoresAereosRouteImport } from './routes/_app/configuracion/operadores-aereos'
 import { Route as AppConfiguracionUsuariosRouteImport } from './routes/_app/configuracion/usuarios'
+import { Route as AppCuentasAereasIndexRouteImport } from './routes/_app/cuentas-aereas/index'
+import { Route as AppCuentasAereasAccountIdRouteImport } from './routes/_app/cuentas-aereas/$accountId'
 import { Route as AppPagosIndexRouteImport } from './routes/_app/pagos/index'
 import { Route as AppPagosIdRouteImport } from './routes/_app/pagos/$id'
 import { Route as AppPagosNuevoRouteImport } from './routes/_app/pagos/nuevo'
@@ -65,11 +67,6 @@ const AppAgendaRoute = AppAgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => AppRoute,
 } as any)
-const AppClicKiuRoute = AppClicKiuRouteImport.update({
-  id: '/clic-kiu',
-  path: '/clic-kiu',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppCredencialesRoute = AppCredencialesRouteImport.update({
   id: '/credenciales',
   path: '/credenciales',
@@ -96,10 +93,27 @@ const AppConfiguracionCategoriasRoute =
     path: '/configuracion/categorias',
     getParentRoute: () => AppRoute,
   } as any)
+const AppConfiguracionOperadoresAereosRoute =
+  AppConfiguracionOperadoresAereosRouteImport.update({
+    id: '/configuracion/operadores-aereos',
+    path: '/configuracion/operadores-aereos',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppConfiguracionUsuariosRoute =
   AppConfiguracionUsuariosRouteImport.update({
     id: '/configuracion/usuarios',
     path: '/configuracion/usuarios',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppCuentasAereasIndexRoute = AppCuentasAereasIndexRouteImport.update({
+  id: '/cuentas-aereas/',
+  path: '/cuentas-aereas/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCuentasAereasAccountIdRoute =
+  AppCuentasAereasAccountIdRouteImport.update({
+    id: '/cuentas-aereas/$accountId',
+    path: '/cuentas-aereas/$accountId',
     getParentRoute: () => AppRoute,
   } as any)
 const AppPagosIndexRoute = AppPagosIndexRouteImport.update({
@@ -147,17 +161,19 @@ export interface FileRoutesByFullPath {
   '/restablecer': typeof RestablecerRoute
   '/plataforma': typeof AppPlataformaRouteRouteWithChildren
   '/agenda': typeof AppAgendaRoute
-  '/clic-kiu': typeof AppClicKiuRoute
   '/credenciales': typeof AppCredencialesRoute
   '/egresos': typeof AppEgresosRoute
   '/responsables': typeof AppResponsablesRoute
   '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
+  '/configuracion/operadores-aereos': typeof AppConfiguracionOperadoresAereosRoute
   '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
+  '/cuentas-aereas/$accountId': typeof AppCuentasAereasAccountIdRoute
   '/pagos/$id': typeof AppPagosIdRoute
   '/pagos/nuevo': typeof AppPagosNuevoRoute
   '/personal/$id': typeof AppPersonalIdRoute
   '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
   '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
+  '/cuentas-aereas/': typeof AppCuentasAereasIndexRoute
   '/pagos/': typeof AppPagosIndexRoute
   '/personal/': typeof AppPersonalIndexRoute
 }
@@ -168,18 +184,20 @@ export interface FileRoutesByTo {
   '/restablecer': typeof RestablecerRoute
   '/plataforma': typeof AppPlataformaRouteRouteWithChildren
   '/agenda': typeof AppAgendaRoute
-  '/clic-kiu': typeof AppClicKiuRoute
   '/credenciales': typeof AppCredencialesRoute
   '/egresos': typeof AppEgresosRoute
   '/responsables': typeof AppResponsablesRoute
   '/': typeof AppIndexRoute
   '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
+  '/configuracion/operadores-aereos': typeof AppConfiguracionOperadoresAereosRoute
   '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
+  '/cuentas-aereas/$accountId': typeof AppCuentasAereasAccountIdRoute
   '/pagos/$id': typeof AppPagosIdRoute
   '/pagos/nuevo': typeof AppPagosNuevoRoute
   '/personal/$id': typeof AppPersonalIdRoute
   '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
   '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
+  '/cuentas-aereas': typeof AppCuentasAereasIndexRoute
   '/pagos': typeof AppPagosIndexRoute
   '/personal': typeof AppPersonalIndexRoute
 }
@@ -192,18 +210,20 @@ export interface FileRoutesById {
   '/restablecer': typeof RestablecerRoute
   '/_app/plataforma': typeof AppPlataformaRouteRouteWithChildren
   '/_app/agenda': typeof AppAgendaRoute
-  '/_app/clic-kiu': typeof AppClicKiuRoute
   '/_app/credenciales': typeof AppCredencialesRoute
   '/_app/egresos': typeof AppEgresosRoute
   '/_app/responsables': typeof AppResponsablesRoute
   '/_app/': typeof AppIndexRoute
   '/_app/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
+  '/_app/configuracion/operadores-aereos': typeof AppConfiguracionOperadoresAereosRoute
   '/_app/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
+  '/_app/cuentas-aereas/$accountId': typeof AppCuentasAereasAccountIdRoute
   '/_app/pagos/$id': typeof AppPagosIdRoute
   '/_app/pagos/nuevo': typeof AppPagosNuevoRoute
   '/_app/personal/$id': typeof AppPersonalIdRoute
   '/_app/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
   '/_app/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
+  '/_app/cuentas-aereas/': typeof AppCuentasAereasIndexRoute
   '/_app/pagos/': typeof AppPagosIndexRoute
   '/_app/personal/': typeof AppPersonalIndexRoute
 }
@@ -217,17 +237,19 @@ export interface FileRouteTypes {
     | '/restablecer'
     | '/plataforma'
     | '/agenda'
-    | '/clic-kiu'
     | '/credenciales'
     | '/egresos'
     | '/responsables'
     | '/configuracion/categorias'
+    | '/configuracion/operadores-aereos'
     | '/configuracion/usuarios'
+    | '/cuentas-aereas/$accountId'
     | '/pagos/$id'
     | '/pagos/nuevo'
     | '/personal/$id'
     | '/plataforma/catalogos'
     | '/plataforma/organizaciones'
+    | '/cuentas-aereas/'
     | '/pagos/'
     | '/personal/'
   fileRoutesByTo: FileRoutesByTo
@@ -238,18 +260,20 @@ export interface FileRouteTypes {
     | '/restablecer'
     | '/plataforma'
     | '/agenda'
-    | '/clic-kiu'
     | '/credenciales'
     | '/egresos'
     | '/responsables'
     | '/'
     | '/configuracion/categorias'
+    | '/configuracion/operadores-aereos'
     | '/configuracion/usuarios'
+    | '/cuentas-aereas/$accountId'
     | '/pagos/$id'
     | '/pagos/nuevo'
     | '/personal/$id'
     | '/plataforma/catalogos'
     | '/plataforma/organizaciones'
+    | '/cuentas-aereas'
     | '/pagos'
     | '/personal'
   id:
@@ -261,18 +285,20 @@ export interface FileRouteTypes {
     | '/restablecer'
     | '/_app/plataforma'
     | '/_app/agenda'
-    | '/_app/clic-kiu'
     | '/_app/credenciales'
     | '/_app/egresos'
     | '/_app/responsables'
     | '/_app/'
     | '/_app/configuracion/categorias'
+    | '/_app/configuracion/operadores-aereos'
     | '/_app/configuracion/usuarios'
+    | '/_app/cuentas-aereas/$accountId'
     | '/_app/pagos/$id'
     | '/_app/pagos/nuevo'
     | '/_app/personal/$id'
     | '/_app/plataforma/catalogos'
     | '/_app/plataforma/organizaciones'
+    | '/_app/cuentas-aereas/'
     | '/_app/pagos/'
     | '/_app/personal/'
   fileRoutesById: FileRoutesById
@@ -336,13 +362,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAgendaRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/clic-kiu': {
-      id: '/_app/clic-kiu'
-      path: '/clic-kiu'
-      fullPath: '/clic-kiu'
-      preLoaderRoute: typeof AppClicKiuRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/credenciales': {
       id: '/_app/credenciales'
       path: '/credenciales'
@@ -378,11 +397,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfiguracionCategoriasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/configuracion/operadores-aereos': {
+      id: '/_app/configuracion/operadores-aereos'
+      path: '/configuracion/operadores-aereos'
+      fullPath: '/configuracion/operadores-aereos'
+      preLoaderRoute: typeof AppConfiguracionOperadoresAereosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/configuracion/usuarios': {
       id: '/_app/configuracion/usuarios'
       path: '/configuracion/usuarios'
       fullPath: '/configuracion/usuarios'
       preLoaderRoute: typeof AppConfiguracionUsuariosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/cuentas-aereas/': {
+      id: '/_app/cuentas-aereas/'
+      path: '/cuentas-aereas'
+      fullPath: '/cuentas-aereas/'
+      preLoaderRoute: typeof AppCuentasAereasIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/cuentas-aereas/$accountId': {
+      id: '/_app/cuentas-aereas/$accountId'
+      path: '/cuentas-aereas/$accountId'
+      fullPath: '/cuentas-aereas/$accountId'
+      preLoaderRoute: typeof AppCuentasAereasAccountIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/pagos/': {
@@ -453,16 +493,18 @@ const AppPlataformaRouteRouteWithChildren =
 interface AppRouteChildren {
   AppPlataformaRouteRoute: typeof AppPlataformaRouteRouteWithChildren
   AppAgendaRoute: typeof AppAgendaRoute
-  AppClicKiuRoute: typeof AppClicKiuRoute
   AppCredencialesRoute: typeof AppCredencialesRoute
   AppEgresosRoute: typeof AppEgresosRoute
   AppResponsablesRoute: typeof AppResponsablesRoute
   AppIndexRoute: typeof AppIndexRoute
   AppConfiguracionCategoriasRoute: typeof AppConfiguracionCategoriasRoute
+  AppConfiguracionOperadoresAereosRoute: typeof AppConfiguracionOperadoresAereosRoute
   AppConfiguracionUsuariosRoute: typeof AppConfiguracionUsuariosRoute
+  AppCuentasAereasAccountIdRoute: typeof AppCuentasAereasAccountIdRoute
   AppPagosIdRoute: typeof AppPagosIdRoute
   AppPagosNuevoRoute: typeof AppPagosNuevoRoute
   AppPersonalIdRoute: typeof AppPersonalIdRoute
+  AppCuentasAereasIndexRoute: typeof AppCuentasAereasIndexRoute
   AppPagosIndexRoute: typeof AppPagosIndexRoute
   AppPersonalIndexRoute: typeof AppPersonalIndexRoute
 }
@@ -470,16 +512,18 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppPlataformaRouteRoute: AppPlataformaRouteRouteWithChildren,
   AppAgendaRoute: AppAgendaRoute,
-  AppClicKiuRoute: AppClicKiuRoute,
   AppCredencialesRoute: AppCredencialesRoute,
   AppEgresosRoute: AppEgresosRoute,
   AppResponsablesRoute: AppResponsablesRoute,
   AppIndexRoute: AppIndexRoute,
   AppConfiguracionCategoriasRoute: AppConfiguracionCategoriasRoute,
+  AppConfiguracionOperadoresAereosRoute: AppConfiguracionOperadoresAereosRoute,
   AppConfiguracionUsuariosRoute: AppConfiguracionUsuariosRoute,
+  AppCuentasAereasAccountIdRoute: AppCuentasAereasAccountIdRoute,
   AppPagosIdRoute: AppPagosIdRoute,
   AppPagosNuevoRoute: AppPagosNuevoRoute,
   AppPersonalIdRoute: AppPersonalIdRoute,
+  AppCuentasAereasIndexRoute: AppCuentasAereasIndexRoute,
   AppPagosIndexRoute: AppPagosIndexRoute,
   AppPersonalIndexRoute: AppPersonalIndexRoute,
 }

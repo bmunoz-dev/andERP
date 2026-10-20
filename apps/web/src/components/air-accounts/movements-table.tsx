@@ -1,55 +1,57 @@
-import { type ClickiuMovement, formatCOP } from '@anderp/shared';
+import { type AirMovement, formatCOP } from '@anderp/shared';
 import type { ColumnDef } from '@tanstack/react-table';
 import { CircleCheck, Pencil, Trash2 } from 'lucide-react';
 import { DataTable } from '@/components/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { AIR_MOVEMENT_LABELS } from '@/lib/air-accounts-api';
 import { formatDate } from '@/lib/format';
 
-/** Tabla de movimientos de Clic Kiu (F11 CA-19). */
+/** Monto con su efecto en el saldo: `−` en emisiones y saldos iniciales negativos, `+` en el resto. */
+function SignedMovement({ movement }: { movement: AirMovement }) {
+  const { amount } = movement;
+  if (movement.type === 'issue' || amount.startsWith('-')) {
+    return <span>− {formatCOP(amount.replace('-', ''))}</span>;
+  }
+  return <span className="text-emerald-700 dark:text-emerald-400">+ {formatCOP(amount)}</span>;
+}
+
+/** Tabla de movimientos de una cuenta aérea (F18 CA-30). */
 export function MovementsTable({
   data,
   isLoading,
-  onComplete,
+  onCollect,
   onEdit,
   onDelete,
 }: {
-  data: ClickiuMovement[] | undefined;
+  data: AirMovement[] | undefined;
   isLoading: boolean;
-  onComplete: (m: ClickiuMovement) => void;
-  onEdit: (m: ClickiuMovement) => void;
-  onDelete: (m: ClickiuMovement) => void;
+  onCollect: (m: AirMovement) => void;
+  onEdit: (m: AirMovement) => void;
+  onDelete: (m: AirMovement) => void;
 }) {
-  const columns: ColumnDef<ClickiuMovement>[] = [
+  const columns: ColumnDef<AirMovement>[] = [
     { id: 'date', header: 'Fecha', cell: ({ row }) => formatDate(row.original.movementDate) },
-    {
-      id: 'type',
-      header: 'Tipo',
-      cell: ({ row }) => (row.original.type === 'recharge' ? 'Recarga' : 'Venta'),
-    },
+    { id: 'type', header: 'Tipo', cell: ({ row }) => AIR_MOVEMENT_LABELS[row.original.type] },
     {
       id: 'amount',
       header: 'Monto',
-      cell: ({ row }) =>
-        row.original.type === 'recharge' ? (
-          <span className="text-emerald-700 dark:text-emerald-400">
-            + {formatCOP(row.original.amount)}
-          </span>
-        ) : (
-          <span>− {formatCOP(row.original.amount)}</span>
-        ),
+      cell: ({ row }) => <SignedMovement movement={row.original} />,
     },
+    { id: 'pnr', header: 'PNR', cell: ({ row }) => row.original.pnr ?? '' },
+    { id: 'ticket', header: 'Tiquete', cell: ({ row }) => row.original.ticketNumber ?? '' },
+    { id: 'passenger', header: 'Pasajero', cell: ({ row }) => row.original.passenger ?? '' },
     {
-      id: 'status',
-      header: 'Estado',
+      id: 'collection',
+      header: 'Estado de cobro',
       cell: ({ row }) => {
-        const { status } = row.original;
-        if (!status) return '—';
-        return status === 'credit' ? (
-          <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400">Crédito</Badge>
+        const { collectionStatus } = row.original;
+        if (!collectionStatus) return '—';
+        return collectionStatus === 'pending' ? (
+          <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400">Por cobrar</Badge>
         ) : (
           <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
-            Completado
+            Cobrado
           </Badge>
         );
       },
@@ -60,14 +62,14 @@ export function MovementsTable({
       header: () => <span className="sr-only">Acciones</span>,
       cell: ({ row }) => (
         <div className="flex justify-end gap-1">
-          {row.original.status === 'credit' && (
+          {row.original.collectionStatus === 'pending' && (
             <Button
               variant="ghost"
               size="icon"
-              aria-label="Marcar como completado"
-              title="Marcar como completado"
+              aria-label="Marcar como cobrado"
+              title="Marcar como cobrado"
               onClick={() => {
-                onComplete(row.original);
+                onCollect(row.original);
               }}
             >
               <CircleCheck />

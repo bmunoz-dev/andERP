@@ -1,11 +1,7 @@
 import {
-  type ClickiuMovement,
-  type ClickiuMovementType,
-  type ClickiuSaleStatus,
-  formatCOP,
-  type SaveClickiuMovement,
-  saveClickiuMovementSchema,
-  sumMoney,
+  type AirMovement,
+  type AirMovementType,
+  createAirMovementSchema,
   todayIn,
 } from '@anderp/shared';
 import { useMutation } from '@tanstack/react-query';
@@ -14,55 +10,56 @@ import { toast } from 'sonner';
 import { FormDialog } from '@/components/form-dialog';
 import { FormField } from '@/components/form-field';
 import { MoneyInput } from '@/components/money-input';
-import { SelectField } from '@/components/select-field';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
-import { createClickiuMovement, updateClickiuMovement } from '@/lib/clickiu-api';
+import { createAirMovement, updateAirMovement } from '@/lib/air-accounts-api';
 import { errorMessage } from '@/lib/error-messages.es';
 
-type Errors = Partial<Record<'movementDate' | 'amount' | 'description', string>>;
+type EntryType = Exclude<AirMovementType, 'issue'>;
 
-const TITLES = {
+const TITLES: Record<EntryType, { create: string; edit: string; saved: string }> = {
+  opening_balance: {
+    create: 'Saldo inicial',
+    edit: 'Editar saldo inicial',
+    saved: 'Saldo inicial guardado',
+  },
   recharge: { create: 'Nueva recarga', edit: 'Editar recarga', saved: 'Recarga guardada' },
-  sale: { create: 'Nueva venta', edit: 'Editar venta', saved: 'Venta guardada' },
+  payment: {
+    create: 'Nuevo pago al operador',
+    edit: 'Editar pago al operador',
+    saved: 'Pago guardado',
+  },
+  refund: { create: 'Nuevo reembolso', edit: 'Editar reembolso', saved: 'Reembolso guardado' },
 };
 
 /**
- * Alta y edición de un movimiento de Clic Kiu (F11 CA-20). El tipo llega fijo: no cambia (CA-3).
- * El aviso de saldo es solo una ayuda; la regla la aplica la base de datos.
+ * Recarga, pago al operador, reembolso o saldo inicial (F18 CA-31). El tipo llega fijo. El saldo
+ * inicial se escribe en positivo y se elige si es a favor o una deuda, en vez de teclear el signo.
  */
 export function MovementFormDialog({
+  accountId,
   type,
   movement,
-  currentBalance,
   onClose,
   onSaved,
 }: {
-  type: ClickiuMovementType;
-  movement: ClickiuMovement | null;
-  currentBalance: string;
+  accountId: string;
+  type: EntryType;
+  movement: AirMovement | null;
   onClose: () => void;
   onSaved: () => Promise<void>;
 }) {
+  const isOpening = type === 'opening_balance';
   const [movementDate, setMovementDate] = useState(movement?.movementDate ?? todayIn());
-  const [amount, setAmount] = useState<string | null>(movement?.amount ?? null);
-  const [status, setStatus] = useState<ClickiuSaleStatus>(movement?.status ?? 'credit');
+  const [amount, setAmount] = useState<string | null>(movement?.amount.replace('-', '') ?? null);
+  const [inDebt, setInDebt] = useState(movement?.amount.startsWith('-') ?? false);
   const [description, setDescription] = useState(movement?.description ?? '');
-  const [errors, setErrors] = useState<Errors>({});
+  const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [error, setError] = useState<string | null>(null);
   const amountId = useId();
-  const isSale = type === 'sale';
   const titles = TITLES[type];
 
-  // Al editar una venta, su monto original vuelve a estar disponible.
-  const available =
-    movement && isSale ? sumMoney([currentBalance, movement.amount]) : currentBalance;
-  const remaining = amount ? sumMoney([available, `-${amount}`]) : available;
-  const overBy = remaining.startsWith('-') ? remaining.slice(1) : null;
-
   const save = useMutation({
-    mutationFn: (body: SaveClickiuMovement) =>
-      movement ? updateClickiuMovement(movement.id, body) : createClickiuMovement(body),
+    mutationFn: (send: () => Promise<AirMovement>) => send(),
     onSuccess: async () => {
       toast.success(titles.saved);
       await onSaved();
@@ -74,11 +71,11 @@ export function MovementFormDialog({
   });
 
   function submit() {
-    const parsed = saveClickiuMovementSchema.safeParse({
+    const signed = amount && isOpening && inDebt ? `-${amount}` : (amount ?? '');
+    const parsed = createAirMovementSchema.safeParse({
       type,
-      status: isSale ? status : null,
       movementDate,
-      amount: amount ?? '',
+      amount: signed,
       description,
     });
     if (!parsed.success) {
@@ -86,7 +83,12 @@ export function MovementFormDialog({
       return;
     }
     setErrors({});
-    save.mutate(parsed.data);
+    const { type: _, ...changes } = parsed.data;
+    save.mutate(() =>
+      movement
+        ? updateAirMovement(accountId, movement.id, changes)
+        : createAirMovement(accountId, parsed.data),
+    );
   }
 
   return (
@@ -123,31 +125,32 @@ export function MovementFormDialog({
           {errors.amount && <p className="text-sm text-destructive">{errors.amount}</p>}
         </div>
       </div>
-      {isSale && (
-        <>
-          <SelectField
-            label="Estado"
-            placeholder="Elige"
-            value={status}
-            onChange={(v) => {
-              setStatus(v as ClickiuSaleStatus);
-            }}
-            options={[
-              { value: 'credit', label: 'Crédito' },
-              { value: 'completed', label: 'Completado' },
-            ]}
-          />
-          <p className="text-sm text-muted-foreground" data-testid="available-balance">
-            Saldo disponible: {formatCOP(available)}
-          </p>
-          {overBy && (
-            <Alert className="border-amber-500/50 text-amber-700 dark:text-amber-400">
-              <AlertDescription>
-                Supera el saldo disponible en {formatCOP(overBy)}.
-              </AlertDescription>
-            </Alert>
-          )}
-        </>
+      {isOpening && (
+        <fieldset className="flex gap-6 text-sm">
+          <legend className="sr-only">El saldo inicial es</legend>
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="opening-sign"
+              checked={!inDebt}
+              onChange={() => {
+                setInDebt(false);
+              }}
+            />
+            A favor
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="opening-sign"
+              checked={inDebt}
+              onChange={() => {
+                setInDebt(true);
+              }}
+            />
+            En deuda
+          </label>
+        </fieldset>
       )}
       <FormField
         label="Descripción (opcional)"

@@ -39,6 +39,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-18 | **Documento del contrato** (F17): tabla `contract_documents` (un archivo vigente por contrato) y bucket privado `contract-documents` en Supabase Storage, usado por la API con su protocolo S3 (s3mock en local y en las pruebas). Lectura con URL firmada de 5 minutos. Reemplazar o eliminar no borra el objeto del bucket. Sale de §11 "adjuntar contratos". | El usuario quiere guardar el contrato firmado junto a su registro y abrirlo desde la app. Pasar el archivo por la API permite validar su tipo real y mantener las llaves fuera del navegador; conservar los objetos acota la falta de respaldo (riesgo aceptado). |
 | 2026-10-17 | **Pagos de monto fijo** (F16): `provider_contracts.payment_mode` (`daily` / `fixed`) y tabla `fixed_payments` (contrato, mes trabajado, fecha de pago, valor). Entran en `v_expense_ledger` (categoría `FEES`) y en `v_contract_month_totals`. En la interfaz, "Prestadores" → "Personal" y "Honorarios" → "Pagos"; el código conserva sus nombres (§3). | A la empresa ahora también le trabajan personas con pago fijo por periodo (empleados); solo se registra lo pagado, sin calcular nómina. Una tabla aparte evita romper las invariantes de F04 (semana, días, un pago por semana). El renombrado del código se pospone a una feature de solo refactor (decisión del usuario). |
 | 2026-10-15 | **Vistas para el celular** (F15): por debajo de 768 px las tablas se muestran como tarjetas generadas de sus mismas columnas, sin ocultar ninguna (§8). | El usuario consulta la Agenda, las credenciales y Clic Kiu, y registra movimientos, desde el teléfono; con tablas había que desplazarse de lado para ver columnas y acciones. Generar las tarjetas de las columnas evita mantener dos maquetaciones por pantalla. |
+| 2026-10-20 | **Cuentas aéreas** (F18) **reemplaza a Clic Kiu** (F11): catálogo `air_operators`, `air_accounts` con `credit_limit` (0 = prepago) y libro `air_account_movements` (saldo inicial, recarga, pago, reembolso y emisión con PNR, tiquete, pasajero, tarifa neta e impuestos). Una sola regla para prepago y crédito: `saldo ≥ −credit_limit`, con trigger diferido y bloqueo por cuenta (clase `18`). Se eliminan `clickiu_movements`, `v_clickiu_balance` y sus enums; la clase `11` queda retirada. Libro editable, sin saldo guardado, sin ciclos de facturación ni comisión (§5.10). | La agencia emite tiquetes con varios operadores (aerolíneas y consolidadores), en cuentas prepago y a crédito con cupo, y varias cuentas por operador (sucursales, portal B2B). Producción no tenía datos de Clic Kiu, así que se reemplaza sin migrar datos. El vencimiento del pago a un operador va en la Agenda (F13). |
 
 ---
 
@@ -52,7 +53,7 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 2. Registrar pagos de honorarios día a día por semana, ligados al contrato del prestador, con lo pagado por mes trabajado frente al monto mensual de referencia del contrato.
 3. Guardar credenciales de portales externos cifradas, con registro de quién las revela.
 4. Avisar con anticipación las fechas límite de las obligaciones con entidades (DIAN, Fontur…) y llevar su historial de cumplimiento (F13).
-5. Llevar el saldo prepagado de Clic Kiu: recargas, ventas y lo que deben los clientes por ventas a crédito (F11).
+5. Llevar las cuentas con los operadores aéreos (prepago o a crédito con cupo): tiquetes emitidos, recargas y pagos, saldo y cupo disponible por cuenta y por operador, y lo que deben los clientes por cada tiquete (F18, reemplaza a F11).
 6. Nacer como sistema interno de una sola empresa, pero con el modelo de datos listo para operar varias organizaciones (multi-tenant) sin migrar datos.
 
 **Criterios de éxito:**
@@ -81,7 +82,7 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 | 12 | Roles | `super_admin` (plataforma: gestiona organizaciones y catálogos globales) y `admin` (todo dentro de su organización, incluidos ver credenciales y gestionar usuarios de la organización). |
 | 13 | Idioma | Base de datos y código en **inglés**. Interfaz en **español**. |
 | 14 | Responsables | Personas de contacto, independientes de los usuarios de la app. |
-| 15 | Clic Kiu | Módulo aparte: las recargas **no** entran en la matriz de Egresos. Una venta resta saldo esté en Crédito (el cliente debe) o Completado (ya pagó). El saldo total nunca queda negativo (F11). |
+| 15 | Cuentas aéreas | Módulo aparte: sus movimientos **no** entran en la matriz de Egresos. Cada cuenta de un operador aéreo tiene un límite de crédito (0 = prepago) y su saldo nunca baja de `−límite`. Una emisión resta saldo esté Por cobrar o Cobrada (F18; reemplaza a Clic Kiu, F11). |
 | 16 | Agenda de pagos | Registra obligaciones y sus fechas límite, **no los pagos**. Las fechas las ingresa el usuario: AndERP no calcula el calendario tributario. Alertas solo dentro de la app (F13). |
 | 17 | Forma de pago | El contrato se paga **por días trabajados** (F04) o con un **monto fijo** por mes trabajado (F16), nunca de las dos formas. AndERP registra lo pagado; **no calcula nómina** (seguridad social, prestaciones, retenciones). |
 | 18 | Documento del contrato | Un archivo vigente por contrato (PDF, `.doc` o `.docx`, hasta 10 MB) en Supabase Storage. Se lee con URL firmada; nunca se borra del bucket (F17). Sin respaldo de archivos: riesgo aceptado por el usuario. |
@@ -110,8 +111,10 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 | Periodicidad de pago | `payment_frequency` |
 | Semana del mes | `week_of_month` |
 | Registro de auditoría | `audit_logs` |
-| Movimiento de Clic Kiu (Recarga / Venta) | `clickiu_movements` (`recharge` / `sale`) |
-| Estado de la venta (Crédito / Completado) | `clickiu_sale_status` (`credit` / `completed`) |
+| Operador aéreo | `air_operators` |
+| Cuenta aérea (Prepago si el límite es 0, Crédito si es mayor) | `air_accounts` (`credit_limit`) |
+| Movimiento de la cuenta (Saldo inicial / Recarga / Pago al operador / Reembolso / Emisión) | `air_account_movements` (`opening_balance` / `recharge` / `payment` / `refund` / `issue`) |
+| Estado de cobro de la emisión (Por cobrar / Cobrado) | `air_collection_status` (`pending` / `collected`) |
 | Obligación (agenda de pagos) | `payment_obligations` |
 | Vencimiento | `obligation_due_dates` |
 | Periodicidad de la obligación | `obligation_frequency` |
@@ -164,7 +167,7 @@ apps/
         responsible-persons/ CRUD de responsables
         credentials/         cifrado AES-256-GCM (credential-cipher.ts), servicio y rotación de llaves
         audit/               escritura de audit_logs
-        clickiu/             movimientos y saldo de Clic Kiu (F11)
+        air-accounts/        operadores, cuentas aéreas, movimientos y cupo (F18)
         obligations/         agenda de pagos a entidades (F13)
         mail/                envío de correos (invitaciones y recuperación)
         health/              healthcheck para el despliegue
@@ -202,8 +205,8 @@ packages/
 | `member_role` | `admin` |
 | `payment_frequency` | `weekly`, `biweekly`, `monthly`, `bimonthly` |
 | `payment_mode` | `daily`, `fixed` |
-| `clickiu_movement_type` | `recharge`, `sale` |
-| `clickiu_sale_status` | `credit`, `completed` |
+| `air_movement_type` | `opening_balance`, `recharge`, `payment`, `refund`, `issue` |
+| `air_collection_status` | `pending`, `collected` |
 | `obligation_frequency` | `once`, `monthly`, `bimonthly`, `quarterly`, `semiannual`, `annual` |
 | `notification_kind` | `obligation_upcoming`, `obligation_overdue` |
 
@@ -489,32 +492,62 @@ Todas son vistas normales (no materializadas).
 
 - `INDEX (organization_id, created_at)`, `INDEX (entity_type, entity_id)`.
 
-**Se registra:** crear, editar y borrar en `expenses`, `fee_payments` (incluidos sus días), `provider_contracts`, `clickiu_movements`, `entity_credentials` (nunca con la contraseña ni sus datos cifrados), `payment_obligations` y `obligation_due_dates` (incluidos completar y crear, cambiar o quitar el pendiente); revelar una credencial; y los eventos de auth (login, login fallido, bloqueo, cambio y recuperación de contraseña).
+**Se registra:** crear, editar y borrar en `expenses`, `fee_payments` (incluidos sus días), `provider_contracts`, `air_accounts` (crear y editar; no se borran), `air_account_movements`, `entity_credentials` (nunca con la contraseña ni sus datos cifrados), `payment_obligations` y `obligation_due_dates` (incluidos completar y crear, cambiar o quitar el pendiente); revelar una credencial; y los eventos de auth (login, login fallido, bloqueo, cambio y recuperación de contraseña).
 
 **Atomicidad (F12):** el cambio y su registro se escriben en la misma transacción (`audit.log(entry, tx)`): si falla la auditoría, el cambio no queda. Los eventos de auth y `credential.reveal` se auditan fuera de cualquier transacción de negocio.
 
 **No se registra:** los cambios en catálogos (los cubren `created_by` y `updated_by`), ni ver o descartar notificaciones (F14, §5.12): es estado de la interfaz de cada usuario, no un dato del negocio.
 
-### 5.10 Clic Kiu (F11)
+### 5.10 Cuentas aéreas (F18)
 
-**`clickiu_movements`**
+Reemplaza a Clic Kiu (F11): `clickiu_movements`, `v_clickiu_balance`, sus triggers y sus enums se eliminaron en las migraciones 0030–0033 de F18.
+
+**`air_operators`** (catálogo de la organización; no se audita, §5.9)
 | Columna | Tipo | Notas |
 |---|---|---|
 | id | uuid PK | |
 | organization_id | uuid NOT NULL | |
-| type | clickiu_movement_type NOT NULL | no cambia después de crear (trigger) |
-| status | clickiu_sale_status NULL | obligatorio en ventas, nulo en recargas |
-| movement_date | date NOT NULL | |
-| amount | numeric(14,2) NOT NULL | `CHECK (amount > 0)` |
-| description | varchar(500) NULL | observaciones |
+| name | varchar(120) NOT NULL | sin espacios sobrantes; UNIQUE parcial (organization_id, lower(name)) → `DUPLICATE_NAME` |
+| is_active | boolean NOT NULL | default `true`; no se borra, se desactiva |
 | audit | | |
 
-- `CHECK ((type = 'sale') = (status IS NOT NULL))`.
-- `INDEX (organization_id, movement_date) WHERE deleted_at IS NULL`.
-- **Trigger diferido** (`AFTER INSERT OR UPDATE`, al confirmar la transacción): toma un `pg_advisory_xact_lock(11, hashtext(organization_id::text))` y rechaza si el saldo de `v_clickiu_balance` queda negativo (`CLICKIU_INSUFFICIENT_BALANCE`). Cubre ventas nuevas o mayores, recargas reducidas y borrados lógicos, y serializa operaciones simultáneas. Rechaza con `25000` (error interno) las transacciones en `REPEATABLE READ`, donde la foto de la transacción no vería la venta confirmada por otra; `READ COMMITTED` y `SERIALIZABLE` sí son seguras.
-- **Bloqueos de aplicación** (`pg_advisory_xact_lock`): siempre con la forma de dos claves `(clase, objeto)`. La clase es una constante por regla, registrada aquí: `11` = saldo de Clic Kiu. La forma de una sola clave no se usa.
+**`air_accounts`**
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | uuid PK | |
+| organization_id | uuid NOT NULL | |
+| operator_id | uuid NOT NULL | FK compuesta → `air_operators` |
+| name | varchar(120) NOT NULL | UNIQUE parcial (organization_id, operator_id, lower(name)) → `DUPLICATE_NAME` |
+| credit_limit | numeric(14,2) NOT NULL | default 0, `CHECK (credit_limit >= 0)`; 0 = prepago |
+| is_active | boolean NOT NULL | default `true`; inactiva = no acepta movimientos nuevos |
+| audit | | |
 
-**`v_clickiu_balance`** (`security_invoker`): por organización, `balance` = recargas − ventas, sin los movimientos borrados. Es la única fórmula del saldo: la usan el trigger y el saldo actual de la API. Los totales filtrados por fechas, tipo o estado se calculan en la consulta de la API con `SUM … FILTER`.
+**`air_account_movements`**
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | uuid PK | |
+| organization_id | uuid NOT NULL | |
+| account_id | uuid NOT NULL | FK compuesta → `air_accounts`; no cambia después de crear (trigger) |
+| type | air_movement_type NOT NULL | no cambia después de crear (trigger) |
+| movement_date | date NOT NULL | |
+| amount | numeric(14,2) NOT NULL | siempre positivo; el saldo inicial puede ser negativo, nunca 0 |
+| description | varchar(500) NULL | |
+| pnr | varchar(6) NULL | solo emisiones; `^[A-Z0-9]{6}$` |
+| ticket_number | varchar(13) NULL | solo emisiones; `^[0-9]{13}$`; UNIQUE parcial (organization_id, ticket_number) |
+| passenger | varchar(120) NULL | solo emisiones |
+| net_fare, taxes | numeric(14,2) NULL | solo emisiones; `>= 0` |
+| collection_status | air_collection_status NULL | solo emisiones |
+| audit | | |
+
+- `air_account_movements_ticket_ck` (`AIR_MOVEMENT_TICKET_FIELDS_MISMATCH`): las seis columnas del tiquete son no nulas si `type = 'issue'` y nulas en cualquier otro tipo.
+- `air_account_movements_amount_ck` y `air_account_movements_fare_ck` (`AIR_MOVEMENT_AMOUNT_INVALID`): `amount <> 0`; `amount > 0` salvo en `opening_balance`; en `issue`, `amount = net_fare + taxes` (la API lo calcula en SQL), con `net_fare` y `taxes` `>= 0`.
+- `air_account_movements_opening_uq` (`AIR_OPENING_BALANCE_EXISTS`): un `opening_balance` no borrado por cuenta.
+- `INDEX (organization_id, account_id, movement_date) WHERE deleted_at IS NULL`.
+- **Trigger de inmutables** (`BEFORE UPDATE`): cambiar `type` o `account_id` → `AIR_MOVEMENT_TYPE_IMMUTABLE` / `AIR_MOVEMENT_ACCOUNT_IMMUTABLE`.
+- **Regla del cupo:** constraint triggers diferidos (`AFTER INSERT OR UPDATE` en `air_account_movements`; `AFTER UPDATE OF credit_limit` en `air_accounts`). Toman `pg_advisory_xact_lock(18, hashtext(account_id::text))` y rechazan si `available < 0` en `v_air_account_balances`: `AIR_ACCOUNT_INSUFFICIENT_BALANCE` si `credit_limit = 0` y `AIR_ACCOUNT_CREDIT_LIMIT_EXCEEDED` si es mayor. Cubren emisiones nuevas o mayores, entradas reducidas o borradas y límites reducidos, y serializan las operaciones simultáneas sobre la misma cuenta. Rechazan con `25000` las transacciones en `REPEATABLE READ`, por la misma razón que tenía Clic Kiu: la foto de la transacción no vería lo confirmado por otra.
+- **Bloqueos de aplicación** (`pg_advisory_xact_lock`): siempre con la forma de dos claves `(clase, objeto)`. La clase es una constante por regla, registrada aquí: `18` = cupo de una cuenta aérea. `11` (saldo de Clic Kiu) quedó retirada y no se reutiliza. La forma de una sola clave no se usa.
+
+**`v_air_account_balances`** (`security_invoker`): por cuenta, `balance` = suma de los movimientos no borrados con las emisiones en negativo, y `available = balance + credit_limit`. Es la única fórmula del saldo: la usan los triggers, el listado de cuentas, el consolidado por operador y el saldo actual de la API. Los totales filtrados por fechas, tipo o estado de cobro se calculan en la consulta de la API con `SUM … FILTER`.
 
 ### 5.11 Agenda de pagos (F13)
 
@@ -674,10 +707,10 @@ Las notificaciones **no se guardan**: son los vencimientos pendientes en estado 
 | Prestadores | Listado y detalle con sus contratos, monto mensual y pagado este mes. |
 | Credenciales | Listado sin contraseñas; botón "Revelar" (se registra en auditoría) y copiar al portapapeles. |
 | Responsables | CRUD. |
-| Clic Kiu | Tarjetas Recargado, Vendido, Por cobrar y Saldo al corte, que cambian con los filtros (fechas, tipo y estado). Tabla de movimientos con "Marcar como completado" y diálogo de recarga o venta que muestra el saldo disponible. |
+| Cuentas aéreas | Tarjetas por operador (saldo, cupo, disponible y por cobrar de sus cuentas activas) y tabla de cuentas con su modalidad, saldo y disponible. Cada cuenta abre sus movimientos: tarjetas Entradas, Emitido, Por cobrar, Saldo al corte y Disponible, que cambian con los filtros (fechas, tipo y estado de cobro); tabla con "Marcar como cobrado"; diálogos de emisión (con el total y el disponible), recarga, pago, reembolso y saldo inicial (F18). |
 | Agenda | Obligaciones por urgencia (pestañas Vencidos, Próximos, Programados, Sin próximo), completar con la fecha siguiente sugerida e historial. El menú muestra un contador de vencidas y próximas. |
 | Notificaciones (cabecera) | Campana con un punto si hay notificaciones sin revisar (sin número). Abre un panel con las alertas de la Agenda: pulsar lleva a la pestaña de la Agenda, la X la descarta; abrir el panel las marca como vistas (F14). |
-| Configuración (admin) | Categorías de egreso y usuarios de la organización. |
+| Configuración (admin) | Categorías de egreso, operadores aéreos y usuarios de la organización. |
 | Plataforma (super admin) | Organizaciones y catálogos globales. |
 
 La interfaz está en español y el formato de moneda es COP (`es-CO`).
