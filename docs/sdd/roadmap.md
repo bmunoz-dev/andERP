@@ -22,7 +22,7 @@
 | F15 | [Vistas para el celular](features/015-mobile-views/spec.md) | F13, F14 | Aprobado | Aprobado | Hecho |
 | F16 | [Pagos de monto fijo](features/016-fixed-payments/spec.md) | F04, F05, F10, F12 | Aprobado | Aprobado | Hecho |
 | F17 | [Documento del contrato](features/017-contract-documents/spec.md) | F03, F12, F15 | Aprobado | Aprobado | Hecho |
-| F18 | [Cuentas aéreas](features/018-air-accounts/spec.md) (reemplaza a F11) | F02, F11, F12, F15 | En revisión | — | — |
+| F18 | [Cuentas aéreas](features/018-air-accounts/spec.md) (reemplaza a F11) | F02, F11, F12, F15 | Aprobado | En revisión | — |
 
 F06 solo depende de F02, así que se puede desarrollar en paralelo con F03–F05.
 

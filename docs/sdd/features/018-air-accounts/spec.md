@@ -1,6 +1,6 @@
 # F18 — Cuentas aéreas · Spec
 
-- **Estado:** En revisión (2026-10-20)
+- **Estado:** Aprobado (2026-10-20)
 - **Diseño:** `design.md` §3 (glosario), §5.2 (enums), §5.9 (auditoría), §5.10 (reescrito: `air_operators`, `air_accounts`, `air_account_movements`, `v_air_account_balances`), §8 (pantallas). Los cambios a `design.md` se hacen en la primera tarea, antes del código.
 - **Depende de:** F02 (organizaciones, `OrgScope`), F11 (lo reemplaza), F12 (auditoría atómica), F15 (tablas como tarjetas en el celular)
 - **Reemplaza a:** F11 — Saldo de Clic Kiu. Su módulo, sus tablas, su vista y sus triggers se eliminan.
@@ -20,7 +20,7 @@ El módulo también lleva lo que los clientes le deben a la agencia por cada tiq
 - **Sin comisión.** Lo que baja del saldo es `tarifa neta + impuestos`.
 - **Sin ruta** en el tiquete.
 - **Operadores como catálogo** de la organización, para que el consolidado por operador no se rompa por nombres escritos distinto.
-- **Sin migración de datos:** producción no tiene movimientos reales de Clic Kiu. Una sola migración crea lo nuevo y elimina lo de F11; se acepta que la API anterior falle en `/clickiu` durante la ventana entre la migración y el despliegue.
+- **Sin migración de datos:** producción no tiene movimientos reales de Clic Kiu. Un solo despliegue crea lo nuevo y elimina lo de F11 (tres archivos de migración, ver el plan); se acepta que la API anterior falle en `/clickiu` durante la ventana entre la migración y el despliegue.
 
 ## Historias
 
