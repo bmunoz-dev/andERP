@@ -5,7 +5,7 @@
 
 ## Bloque A — Diseño y base de datos
 
-- [ ] F19-T001 Actualizar `design.md` antes del código:
+- [x] F19-T001 Actualizar `design.md` antes del código:
       - §2: decisión 1, "Tenencia": pasa de uso interno a varias empresas cliente. Decisión 12, "Roles": paquetes por organización;
       - §5.2: enum `app_module`;
       - §5.3: `organizations.modules`;
