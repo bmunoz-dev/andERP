@@ -11,10 +11,12 @@ describe('navigationFor (F02 CA-18)', () => {
       'Personal',
       'Credenciales',
       'Responsables',
+      'Cuentas aéreas',
       'Agenda',
     ]);
     expect(groups[1]?.items.map((i) => i.to)).toEqual([
       '/configuracion/categorias',
+      '/configuracion/operadores-aereos',
       '/configuracion/usuarios',
     ]);
   });

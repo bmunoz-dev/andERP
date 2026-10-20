@@ -37,7 +37,7 @@
 
 ## Bloque D — Web
 
-- [ ] F18-T007 [TDD] `lib/air-accounts-api.ts`, página `/configuracion/operadores-aereos` y página `/cuentas-aereas` con `OperatorBalanceCards`, `AccountsTable` y `AccountFormDialog`. Menú: "Cuentas aéreas" reemplaza a "Clic Kiu" y "Operadores aéreos" en Configuración. Borrar `clic-kiu.tsx`, `components/clickiu/` y `lib/clickiu-api.ts`.
+- [x] F18-T007 [TDD] `lib/air-accounts-api.ts`, página `/configuracion/operadores-aereos` y página `/cuentas-aereas` con `OperatorBalanceCards`, `AccountsTable` y `AccountFormDialog`. Menú: "Cuentas aéreas" reemplaza a "Clic Kiu" y "Operadores aéreos" en Configuración. Borrar `clic-kiu.tsx`, `components/clickiu/` y `lib/clickiu-api.ts`.
       Depende de: F18-T003, F18-T004 · Verificación: CA-26–CA-28
 - [ ] F18-T008 [TDD] Página `/cuentas-aereas/$accountId` con `MovementSummaryCards`, `MovementFilters`, `MovementsTable`, `IssueFormDialog` y `MovementFormDialog` (saldo inicial con A favor / En deuda), "Marcar como cobrado" y borrar con confirmación; mensajes de cupo en español.
       Depende de: F18-T005, F18-T007 · Verificación: CA-29–CA-32

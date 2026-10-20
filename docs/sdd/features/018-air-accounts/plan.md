@@ -108,3 +108,5 @@ Se borran `routes/_app/clic-kiu.tsx`, `components/clickiu/` y `lib/clickiu-api.t
 - **Cuerpo de `POST` de movimientos (T005):** `createZodDto` no admite una unión discriminada (no es una clase con miembros fijos). El controlador valida con `new ZodValidationPipe(createAirMovementSchema)` en el `@Body`; el error sigue siendo `422 VALIDATION_ERROR`.
 - **Recalcular el monto (T005):** solo si el movimiento guardado es una emisión. En otro tipo, un `PATCH` con `netFare` deja `amount` como estaba y el CHECK responde `AIR_MOVEMENT_TICKET_FIELDS_MISMATCH`, en vez de un `NOT NULL` sin `code`.
 - **Atomicidad (T005):** `audit-atomicity.test.ts` cubre crear y editar cuentas, crear, editar y borrar movimientos, y el borrado simultáneo de un movimiento.
+- **Enlace a los movimientos (T007):** `AccountsTable` recibe `renderName`, así la página enlaza el nombre a `/cuentas-aereas/$accountId` en T008 sin que la tabla dependa del router (y sus pruebas, tampoco).
+- **`isPrepaid` (T007):** vive en `lib/air-accounts-api.ts` y no en un archivo de componentes (regla `react-refresh/only-export-components`).
