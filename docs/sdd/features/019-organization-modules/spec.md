@@ -1,6 +1,6 @@
 # F19 — Módulos por organización · Spec
 
-- **Estado:** En revisión (2026-10-20)
+- **Estado:** Aprobado (2026-10-20)
 - **Diseño:** `design.md` §2 (decisiones 1 y 12), §5.2 (enum `app_module`), §5.3 (`organizations.modules`), §6.4 (permisos por paquete), §8 (menú y Plataforma → Organizaciones), §11 (fuera de alcance) e historial. Los cambios a `design.md` se hacen en la primera tarea, antes del código.
 - **Depende de:** F02 (organizaciones, guard, Plataforma), F12 (auditoría atómica), y de los módulos que agrupa: F03, F04, F06, F13, F14, F16, F17, F18.
 
