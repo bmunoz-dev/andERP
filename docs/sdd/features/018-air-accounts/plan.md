@@ -103,3 +103,5 @@ Se borran `routes/_app/clic-kiu.tsx`, `components/clickiu/` y `lib/clickiu-api.t
 - **Guarda de la 0030 (T001):** la prueba crea una `clickiu_movements` con una fila y ejecuta el archivo de la 0030: falla en el `DO` antes del `DROP VIEW`.
 - **Web de Clic Kiu retirada en T003, no en T007:** quitar los esquemas y códigos `CLICKIU_*` del paquete compartido rompía la compilación de la página, que además ya no servía sin la API. Se borraron en T003 la página, sus componentes, `clickiu-api.ts` y la entrada del menú; T007 solo agrega lo nuevo.
 - **Monto del saldo inicial (T003):** `-0.00` también se rechaza como 0.
+- **Por cobrar como subconsulta correlacionada (T004):** el listado, la ficha y el consolidado leen `pendingCollection` con una subconsulta por cuenta en lugar de un `LEFT JOIN` a un agregado; con un helper de uniones compartido, el tipado de Drizzle no aceptaba campos distintos. Las sumas siguen en SQL.
+- **Servicios (T004):** `AirOperatorsService` y `AirAccountsService`; los dos controladores van en `air-accounts.module.ts`, como hacía `clickiu.module.ts`.
