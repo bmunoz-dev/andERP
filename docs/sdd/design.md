@@ -500,14 +500,14 @@ Todas son vistas normales (no materializadas).
 
 ### 5.10 Cuentas aéreas (F18)
 
-Reemplaza a Clic Kiu (F11): `clickiu_movements`, `v_clickiu_balance`, sus triggers y sus enums se eliminaron en la migración de F18.
+Reemplaza a Clic Kiu (F11): `clickiu_movements`, `v_clickiu_balance`, sus triggers y sus enums se eliminaron en las migraciones 0030–0033 de F18.
 
 **`air_operators`** (catálogo de la organización; no se audita, §5.9)
 | Columna | Tipo | Notas |
 |---|---|---|
 | id | uuid PK | |
 | organization_id | uuid NOT NULL | |
-| name | citext NOT NULL | de 1 a 120 caracteres, sin espacios sobrantes; UNIQUE parcial (organization_id, name) → `DUPLICATE_NAME` |
+| name | varchar(120) NOT NULL | sin espacios sobrantes; UNIQUE parcial (organization_id, lower(name)) → `DUPLICATE_NAME` |
 | is_active | boolean NOT NULL | default `true`; no se borra, se desactiva |
 | audit | | |
 
@@ -517,7 +517,7 @@ Reemplaza a Clic Kiu (F11): `clickiu_movements`, `v_clickiu_balance`, sus trigge
 | id | uuid PK | |
 | organization_id | uuid NOT NULL | |
 | operator_id | uuid NOT NULL | FK compuesta → `air_operators` |
-| name | citext NOT NULL | de 1 a 120 caracteres; UNIQUE parcial (organization_id, operator_id, name) → `DUPLICATE_NAME` |
+| name | varchar(120) NOT NULL | UNIQUE parcial (organization_id, operator_id, lower(name)) → `DUPLICATE_NAME` |
 | credit_limit | numeric(14,2) NOT NULL | default 0, `CHECK (credit_limit >= 0)`; 0 = prepago |
 | is_active | boolean NOT NULL | default `true`; inactiva = no acepta movimientos nuevos |
 | audit | | |
@@ -540,7 +540,7 @@ Reemplaza a Clic Kiu (F11): `clickiu_movements`, `v_clickiu_balance`, sus trigge
 | audit | | |
 
 - `air_account_movements_ticket_ck` (`AIR_MOVEMENT_TICKET_FIELDS_MISMATCH`): las seis columnas del tiquete son no nulas si `type = 'issue'` y nulas en cualquier otro tipo.
-- `air_account_movements_amount_ck` (`AIR_MOVEMENT_AMOUNT_INVALID`): `amount <> 0`; `amount > 0` salvo en `opening_balance`; en `issue`, `amount = net_fare + taxes` (la API lo calcula en SQL).
+- `air_account_movements_amount_ck` y `air_account_movements_fare_ck` (`AIR_MOVEMENT_AMOUNT_INVALID`): `amount <> 0`; `amount > 0` salvo en `opening_balance`; en `issue`, `amount = net_fare + taxes` (la API lo calcula en SQL), con `net_fare` y `taxes` `>= 0`.
 - `air_account_movements_opening_uq` (`AIR_OPENING_BALANCE_EXISTS`): un `opening_balance` no borrado por cuenta.
 - `INDEX (organization_id, account_id, movement_date) WHERE deleted_at IS NULL`.
 - **Trigger de inmutables** (`BEFORE UPDATE`): cambiar `type` o `account_id` → `AIR_MOVEMENT_TYPE_IMMUTABLE` / `AIR_MOVEMENT_ACCOUNT_IMMUTABLE`.

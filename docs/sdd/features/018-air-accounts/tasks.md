@@ -5,7 +5,7 @@
 
 ## Bloque A — Base de datos
 
-- [ ] F18-T001 [TDD] Escribir `air-accounts.db.test.ts` y después crear `0030_drop_clickiu_guard`, `0031_air_accounts` y `0032_air_account_rules` con `db/schema/air-accounts.ts` (y borrar `db/schema/clickiu.ts` y `clickiu.db.test.ts`). Pruebas:
+- [x] F18-T001 [TDD] Escribir `air-accounts.db.test.ts` y después crear `0030_drop_clickiu_guard`, `0031_drop_clickiu`, `0032_air_accounts` y `0033_air_account_rules` con `db/schema/air-accounts.ts` (y borrar `db/schema/clickiu.ts` y `clickiu.db.test.ts`). Pruebas:
       - la guarda de la 0030 falla si `clickiu_movements` tiene filas;
       - CHECK de campos del tiquete, de monto (incluido `amount = net_fare + taxes` y saldo inicial ≠ 0), de límite y de formato de PNR y tiquete;
       - índices únicos: nombres sin distinguir mayúsculas, tiquete repetido, segundo saldo inicial; se pueden repetir tras un borrado lógico;
@@ -15,9 +15,9 @@
       - cupo en prepago y en crédito: crear y subir una emisión, bajar o borrar una recarga, saldo inicial negativo, bajar el límite por debajo de la deuda; disponible justo en 0 aceptado; código según el límite;
       - concurrencia: dos emisiones simultáneas en la misma cuenta, solo una confirma; en cuentas distintas, las dos;
       - `REPEATABLE READ` rechazado; `app_runtime` lee la vista.
-      Archivos: `apps/api/drizzle/0030_*.sql`, `0031_*.sql`, `0032_*.sql`, `apps/api/src/db/schema/air-accounts.ts`, `apps/api/src/db/schema/index.ts`
+      Archivos: `apps/api/drizzle/0030_*.sql`, `0031_*.sql`, `0032_*.sql`, `0033_*.sql`, `apps/api/src/db/schema/air-accounts.ts`, `apps/api/src/db/schema/index.ts`
       Verificación: CA-1, CA-3, CA-6–CA-12, CA-14–CA-18, CA-33, CA-34
-- [ ] F18-T002 Actualizar `foundation.test.ts` (enums) y `design.md` si el SQL generado obligó a algún cambio.
+- [x] F18-T002 Actualizar `foundation.test.ts` (enums) y `design.md` si el SQL generado obligó a algún cambio.
       Depende de: F18-T001
 
 ## Bloque B — Compartido

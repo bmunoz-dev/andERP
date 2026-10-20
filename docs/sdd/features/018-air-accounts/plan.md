@@ -5,19 +5,19 @@
 
 ## Datos
 
-Tres migraciones que se aplican en el mismo despliegue (la decisión del usuario de "una sola migración" es un solo despliegue, sin ventana doble). Van en tres archivos porque `drizzle-kit generate` solo diffea el esquema de Drizzle: la vista y las funciones de F11 están fuera de él y hay que soltarlas a mano antes de que el diff borre la tabla.
+Cuatro migraciones que se aplican en el mismo despliegue (la decisión del usuario de "una sola migración" es un solo despliegue, sin ventana doble). Van en varios archivos porque `drizzle-kit generate` solo diffea el esquema de Drizzle: la vista y las funciones de F11 están fuera de él y hay que soltarlas a mano antes de que el diff borre la tabla.
 
 1. **`0030_drop_clickiu_guard` (a mano, `pnpm db:generate:custom`):**
    - **guarda (CA-34):** `DO $$ … IF EXISTS (SELECT 1 FROM anderp.clickiu_movements) THEN RAISE EXCEPTION 'clickiu_movements is not empty' …`. Si producción tuviera filas, la migración falla y el pipeline se detiene antes de borrar nada; la consulta de solo lectura previa (T010) es la primera barrera, esta la segunda;
    - `DROP VIEW anderp.v_clickiu_balance`.
-2. **`0031_air_accounts` (generada con `pnpm db:generate`, tras borrar `db/schema/clickiu.ts` y crear `db/schema/air-accounts.ts`):**
-   - borra `clickiu_movements` (con sus triggers) y los enums `clickiu_movement_type` y `clickiu_sale_status`;
+2. **`0031_drop_clickiu` (generada, tras borrar `db/schema/clickiu.ts`):** borra `clickiu_movements` (con sus triggers) y los enums `clickiu_movement_type` y `clickiu_sale_status`.
+3. **`0032_air_accounts` (generada, tras crear `db/schema/air-accounts.ts`):**
    - crea los enums `air_movement_type` y `air_collection_status`;
-   - crea `air_operators`, `air_accounts` y `air_account_movements` como en `design.md` §5.10: `id()`, `organizationId()`, `auditColumns`, `UNIQUE (organization_id, id)`, FK compuestas `(organization_id, operator_id)` y `(organization_id, account_id)` con `ON DELETE RESTRICT`, `citext` para los nombres con `CHECK (char_length(...) BETWEEN 1 AND 120)`;
-   - CHECK `air_accounts_credit_limit_ck`, `air_account_movements_ticket_ck`, `air_account_movements_amount_ck` y los de formato de `pnr` y `ticket_number`;
+   - crea `air_operators`, `air_accounts` y `air_account_movements` como en `design.md` §5.10: `id()`, `organizationId()`, `auditColumns`, `UNIQUE (organization_id, id)`, FK compuestas `(organization_id, operator_id)` y `(organization_id, account_id)` con `ON DELETE RESTRICT`, `varchar(120)` para los nombres con índice único sobre `lower(name)` (patrón de `payment_obligations`);
+   - CHECK `air_accounts_credit_limit_ck`, `air_account_movements_ticket_ck` (con `num_nonnulls`), `air_account_movements_amount_ck`, `air_account_movements_fare_ck` y los de formato de `pnr` y `ticket_number`;
    - índices únicos parciales `air_operators_name_uq`, `air_accounts_name_uq`, `air_account_movements_ticket_number_uq` y `air_account_movements_opening_uq` (`(account_id) WHERE type = 'opening_balance' AND deleted_at IS NULL`), y el índice `air_account_movements_account_date_idx`.
    Se revisa el SQL generado antes de aceptarlo (orden de los `DROP`, nombres de las restricciones).
-3. **`0032_air_account_rules` (a mano):**
+4. **`0033_air_account_rules` (a mano):**
    - `DROP FUNCTION` de las dos funciones de F11 que quedaron huérfanas al borrar la tabla;
    - `v_air_account_balances` (`security_invoker = true`): `LEFT JOIN` de `air_accounts` con sus movimientos no borrados; `balance = COALESCE(SUM(CASE WHEN type = 'issue' THEN -amount ELSE amount END), 0)`, `available = balance + credit_limit`;
    - `air_account_movements_immutable` (`BEFORE UPDATE`, `WHEN (OLD.type IS DISTINCT FROM NEW.type OR OLD.account_id IS DISTINCT FROM NEW.account_id)`): lanza `AIR_MOVEMENT_TYPE_IMMUTABLE` o `AIR_MOVEMENT_ACCOUNT_IMMUTABLE`;
@@ -91,10 +91,13 @@ Se borran `routes/_app/clic-kiu.tsx`, `components/clickiu/` y `lib/clickiu-api.t
 ## Despliegue
 
 1. **Antes del merge (T010):** consulta de solo lectura en producción `SELECT count(*) FROM anderp.clickiu_movements`, con la confirmación del usuario. Si no es 0, se detiene y se vuelve a decidir.
-2. Pipeline de F07: CI → aprobación → migraciones 0030–0032 → deploy. La guarda de la 0030 es la segunda barrera.
+2. Pipeline de F07: CI → aprobación → migraciones 0030–0033 → deploy. La guarda de la 0030 es la segunda barrera.
 3. Durante la ventana entre la migración y el deploy, la API anterior responde 500 en `/clickiu` (riesgo aceptado por el usuario: sin datos ni uso).
 4. Después: crear los operadores y las cuentas reales y sus saldos iniciales (lo hace el usuario).
 
 ## Notas de implementación
 
-(Se completan durante la implementación.)
+- **Cuatro migraciones (T001):** `drizzle-kit generate` pregunta de forma interactiva si las tablas nuevas son un renombre de `clickiu_movements`, y sin TTY falla. Se generó en dos pasos (primero solo el borrado, 0031; después solo la creación, 0032), así no hay nada que preguntar. Siguen yendo en un solo despliegue.
+- **Nombres sin `citext` (T001):** `varchar(120)` con índice único sobre `lower(name)`, igual que `payment_obligations`; `citext` solo se usa en los correos.
+- **Concurrencia (T001):** se comprobó que la prueba CA-18 falla si se quita el `pg_advisory_xact_lock` de `check_air_account_limit`.
+- **Guarda de la 0030 (T001):** la prueba crea una `clickiu_movements` con una fila y ejecuta el archivo de la 0030: falla en el `DO` antes del `DROP VIEW`.

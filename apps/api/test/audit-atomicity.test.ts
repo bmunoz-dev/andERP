@@ -1,5 +1,4 @@
 import type {
-  ClickiuMovement,
   Contract,
   Credential,
   Expense,
@@ -116,35 +115,6 @@ afterEach(async () => {
 afterAll(async () => {
   await withOwnerSql((sql) => sql`drop function if exists anderp.test_fail_audit()`);
   await t.close();
-});
-
-describe('Clic Kiu', () => {
-  const recharge = (amount = '100.00') =>
-    api().post('/clickiu/movements', { type: 'recharge', movementDate: '2026-09-01', amount });
-  const list = () =>
-    body<ClickiuMovement[]>(api().get('/clickiu/movements?from=2026-09-01&to=2026-09-30'));
-
-  it('crear', async () => {
-    await failAudit('clickiu_movement.create');
-    await body(recharge(), 500);
-    expect(await list()).toHaveLength(0);
-  });
-
-  it('editar', async () => {
-    const m = await body<ClickiuMovement>(recharge(), 201);
-    await failAudit('clickiu_movement.update');
-    await body(api().patch(`/clickiu/movements/${m.id}`, { amount: '200.00' }), 500);
-    expect((await body<ClickiuMovement>(api().get(`/clickiu/movements/${m.id}`))).amount).toBe(
-      '100.00',
-    );
-  });
-
-  it('borrar', async () => {
-    const m = await body<ClickiuMovement>(recharge(), 201);
-    await failAudit('clickiu_movement.delete');
-    await body(api().delete(`/clickiu/movements/${m.id}`), 500);
-    await body(api().get(`/clickiu/movements/${m.id}`));
-  });
 });
 
 describe('Egresos', () => {
@@ -509,22 +479,6 @@ describe('Dos borrados simultáneos', () => {
   };
 
   const cases: [string, string, string, () => Promise<string>][] = [
-    [
-      'clickiu_movements',
-      '/clickiu/movements',
-      'clickiu_movement.delete',
-      async () =>
-        (
-          await body<ClickiuMovement>(
-            api().post('/clickiu/movements', {
-              type: 'recharge',
-              movementDate: '2026-09-01',
-              amount: '100.00',
-            }),
-            201,
-          )
-        ).id,
-    ],
     ['expenses', '/expenses', 'expense.delete', createExpense],
     [
       'fee_payments',
