@@ -15,13 +15,14 @@
 | F08 | [Modo oscuro](features/008-dark-mode/spec.md) | F00 | Aprobado | Aprobado | Hecho |
 | F09 | [Desactivar prestadores](features/009-provider-deactivation/spec.md) | F03, F04 | Aprobado | Aprobado | Hecho |
 | F10 | [Monto mensual de referencia en los contratos](features/010-monthly-contract-amount/spec.md) | F04 | Aprobado | Aprobado | Hecho |
-| F11 | [Saldo de Clic Kiu](features/011-clickiu-balance/spec.md) | F02 | Aprobado | Aprobado | Hecho |
+| F11 | [Saldo de Clic Kiu](features/011-clickiu-balance/spec.md) (será reemplazada por F18) | F02 | Aprobado | Aprobado | Hecho |
 | F12 | [Auditoría atómica](features/012-atomic-audit/spec.md) | F01–F06, F11 | Aprobado | Aprobado | Hecho |
 | F13 | [Agenda de pagos a entidades](features/013-payment-agenda/spec.md) | F02, F12 | Aprobado | Aprobado | Hecho |
 | F14 | [Panel de notificaciones](features/014-notifications/spec.md) | F13 | Aprobado | Aprobado | Hecho |
 | F15 | [Vistas para el celular](features/015-mobile-views/spec.md) | F13, F14 | Aprobado | Aprobado | Hecho |
 | F16 | [Pagos de monto fijo](features/016-fixed-payments/spec.md) | F04, F05, F10, F12 | Aprobado | Aprobado | Hecho |
 | F17 | [Documento del contrato](features/017-contract-documents/spec.md) | F03, F12, F15 | Aprobado | Aprobado | Hecho |
+| F18 | [Cuentas aéreas](features/018-air-accounts/spec.md) (reemplaza a F11) | F02, F11, F12, F15 | En revisión | — | — |
 
 F06 solo depende de F02, así que se puede desarrollar en paralelo con F03–F05.
 
