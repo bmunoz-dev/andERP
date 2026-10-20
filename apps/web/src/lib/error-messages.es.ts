@@ -89,11 +89,21 @@ const MESSAGES = {
     'Esta persona está inactiva y no puede recibir contratos nuevos. Actívala primero.',
   PROVIDER_HAS_ACTIVE_CONTRACT:
     'La persona tiene un contrato vigente o futuro. Ponle una fecha de fin ya cumplida antes de desactivarlo.',
-  CLICKIU_INSUFFICIENT_BALANCE: 'El saldo de Clic Kiu no alcanza para este movimiento.',
-  CLICKIU_MOVEMENT_TYPE_IMMUTABLE:
-    'Una recarga no se puede convertir en venta ni al revés. Borra el movimiento y créalo de nuevo.',
-  CLICKIU_SALE_STATUS_REQUIRED:
-    'Una venta debe tener estado (Crédito o Completado); una recarga no.',
+  AIR_ACCOUNT_INSUFFICIENT_BALANCE:
+    'Saldo prepago insuficiente: el movimiento deja la cuenta en negativo.',
+  AIR_ACCOUNT_CREDIT_LIMIT_EXCEEDED:
+    'Cupo de crédito excedido: la deuda de la cuenta superaría su límite.',
+  AIR_ACCOUNT_INACTIVE: 'La cuenta está inactiva y no acepta movimientos nuevos.',
+  AIR_OPERATOR_INACTIVE: 'El operador aéreo está inactivo.',
+  AIR_MOVEMENT_TYPE_IMMUTABLE:
+    'El tipo de un movimiento no se puede cambiar. Borra el movimiento y créalo de nuevo.',
+  AIR_MOVEMENT_ACCOUNT_IMMUTABLE:
+    'Un movimiento no se puede pasar a otra cuenta. Borra el movimiento y créalo en la cuenta correcta.',
+  AIR_MOVEMENT_TICKET_FIELDS_MISMATCH:
+    'Solo las emisiones llevan los datos del tiquete, y una emisión los lleva todos.',
+  AIR_MOVEMENT_AMOUNT_INVALID: 'El monto no es válido para este tipo de movimiento.',
+  AIR_TICKET_NUMBER_TAKEN: 'Ya hay un tiquete registrado con ese número.',
+  AIR_OPENING_BALANCE_EXISTS: 'La cuenta ya tiene un saldo inicial.',
   DUPLICATE_OBLIGATION: 'Ya existe una obligación con esa entidad y ese concepto.',
   OBLIGATION_ALREADY_PENDING:
     'Esta obligación ya tiene un vencimiento pendiente. Cámbiale la fecha o complétalo.',

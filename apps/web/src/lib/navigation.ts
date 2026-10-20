@@ -10,7 +10,6 @@ import {
   Tags,
   UserRound,
   Users,
-  Wallet,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -32,7 +31,6 @@ const operation: NavGroup = {
     { label: 'Personal', to: '/personal', icon: FileText },
     { label: 'Credenciales', to: '/credenciales', icon: KeyRound },
     { label: 'Responsables', to: '/responsables', icon: UserRound },
-    { label: 'Clic Kiu', to: '/clic-kiu', icon: Wallet },
     { label: 'Agenda', to: '/agenda', icon: CalendarClock },
   ],
 };

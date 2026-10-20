@@ -11,7 +11,6 @@ describe('navigationFor (F02 CA-18)', () => {
       'Personal',
       'Credenciales',
       'Responsables',
-      'Clic Kiu',
       'Agenda',
     ]);
     expect(groups[1]?.items.map((i) => i.to)).toEqual([

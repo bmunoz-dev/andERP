@@ -12,6 +12,6 @@ export * from './schemas/fee-payments';
 export * from './schemas/expenses';
 export * from './schemas/responsible-persons';
 export * from './schemas/credentials';
-export * from './schemas/clickiu';
+export * from './schemas/air-accounts';
 export * from './schemas/obligations';
 export * from './schemas/notifications';

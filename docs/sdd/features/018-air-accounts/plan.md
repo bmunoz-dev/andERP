@@ -101,3 +101,5 @@ Se borran `routes/_app/clic-kiu.tsx`, `components/clickiu/` y `lib/clickiu-api.t
 - **Nombres sin `citext` (T001):** `varchar(120)` con índice único sobre `lower(name)`, igual que `payment_obligations`; `citext` solo se usa en los correos.
 - **Concurrencia (T001):** se comprobó que la prueba CA-18 falla si se quita el `pg_advisory_xact_lock` de `check_air_account_limit`.
 - **Guarda de la 0030 (T001):** la prueba crea una `clickiu_movements` con una fila y ejecuta el archivo de la 0030: falla en el `DO` antes del `DROP VIEW`.
+- **Web de Clic Kiu retirada en T003, no en T007:** quitar los esquemas y códigos `CLICKIU_*` del paquete compartido rompía la compilación de la página, que además ya no servía sin la API. Se borraron en T003 la página, sus componentes, `clickiu-api.ts` y la entrada del menú; T007 solo agrega lo nuevo.
+- **Monto del saldo inicial (T003):** `-0.00` también se rechaza como 0.

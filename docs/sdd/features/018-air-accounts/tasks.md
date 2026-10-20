@@ -22,7 +22,7 @@
 
 ## Bloque B — Compartido
 
-- [ ] F18-T003 [P] Esquemas Zod en `packages/shared/src/schemas/air-accounts.ts` con su prueba (y borrar `clickiu.ts` y su prueba); los diez códigos nuevos con su mensaje en español y quitar los `CLICKIU_*`.
+- [x] F18-T003 [P] Esquemas Zod en `packages/shared/src/schemas/air-accounts.ts` con su prueba (y borrar `clickiu.ts` y su prueba); los diez códigos nuevos con su mensaje en español y quitar los `CLICKIU_*`.
       Archivos: `packages/shared/src/schemas/air-accounts.ts`, `packages/shared/src/index.ts`, `packages/shared/src/errors/codes.ts`, `apps/web/src/lib/error-messages.es.ts`
       Verificación: CA-1, CA-3, CA-6, CA-7, CA-9, CA-10, CA-21
 
