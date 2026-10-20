@@ -1,6 +1,6 @@
 # F18 — Cuentas aéreas · Plan
 
-- **Estado:** En revisión (2026-10-20)
+- **Estado:** Aprobado (2026-10-20)
 - **Spec:** [spec.md](spec.md)
 
 ## Datos
@@ -111,5 +111,7 @@ Se borran `routes/_app/clic-kiu.tsx`, `components/clickiu/` y `lib/clickiu-api.t
 - **Enlace a los movimientos (T007):** `AccountsTable` recibe `renderName`, así la página enlaza el nombre a `/cuentas-aereas/$accountId` en T008 sin que la tabla dependa del router (y sus pruebas, tampoco).
 - **`isPrepaid` (T007):** vive en `lib/air-accounts-api.ts` y no en un archivo de componentes (regla `react-refresh/only-export-components`).
 - **Diálogos sin casts (T008):** la mutación recibe la llamada a la API ya armada (`() => Promise<AirMovement>`). Los dos diálogos validan siempre con `createAirMovementSchema` (el formulario trae todos los campos del tipo) y al editar envían lo mismo sin `type`.
-- **Botón "Saldo inicial" (T008):** la página consulta las emisiones de tipo `opening_balance` desde 1900 para saber si ya hay uno; el listado del mes no alcanza. Los botones de alta se ocultan si la cuenta está inactiva (CA-5).
+- **Botón "Saldo inicial" (T008):** la página consulta los movimientos de tipo `opening_balance` desde 1900 para saber si ya hay uno; el listado del mes no alcanza. Los botones de alta se ocultan si la cuenta está inactiva (CA-5).
 - **Signo del saldo inicial (T008):** se escribe en positivo con radios nativos A favor / En deuda; el diálogo antepone el `-` al enviar.
+- **Verificación completa (T009):** `format:check`, `lint`, `typecheck` y `test` en verde (72 archivos; uno se repitió por el `0xC0000409` del trabajador de Vitest en Windows y pasó). Las migraciones se aplican desde cero en cada corrida (Testcontainers).
+- **Web sin prueba de página (T009):** como en F11, se prueban los componentes (`AccountsTable`, `OperatorBalanceCards`, filtros, tabla, tarjetas y los dos diálogos), no las rutas. La página de operadores (CA-27) copia el patrón de Departamentos y no tiene prueba propia; `AccountFormDialog` tampoco.
