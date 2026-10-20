@@ -1,6 +1,6 @@
 # F19 — Módulos por organización · Plan
 
-- **Estado:** En revisión (2026-10-20)
+- **Estado:** Aprobado (2026-10-20)
 - **Spec:** [spec.md](spec.md)
 
 ## Datos
