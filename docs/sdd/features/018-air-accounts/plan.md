@@ -115,3 +115,4 @@ Se borran `routes/_app/clic-kiu.tsx`, `components/clickiu/` y `lib/clickiu-api.t
 - **Signo del saldo inicial (T008):** se escribe en positivo con radios nativos A favor / En deuda; el diálogo antepone el `-` al enviar.
 - **Verificación completa (T009):** `format:check`, `lint`, `typecheck` y `test` en verde (72 archivos; uno se repitió por el `0xC0000409` del trabajador de Vitest en Windows y pasó). Las migraciones se aplican desde cero en cada corrida (Testcontainers).
 - **Web sin prueba de página (T009):** como en F11, se prueban los componentes (`AccountsTable`, `OperatorBalanceCards`, filtros, tabla, tarjetas y los dos diálogos), no las rutas. La página de operadores (CA-27) copia el patrón de Departamentos y no tiene prueba propia; `AccountFormDialog` tampoco.
+- **Consulta previa en producción (T010, 2026-10-20):** `SELECT count(*) FROM anderp.clickiu_movements` devolvió 0, con autorización del usuario. Falta la verificación manual después del despliegue.
