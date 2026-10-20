@@ -8,213 +8,227 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root';
-import { Route as AppRouteImport } from './routes/_app';
-import { Route as ActivarRouteImport } from './routes/activar';
-import { Route as LoginRouteImport } from './routes/login';
-import { Route as OlvideContrasenaRouteImport } from './routes/olvide-contrasena';
-import { Route as RestablecerRouteImport } from './routes/restablecer';
-import { Route as AppIndexRouteImport } from './routes/_app/index';
-import { Route as AppAgendaRouteImport } from './routes/_app/agenda';
-import { Route as AppCredencialesRouteImport } from './routes/_app/credenciales';
-import { Route as AppEgresosRouteImport } from './routes/_app/egresos';
-import { Route as AppPlataformaRouteRouteImport } from './routes/_app/plataforma/route';
-import { Route as AppResponsablesRouteImport } from './routes/_app/responsables';
-import { Route as AppConfiguracionCategoriasRouteImport } from './routes/_app/configuracion/categorias';
-import { Route as AppConfiguracionOperadoresAereosRouteImport } from './routes/_app/configuracion/operadores-aereos';
-import { Route as AppConfiguracionUsuariosRouteImport } from './routes/_app/configuracion/usuarios';
-import { Route as AppCuentasAereasIndexRouteImport } from './routes/_app/cuentas-aereas/index';
-import { Route as AppPagosIndexRouteImport } from './routes/_app/pagos/index';
-import { Route as AppPagosIdRouteImport } from './routes/_app/pagos/$id';
-import { Route as AppPagosNuevoRouteImport } from './routes/_app/pagos/nuevo';
-import { Route as AppPersonalIndexRouteImport } from './routes/_app/personal/index';
-import { Route as AppPersonalIdRouteImport } from './routes/_app/personal/$id';
-import { Route as AppPlataformaCatalogosRouteImport } from './routes/_app/plataforma/catalogos';
-import { Route as AppPlataformaOrganizacionesRouteImport } from './routes/_app/plataforma/organizaciones';
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as ActivarRouteImport } from './routes/activar'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as OlvideContrasenaRouteImport } from './routes/olvide-contrasena'
+import { Route as RestablecerRouteImport } from './routes/restablecer'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppAgendaRouteImport } from './routes/_app/agenda'
+import { Route as AppCredencialesRouteImport } from './routes/_app/credenciales'
+import { Route as AppEgresosRouteImport } from './routes/_app/egresos'
+import { Route as AppPlataformaRouteRouteImport } from './routes/_app/plataforma/route'
+import { Route as AppResponsablesRouteImport } from './routes/_app/responsables'
+import { Route as AppConfiguracionCategoriasRouteImport } from './routes/_app/configuracion/categorias'
+import { Route as AppConfiguracionOperadoresAereosRouteImport } from './routes/_app/configuracion/operadores-aereos'
+import { Route as AppConfiguracionUsuariosRouteImport } from './routes/_app/configuracion/usuarios'
+import { Route as AppCuentasAereasIndexRouteImport } from './routes/_app/cuentas-aereas/index'
+import { Route as AppCuentasAereasAccountIdRouteImport } from './routes/_app/cuentas-aereas/$accountId'
+import { Route as AppPagosIndexRouteImport } from './routes/_app/pagos/index'
+import { Route as AppPagosIdRouteImport } from './routes/_app/pagos/$id'
+import { Route as AppPagosNuevoRouteImport } from './routes/_app/pagos/nuevo'
+import { Route as AppPersonalIndexRouteImport } from './routes/_app/personal/index'
+import { Route as AppPersonalIdRouteImport } from './routes/_app/personal/$id'
+import { Route as AppPlataformaCatalogosRouteImport } from './routes/_app/plataforma/catalogos'
+import { Route as AppPlataformaOrganizacionesRouteImport } from './routes/_app/plataforma/organizaciones'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ActivarRoute = ActivarRouteImport.update({
   id: '/activar',
   path: '/activar',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const OlvideContrasenaRoute = OlvideContrasenaRouteImport.update({
   id: '/olvide-contrasena',
   path: '/olvide-contrasena',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const RestablecerRoute = RestablecerRouteImport.update({
   id: '/restablecer',
   path: '/restablecer',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppAgendaRoute = AppAgendaRouteImport.update({
   id: '/agenda',
   path: '/agenda',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppCredencialesRoute = AppCredencialesRouteImport.update({
   id: '/credenciales',
   path: '/credenciales',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppEgresosRoute = AppEgresosRouteImport.update({
   id: '/egresos',
   path: '/egresos',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppPlataformaRouteRoute = AppPlataformaRouteRouteImport.update({
   id: '/plataforma',
   path: '/plataforma',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppResponsablesRoute = AppResponsablesRouteImport.update({
   id: '/responsables',
   path: '/responsables',
   getParentRoute: () => AppRoute,
-} as any);
-const AppConfiguracionCategoriasRoute = AppConfiguracionCategoriasRouteImport.update({
-  id: '/configuracion/categorias',
-  path: '/configuracion/categorias',
-  getParentRoute: () => AppRoute,
-} as any);
-const AppConfiguracionOperadoresAereosRoute = AppConfiguracionOperadoresAereosRouteImport.update({
-  id: '/configuracion/operadores-aereos',
-  path: '/configuracion/operadores-aereos',
-  getParentRoute: () => AppRoute,
-} as any);
-const AppConfiguracionUsuariosRoute = AppConfiguracionUsuariosRouteImport.update({
-  id: '/configuracion/usuarios',
-  path: '/configuracion/usuarios',
-  getParentRoute: () => AppRoute,
-} as any);
+} as any)
+const AppConfiguracionCategoriasRoute =
+  AppConfiguracionCategoriasRouteImport.update({
+    id: '/configuracion/categorias',
+    path: '/configuracion/categorias',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppConfiguracionOperadoresAereosRoute =
+  AppConfiguracionOperadoresAereosRouteImport.update({
+    id: '/configuracion/operadores-aereos',
+    path: '/configuracion/operadores-aereos',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppConfiguracionUsuariosRoute =
+  AppConfiguracionUsuariosRouteImport.update({
+    id: '/configuracion/usuarios',
+    path: '/configuracion/usuarios',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppCuentasAereasIndexRoute = AppCuentasAereasIndexRouteImport.update({
   id: '/cuentas-aereas/',
   path: '/cuentas-aereas/',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
+const AppCuentasAereasAccountIdRoute =
+  AppCuentasAereasAccountIdRouteImport.update({
+    id: '/cuentas-aereas/$accountId',
+    path: '/cuentas-aereas/$accountId',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppPagosIndexRoute = AppPagosIndexRouteImport.update({
   id: '/pagos/',
   path: '/pagos/',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppPagosIdRoute = AppPagosIdRouteImport.update({
   id: '/pagos/$id',
   path: '/pagos/$id',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppPagosNuevoRoute = AppPagosNuevoRouteImport.update({
   id: '/pagos/nuevo',
   path: '/pagos/nuevo',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppPersonalIndexRoute = AppPersonalIndexRouteImport.update({
   id: '/personal/',
   path: '/personal/',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppPersonalIdRoute = AppPersonalIdRouteImport.update({
   id: '/personal/$id',
   path: '/personal/$id',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
 const AppPlataformaCatalogosRoute = AppPlataformaCatalogosRouteImport.update({
   id: '/catalogos',
   path: '/catalogos',
   getParentRoute: () => AppPlataformaRouteRoute,
-} as any);
-const AppPlataformaOrganizacionesRoute = AppPlataformaOrganizacionesRouteImport.update({
-  id: '/organizaciones',
-  path: '/organizaciones',
-  getParentRoute: () => AppPlataformaRouteRoute,
-} as any);
+} as any)
+const AppPlataformaOrganizacionesRoute =
+  AppPlataformaOrganizacionesRouteImport.update({
+    id: '/organizaciones',
+    path: '/organizaciones',
+    getParentRoute: () => AppPlataformaRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AppIndexRoute;
-  '/activar': typeof ActivarRoute;
-  '/login': typeof LoginRoute;
-  '/olvide-contrasena': typeof OlvideContrasenaRoute;
-  '/restablecer': typeof RestablecerRoute;
-  '/plataforma': typeof AppPlataformaRouteRouteWithChildren;
-  '/agenda': typeof AppAgendaRoute;
-  '/credenciales': typeof AppCredencialesRoute;
-  '/egresos': typeof AppEgresosRoute;
-  '/responsables': typeof AppResponsablesRoute;
-  '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute;
-  '/configuracion/operadores-aereos': typeof AppConfiguracionOperadoresAereosRoute;
-  '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute;
-  '/pagos/$id': typeof AppPagosIdRoute;
-  '/pagos/nuevo': typeof AppPagosNuevoRoute;
-  '/personal/$id': typeof AppPersonalIdRoute;
-  '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute;
-  '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute;
-  '/cuentas-aereas/': typeof AppCuentasAereasIndexRoute;
-  '/pagos/': typeof AppPagosIndexRoute;
-  '/personal/': typeof AppPersonalIndexRoute;
+  '/': typeof AppIndexRoute
+  '/activar': typeof ActivarRoute
+  '/login': typeof LoginRoute
+  '/olvide-contrasena': typeof OlvideContrasenaRoute
+  '/restablecer': typeof RestablecerRoute
+  '/plataforma': typeof AppPlataformaRouteRouteWithChildren
+  '/agenda': typeof AppAgendaRoute
+  '/credenciales': typeof AppCredencialesRoute
+  '/egresos': typeof AppEgresosRoute
+  '/responsables': typeof AppResponsablesRoute
+  '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
+  '/configuracion/operadores-aereos': typeof AppConfiguracionOperadoresAereosRoute
+  '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
+  '/cuentas-aereas/$accountId': typeof AppCuentasAereasAccountIdRoute
+  '/pagos/$id': typeof AppPagosIdRoute
+  '/pagos/nuevo': typeof AppPagosNuevoRoute
+  '/personal/$id': typeof AppPersonalIdRoute
+  '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
+  '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
+  '/cuentas-aereas/': typeof AppCuentasAereasIndexRoute
+  '/pagos/': typeof AppPagosIndexRoute
+  '/personal/': typeof AppPersonalIndexRoute
 }
 export interface FileRoutesByTo {
-  '/activar': typeof ActivarRoute;
-  '/login': typeof LoginRoute;
-  '/olvide-contrasena': typeof OlvideContrasenaRoute;
-  '/restablecer': typeof RestablecerRoute;
-  '/plataforma': typeof AppPlataformaRouteRouteWithChildren;
-  '/agenda': typeof AppAgendaRoute;
-  '/credenciales': typeof AppCredencialesRoute;
-  '/egresos': typeof AppEgresosRoute;
-  '/responsables': typeof AppResponsablesRoute;
-  '/': typeof AppIndexRoute;
-  '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute;
-  '/configuracion/operadores-aereos': typeof AppConfiguracionOperadoresAereosRoute;
-  '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute;
-  '/pagos/$id': typeof AppPagosIdRoute;
-  '/pagos/nuevo': typeof AppPagosNuevoRoute;
-  '/personal/$id': typeof AppPersonalIdRoute;
-  '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute;
-  '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute;
-  '/cuentas-aereas': typeof AppCuentasAereasIndexRoute;
-  '/pagos': typeof AppPagosIndexRoute;
-  '/personal': typeof AppPersonalIndexRoute;
+  '/activar': typeof ActivarRoute
+  '/login': typeof LoginRoute
+  '/olvide-contrasena': typeof OlvideContrasenaRoute
+  '/restablecer': typeof RestablecerRoute
+  '/plataforma': typeof AppPlataformaRouteRouteWithChildren
+  '/agenda': typeof AppAgendaRoute
+  '/credenciales': typeof AppCredencialesRoute
+  '/egresos': typeof AppEgresosRoute
+  '/responsables': typeof AppResponsablesRoute
+  '/': typeof AppIndexRoute
+  '/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
+  '/configuracion/operadores-aereos': typeof AppConfiguracionOperadoresAereosRoute
+  '/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
+  '/cuentas-aereas/$accountId': typeof AppCuentasAereasAccountIdRoute
+  '/pagos/$id': typeof AppPagosIdRoute
+  '/pagos/nuevo': typeof AppPagosNuevoRoute
+  '/personal/$id': typeof AppPersonalIdRoute
+  '/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
+  '/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
+  '/cuentas-aereas': typeof AppCuentasAereasIndexRoute
+  '/pagos': typeof AppPagosIndexRoute
+  '/personal': typeof AppPersonalIndexRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  '/_app': typeof AppRouteWithChildren;
-  '/activar': typeof ActivarRoute;
-  '/login': typeof LoginRoute;
-  '/olvide-contrasena': typeof OlvideContrasenaRoute;
-  '/restablecer': typeof RestablecerRoute;
-  '/_app/plataforma': typeof AppPlataformaRouteRouteWithChildren;
-  '/_app/agenda': typeof AppAgendaRoute;
-  '/_app/credenciales': typeof AppCredencialesRoute;
-  '/_app/egresos': typeof AppEgresosRoute;
-  '/_app/responsables': typeof AppResponsablesRoute;
-  '/_app/': typeof AppIndexRoute;
-  '/_app/configuracion/categorias': typeof AppConfiguracionCategoriasRoute;
-  '/_app/configuracion/operadores-aereos': typeof AppConfiguracionOperadoresAereosRoute;
-  '/_app/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute;
-  '/_app/pagos/$id': typeof AppPagosIdRoute;
-  '/_app/pagos/nuevo': typeof AppPagosNuevoRoute;
-  '/_app/personal/$id': typeof AppPersonalIdRoute;
-  '/_app/plataforma/catalogos': typeof AppPlataformaCatalogosRoute;
-  '/_app/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute;
-  '/_app/cuentas-aereas/': typeof AppCuentasAereasIndexRoute;
-  '/_app/pagos/': typeof AppPagosIndexRoute;
-  '/_app/personal/': typeof AppPersonalIndexRoute;
+  __root__: typeof rootRouteImport
+  '/_app': typeof AppRouteWithChildren
+  '/activar': typeof ActivarRoute
+  '/login': typeof LoginRoute
+  '/olvide-contrasena': typeof OlvideContrasenaRoute
+  '/restablecer': typeof RestablecerRoute
+  '/_app/plataforma': typeof AppPlataformaRouteRouteWithChildren
+  '/_app/agenda': typeof AppAgendaRoute
+  '/_app/credenciales': typeof AppCredencialesRoute
+  '/_app/egresos': typeof AppEgresosRoute
+  '/_app/responsables': typeof AppResponsablesRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/configuracion/categorias': typeof AppConfiguracionCategoriasRoute
+  '/_app/configuracion/operadores-aereos': typeof AppConfiguracionOperadoresAereosRoute
+  '/_app/configuracion/usuarios': typeof AppConfiguracionUsuariosRoute
+  '/_app/cuentas-aereas/$accountId': typeof AppCuentasAereasAccountIdRoute
+  '/_app/pagos/$id': typeof AppPagosIdRoute
+  '/_app/pagos/nuevo': typeof AppPagosNuevoRoute
+  '/_app/personal/$id': typeof AppPersonalIdRoute
+  '/_app/plataforma/catalogos': typeof AppPlataformaCatalogosRoute
+  '/_app/plataforma/organizaciones': typeof AppPlataformaOrganizacionesRoute
+  '/_app/cuentas-aereas/': typeof AppCuentasAereasIndexRoute
+  '/_app/pagos/': typeof AppPagosIndexRoute
+  '/_app/personal/': typeof AppPersonalIndexRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/activar'
@@ -229,6 +243,7 @@ export interface FileRouteTypes {
     | '/configuracion/categorias'
     | '/configuracion/operadores-aereos'
     | '/configuracion/usuarios'
+    | '/cuentas-aereas/$accountId'
     | '/pagos/$id'
     | '/pagos/nuevo'
     | '/personal/$id'
@@ -236,8 +251,8 @@ export interface FileRouteTypes {
     | '/plataforma/organizaciones'
     | '/cuentas-aereas/'
     | '/pagos/'
-    | '/personal/';
-  fileRoutesByTo: FileRoutesByTo;
+    | '/personal/'
+  fileRoutesByTo: FileRoutesByTo
   to:
     | '/activar'
     | '/login'
@@ -252,6 +267,7 @@ export interface FileRouteTypes {
     | '/configuracion/categorias'
     | '/configuracion/operadores-aereos'
     | '/configuracion/usuarios'
+    | '/cuentas-aereas/$accountId'
     | '/pagos/$id'
     | '/pagos/nuevo'
     | '/personal/$id'
@@ -259,7 +275,7 @@ export interface FileRouteTypes {
     | '/plataforma/organizaciones'
     | '/cuentas-aereas'
     | '/pagos'
-    | '/personal';
+    | '/personal'
   id:
     | '__root__'
     | '/_app'
@@ -276,6 +292,7 @@ export interface FileRouteTypes {
     | '/_app/configuracion/categorias'
     | '/_app/configuracion/operadores-aereos'
     | '/_app/configuracion/usuarios'
+    | '/_app/cuentas-aereas/$accountId'
     | '/_app/pagos/$id'
     | '/_app/pagos/nuevo'
     | '/_app/personal/$id'
@@ -283,206 +300,213 @@ export interface FileRouteTypes {
     | '/_app/plataforma/organizaciones'
     | '/_app/cuentas-aereas/'
     | '/_app/pagos/'
-    | '/_app/personal/';
-  fileRoutesById: FileRoutesById;
+    | '/_app/personal/'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  AppRoute: typeof AppRouteWithChildren;
-  ActivarRoute: typeof ActivarRoute;
-  LoginRoute: typeof LoginRoute;
-  OlvideContrasenaRoute: typeof OlvideContrasenaRoute;
-  RestablecerRoute: typeof RestablecerRoute;
+  AppRoute: typeof AppRouteWithChildren
+  ActivarRoute: typeof ActivarRoute
+  LoginRoute: typeof LoginRoute
+  OlvideContrasenaRoute: typeof OlvideContrasenaRoute
+  RestablecerRoute: typeof RestablecerRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/_app': {
-      id: '/_app';
-      path: '';
-      fullPath: '/';
-      preLoaderRoute: typeof AppRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/activar': {
-      id: '/activar';
-      path: '/activar';
-      fullPath: '/activar';
-      preLoaderRoute: typeof ActivarRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/activar'
+      path: '/activar'
+      fullPath: '/activar'
+      preLoaderRoute: typeof ActivarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
-      id: '/login';
-      path: '/login';
-      fullPath: '/login';
-      preLoaderRoute: typeof LoginRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/olvide-contrasena': {
-      id: '/olvide-contrasena';
-      path: '/olvide-contrasena';
-      fullPath: '/olvide-contrasena';
-      preLoaderRoute: typeof OlvideContrasenaRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/olvide-contrasena'
+      path: '/olvide-contrasena'
+      fullPath: '/olvide-contrasena'
+      preLoaderRoute: typeof OlvideContrasenaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/restablecer': {
-      id: '/restablecer';
-      path: '/restablecer';
-      fullPath: '/restablecer';
-      preLoaderRoute: typeof RestablecerRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/restablecer'
+      path: '/restablecer'
+      fullPath: '/restablecer'
+      preLoaderRoute: typeof RestablecerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/': {
-      id: '/_app/';
-      path: '/';
-      fullPath: '/';
-      preLoaderRoute: typeof AppIndexRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+      id: '/_app/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/agenda': {
-      id: '/_app/agenda';
-      path: '/agenda';
-      fullPath: '/agenda';
-      preLoaderRoute: typeof AppAgendaRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+      id: '/_app/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AppAgendaRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/credenciales': {
-      id: '/_app/credenciales';
-      path: '/credenciales';
-      fullPath: '/credenciales';
-      preLoaderRoute: typeof AppCredencialesRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+      id: '/_app/credenciales'
+      path: '/credenciales'
+      fullPath: '/credenciales'
+      preLoaderRoute: typeof AppCredencialesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/egresos': {
-      id: '/_app/egresos';
-      path: '/egresos';
-      fullPath: '/egresos';
-      preLoaderRoute: typeof AppEgresosRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+      id: '/_app/egresos'
+      path: '/egresos'
+      fullPath: '/egresos'
+      preLoaderRoute: typeof AppEgresosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/plataforma': {
-      id: '/_app/plataforma';
-      path: '/plataforma';
-      fullPath: '/plataforma';
-      preLoaderRoute: typeof AppPlataformaRouteRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+      id: '/_app/plataforma'
+      path: '/plataforma'
+      fullPath: '/plataforma'
+      preLoaderRoute: typeof AppPlataformaRouteRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/responsables': {
-      id: '/_app/responsables';
-      path: '/responsables';
-      fullPath: '/responsables';
-      preLoaderRoute: typeof AppResponsablesRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+      id: '/_app/responsables'
+      path: '/responsables'
+      fullPath: '/responsables'
+      preLoaderRoute: typeof AppResponsablesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/configuracion/categorias': {
-      id: '/_app/configuracion/categorias';
-      path: '/configuracion/categorias';
-      fullPath: '/configuracion/categorias';
-      preLoaderRoute: typeof AppConfiguracionCategoriasRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+      id: '/_app/configuracion/categorias'
+      path: '/configuracion/categorias'
+      fullPath: '/configuracion/categorias'
+      preLoaderRoute: typeof AppConfiguracionCategoriasRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/configuracion/operadores-aereos': {
-      id: '/_app/configuracion/operadores-aereos';
-      path: '/configuracion/operadores-aereos';
-      fullPath: '/configuracion/operadores-aereos';
-      preLoaderRoute: typeof AppConfiguracionOperadoresAereosRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+      id: '/_app/configuracion/operadores-aereos'
+      path: '/configuracion/operadores-aereos'
+      fullPath: '/configuracion/operadores-aereos'
+      preLoaderRoute: typeof AppConfiguracionOperadoresAereosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/configuracion/usuarios': {
-      id: '/_app/configuracion/usuarios';
-      path: '/configuracion/usuarios';
-      fullPath: '/configuracion/usuarios';
-      preLoaderRoute: typeof AppConfiguracionUsuariosRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+      id: '/_app/configuracion/usuarios'
+      path: '/configuracion/usuarios'
+      fullPath: '/configuracion/usuarios'
+      preLoaderRoute: typeof AppConfiguracionUsuariosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/cuentas-aereas/': {
-      id: '/_app/cuentas-aereas/';
-      path: '/cuentas-aereas';
-      fullPath: '/cuentas-aereas/';
-      preLoaderRoute: typeof AppCuentasAereasIndexRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+      id: '/_app/cuentas-aereas/'
+      path: '/cuentas-aereas'
+      fullPath: '/cuentas-aereas/'
+      preLoaderRoute: typeof AppCuentasAereasIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/cuentas-aereas/$accountId': {
+      id: '/_app/cuentas-aereas/$accountId'
+      path: '/cuentas-aereas/$accountId'
+      fullPath: '/cuentas-aereas/$accountId'
+      preLoaderRoute: typeof AppCuentasAereasAccountIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/pagos/': {
-      id: '/_app/pagos/';
-      path: '/pagos';
-      fullPath: '/pagos/';
-      preLoaderRoute: typeof AppPagosIndexRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+      id: '/_app/pagos/'
+      path: '/pagos'
+      fullPath: '/pagos/'
+      preLoaderRoute: typeof AppPagosIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/pagos/$id': {
-      id: '/_app/pagos/$id';
-      path: '/pagos/$id';
-      fullPath: '/pagos/$id';
-      preLoaderRoute: typeof AppPagosIdRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+      id: '/_app/pagos/$id'
+      path: '/pagos/$id'
+      fullPath: '/pagos/$id'
+      preLoaderRoute: typeof AppPagosIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/pagos/nuevo': {
-      id: '/_app/pagos/nuevo';
-      path: '/pagos/nuevo';
-      fullPath: '/pagos/nuevo';
-      preLoaderRoute: typeof AppPagosNuevoRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+      id: '/_app/pagos/nuevo'
+      path: '/pagos/nuevo'
+      fullPath: '/pagos/nuevo'
+      preLoaderRoute: typeof AppPagosNuevoRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/personal/': {
-      id: '/_app/personal/';
-      path: '/personal';
-      fullPath: '/personal/';
-      preLoaderRoute: typeof AppPersonalIndexRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+      id: '/_app/personal/'
+      path: '/personal'
+      fullPath: '/personal/'
+      preLoaderRoute: typeof AppPersonalIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/personal/$id': {
-      id: '/_app/personal/$id';
-      path: '/personal/$id';
-      fullPath: '/personal/$id';
-      preLoaderRoute: typeof AppPersonalIdRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+      id: '/_app/personal/$id'
+      path: '/personal/$id'
+      fullPath: '/personal/$id'
+      preLoaderRoute: typeof AppPersonalIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/plataforma/catalogos': {
-      id: '/_app/plataforma/catalogos';
-      path: '/catalogos';
-      fullPath: '/plataforma/catalogos';
-      preLoaderRoute: typeof AppPlataformaCatalogosRouteImport;
-      parentRoute: typeof AppPlataformaRouteRoute;
-    };
+      id: '/_app/plataforma/catalogos'
+      path: '/catalogos'
+      fullPath: '/plataforma/catalogos'
+      preLoaderRoute: typeof AppPlataformaCatalogosRouteImport
+      parentRoute: typeof AppPlataformaRouteRoute
+    }
     '/_app/plataforma/organizaciones': {
-      id: '/_app/plataforma/organizaciones';
-      path: '/organizaciones';
-      fullPath: '/plataforma/organizaciones';
-      preLoaderRoute: typeof AppPlataformaOrganizacionesRouteImport;
-      parentRoute: typeof AppPlataformaRouteRoute;
-    };
+      id: '/_app/plataforma/organizaciones'
+      path: '/organizaciones'
+      fullPath: '/plataforma/organizaciones'
+      preLoaderRoute: typeof AppPlataformaOrganizacionesRouteImport
+      parentRoute: typeof AppPlataformaRouteRoute
+    }
   }
 }
 
 interface AppPlataformaRouteRouteChildren {
-  AppPlataformaCatalogosRoute: typeof AppPlataformaCatalogosRoute;
-  AppPlataformaOrganizacionesRoute: typeof AppPlataformaOrganizacionesRoute;
+  AppPlataformaCatalogosRoute: typeof AppPlataformaCatalogosRoute
+  AppPlataformaOrganizacionesRoute: typeof AppPlataformaOrganizacionesRoute
 }
 
 const AppPlataformaRouteRouteChildren: AppPlataformaRouteRouteChildren = {
   AppPlataformaCatalogosRoute: AppPlataformaCatalogosRoute,
   AppPlataformaOrganizacionesRoute: AppPlataformaOrganizacionesRoute,
-};
+}
 
-const AppPlataformaRouteRouteWithChildren = AppPlataformaRouteRoute._addFileChildren(
-  AppPlataformaRouteRouteChildren,
-);
+const AppPlataformaRouteRouteWithChildren =
+  AppPlataformaRouteRoute._addFileChildren(AppPlataformaRouteRouteChildren)
 
 interface AppRouteChildren {
-  AppPlataformaRouteRoute: typeof AppPlataformaRouteRouteWithChildren;
-  AppAgendaRoute: typeof AppAgendaRoute;
-  AppCredencialesRoute: typeof AppCredencialesRoute;
-  AppEgresosRoute: typeof AppEgresosRoute;
-  AppResponsablesRoute: typeof AppResponsablesRoute;
-  AppIndexRoute: typeof AppIndexRoute;
-  AppConfiguracionCategoriasRoute: typeof AppConfiguracionCategoriasRoute;
-  AppConfiguracionOperadoresAereosRoute: typeof AppConfiguracionOperadoresAereosRoute;
-  AppConfiguracionUsuariosRoute: typeof AppConfiguracionUsuariosRoute;
-  AppPagosIdRoute: typeof AppPagosIdRoute;
-  AppPagosNuevoRoute: typeof AppPagosNuevoRoute;
-  AppPersonalIdRoute: typeof AppPersonalIdRoute;
-  AppCuentasAereasIndexRoute: typeof AppCuentasAereasIndexRoute;
-  AppPagosIndexRoute: typeof AppPagosIndexRoute;
-  AppPersonalIndexRoute: typeof AppPersonalIndexRoute;
+  AppPlataformaRouteRoute: typeof AppPlataformaRouteRouteWithChildren
+  AppAgendaRoute: typeof AppAgendaRoute
+  AppCredencialesRoute: typeof AppCredencialesRoute
+  AppEgresosRoute: typeof AppEgresosRoute
+  AppResponsablesRoute: typeof AppResponsablesRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppConfiguracionCategoriasRoute: typeof AppConfiguracionCategoriasRoute
+  AppConfiguracionOperadoresAereosRoute: typeof AppConfiguracionOperadoresAereosRoute
+  AppConfiguracionUsuariosRoute: typeof AppConfiguracionUsuariosRoute
+  AppCuentasAereasAccountIdRoute: typeof AppCuentasAereasAccountIdRoute
+  AppPagosIdRoute: typeof AppPagosIdRoute
+  AppPagosNuevoRoute: typeof AppPagosNuevoRoute
+  AppPersonalIdRoute: typeof AppPersonalIdRoute
+  AppCuentasAereasIndexRoute: typeof AppCuentasAereasIndexRoute
+  AppPagosIndexRoute: typeof AppPagosIndexRoute
+  AppPersonalIndexRoute: typeof AppPersonalIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -495,15 +519,16 @@ const AppRouteChildren: AppRouteChildren = {
   AppConfiguracionCategoriasRoute: AppConfiguracionCategoriasRoute,
   AppConfiguracionOperadoresAereosRoute: AppConfiguracionOperadoresAereosRoute,
   AppConfiguracionUsuariosRoute: AppConfiguracionUsuariosRoute,
+  AppCuentasAereasAccountIdRoute: AppCuentasAereasAccountIdRoute,
   AppPagosIdRoute: AppPagosIdRoute,
   AppPagosNuevoRoute: AppPagosNuevoRoute,
   AppPersonalIdRoute: AppPersonalIdRoute,
   AppCuentasAereasIndexRoute: AppCuentasAereasIndexRoute,
   AppPagosIndexRoute: AppPagosIndexRoute,
   AppPersonalIndexRoute: AppPersonalIndexRoute,
-};
+}
 
-const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren);
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
@@ -511,7 +536,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OlvideContrasenaRoute: OlvideContrasenaRoute,
   RestablecerRoute: RestablecerRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()

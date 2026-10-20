@@ -1,6 +1,6 @@
 import type { AirAccount } from '@anderp/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -65,6 +65,15 @@ function AirAccountsPage() {
         onToggle={(a) => {
           toggle.mutate(a);
         }}
+        renderName={(a) => (
+          <Link
+            to="/cuentas-aereas/$accountId"
+            params={{ accountId: a.id }}
+            className="underline-offset-4 hover:underline"
+          >
+            {a.name}
+          </Link>
+        )}
       />
       {editing && (
         <AccountFormDialog

@@ -110,3 +110,6 @@ Se borran `routes/_app/clic-kiu.tsx`, `components/clickiu/` y `lib/clickiu-api.t
 - **Atomicidad (T005):** `audit-atomicity.test.ts` cubre crear y editar cuentas, crear, editar y borrar movimientos, y el borrado simultáneo de un movimiento.
 - **Enlace a los movimientos (T007):** `AccountsTable` recibe `renderName`, así la página enlaza el nombre a `/cuentas-aereas/$accountId` en T008 sin que la tabla dependa del router (y sus pruebas, tampoco).
 - **`isPrepaid` (T007):** vive en `lib/air-accounts-api.ts` y no en un archivo de componentes (regla `react-refresh/only-export-components`).
+- **Diálogos sin casts (T008):** la mutación recibe la llamada a la API ya armada (`() => Promise<AirMovement>`). Los dos diálogos validan siempre con `createAirMovementSchema` (el formulario trae todos los campos del tipo) y al editar envían lo mismo sin `type`.
+- **Botón "Saldo inicial" (T008):** la página consulta las emisiones de tipo `opening_balance` desde 1900 para saber si ya hay uno; el listado del mes no alcanza. Los botones de alta se ocultan si la cuenta está inactiva (CA-5).
+- **Signo del saldo inicial (T008):** se escribe en positivo con radios nativos A favor / En deuda; el diálogo antepone el `-` al enviar.

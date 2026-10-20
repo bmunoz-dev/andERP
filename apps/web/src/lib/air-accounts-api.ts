@@ -3,6 +3,7 @@ import type {
   AirMovement,
   AirMovementFilters,
   AirMovementSummary,
+  AirMovementType,
   AirOperator,
   AirOperatorBalance,
   CreateAirMovement,
@@ -13,6 +14,15 @@ import type {
   UpdateAirOperator,
 } from '@anderp/shared';
 import { apiFetch } from './api-client';
+
+/** Nombres en la interfaz de los tipos de movimiento (design.md §3). */
+export const AIR_MOVEMENT_LABELS: Record<AirMovementType, string> = {
+  opening_balance: 'Saldo inicial',
+  recharge: 'Recarga',
+  payment: 'Pago al operador',
+  refund: 'Reembolso',
+  issue: 'Emisión',
+};
 
 /** Prepago si el límite es 0, Crédito si es mayor (F18 CA-4): la modalidad no se guarda. */
 export const isPrepaid = (account: Pick<AirAccount, 'creditLimit'>) =>
