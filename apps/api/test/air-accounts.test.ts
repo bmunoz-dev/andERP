@@ -517,3 +517,104 @@ describe('Movimientos de una cuenta aérea', () => {
     });
   });
 });
+
+describe('Aislamiento entre organizaciones', () => {
+  it('CA-25 B no lista, lee, edita ni usa operadores, cuentas ni movimientos de A', async () => {
+    const o = await createOperator('Satena');
+    const acc = await createAccount(o.id, 'KIU', '1000.00');
+    const movements = `/air-accounts/${acc.id}/movements`;
+    const issue = (
+      await api()
+        .post(movements, {
+          type: 'issue',
+          movementDate: '2026-09-10',
+          pnr: 'K4J2LL',
+          ticketNumber: '1234567890123',
+          passenger: 'Ana Pérez',
+          netFare: '300.00',
+          taxes: '0.00',
+        })
+        .expect(201)
+    ).body as AirMovement;
+    const before = (await api().get(`/air-accounts/${acc.id}`).expect(200)).body as AirAccount;
+
+    const other = as(t, s.orgB.admin.token);
+    expect((await other.get('/air-operators').expect(200)).body).toEqual([]);
+    expect((await other.get('/air-accounts').expect(200)).body).toEqual([]);
+    expect((await other.get('/air-accounts/by-operator').expect(200)).body).toEqual([]);
+    await other.patch(`/air-operators/${o.id}`, { name: 'Robado' }).expect(404);
+    await other.get(`/air-accounts/${acc.id}`).expect(404);
+    await other.patch(`/air-accounts/${acc.id}`, { creditLimit: '0.00' }).expect(404);
+    await other
+      .post('/air-accounts', { operatorId: o.id, name: 'KIU', creditLimit: '0.00' })
+      .expect(404);
+    await other.get(movements).expect(404);
+    await other.get(`${movements}/summary`).expect(404);
+    await other
+      .post(movements, { type: 'recharge', movementDate: '2026-09-01', amount: '1.00' })
+      .expect(404);
+    await other.get(`${movements}/${issue.id}`).expect(404);
+    await other.patch(`${movements}/${issue.id}`, { collectionStatus: 'collected' }).expect(404);
+    await other.delete(`${movements}/${issue.id}`).expect(404);
+
+    // Los nombres y tiquetes de A no chocan en B, y lo de B no cambia los saldos de A.
+    const bOperator = (await other.post('/air-operators', { name: 'Satena' }).expect(201))
+      .body as AirOperator;
+    const bAccount = (
+      await other
+        .post('/air-accounts', { operatorId: bOperator.id, name: 'KIU', creditLimit: '0.00' })
+        .expect(201)
+    ).body as AirAccount;
+    await other
+      .post(`/air-accounts/${bAccount.id}/movements`, {
+        type: 'recharge',
+        movementDate: '2026-09-01',
+        amount: '5000.00',
+      })
+      .expect(201);
+    await other
+      .post(`/air-accounts/${bAccount.id}/movements`, {
+        type: 'issue',
+        movementDate: '2026-09-10',
+        pnr: 'K4J2LL',
+        ticketNumber: '1234567890123',
+        passenger: 'Otro',
+        netFare: '10.00',
+        taxes: '0.00',
+      })
+      .expect(201);
+
+    expect((await api().get(`/air-accounts/${acc.id}`).expect(200)).body).toEqual(before);
+    expect((await api().get('/air-accounts/by-operator').expect(200)).body).toEqual([
+      {
+        operatorId: o.id,
+        operatorName: 'Satena',
+        balance: '-300.00',
+        creditLimit: '1000.00',
+        available: '700.00',
+        pendingCollection: '300.00',
+      },
+    ]);
+    expect(
+      (await api().get(`${movements}/summary?from=2026-09-01&to=2026-09-30`).expect(200)).body,
+    ).toMatchObject({ totalIn: '0.00', totalIssued: '300.00', currentBalance: '-300.00' });
+  });
+});
+
+it('los endpoints de cuentas aéreas aparecen en OpenAPI', async () => {
+  const { paths } = (await t.http.get('/api/docs-json').expect(200)).body as {
+    paths: Record<string, unknown>;
+  };
+  expect(Object.keys(paths)).toEqual(
+    expect.arrayContaining([
+      '/api/v1/air-operators',
+      '/api/v1/air-operators/{id}',
+      '/api/v1/air-accounts',
+      '/api/v1/air-accounts/by-operator',
+      '/api/v1/air-accounts/{id}',
+      '/api/v1/air-accounts/{accountId}/movements',
+      '/api/v1/air-accounts/{accountId}/movements/summary',
+      '/api/v1/air-accounts/{accountId}/movements/{id}',
+    ]),
+  );
+});
