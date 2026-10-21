@@ -14,7 +14,7 @@
       - §11: aclarar que los permisos granulares por usuario siguen fuera;
       - historial de cambios.
       Archivos: `docs/sdd/design.md`
-- [ ] F19-T002 [TDD] Primero los casos de migración y valor por defecto en `organization-modules.test.ts`; después:
+- [x] F19-T002 [TDD] Primero los casos de migración y valor por defecto en `organization-modules.test.ts`; después:
       - `appModule` en `enums.ts`;
       - `organizations.modules` en `core.ts`;
       - `0034_organization_modules` generada, con el `UPDATE` de relleno agregado a mano;

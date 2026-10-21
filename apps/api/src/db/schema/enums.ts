@@ -10,6 +10,13 @@ export const anderp = pgSchema('anderp');
 export const organizationStatus = anderp.enum('organization_status', ['active', 'suspended']);
 export const userStatus = anderp.enum('user_status', ['active', 'locked', 'inactive']);
 export const memberRole = anderp.enum('member_role', ['admin']);
+// Debe coincidir con `APP_MODULES` de @anderp/shared (lo comprueba una prueba).
+export const appModule = anderp.enum('app_module', [
+  'staff_payments',
+  'credentials',
+  'air_accounts',
+  'agenda',
+]);
 export const paymentFrequency = anderp.enum('payment_frequency', [
   'weekly',
   'biweekly',

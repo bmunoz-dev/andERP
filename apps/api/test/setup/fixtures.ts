@@ -1,7 +1,13 @@
 import type { AuthSessionResponse } from '@anderp/shared';
 import { randomUUID } from 'node:crypto';
 import type { Database } from '../../src/db/database.module';
-import { expenseCategories, organizationMembers, organizations, users } from '../../src/db/schema';
+import {
+  appModule,
+  expenseCategories,
+  organizationMembers,
+  organizations,
+  users,
+} from '../../src/db/schema';
 import { DEFAULT_EXPENSE_CATEGORIES } from '../../src/modules/catalogs/default-categories';
 import { Argon2PasswordHasher } from '../../src/modules/auth/infrastructure/argon2-password-hasher';
 import type { TestApp } from './create-test-app';
@@ -26,10 +32,11 @@ export interface TestUser {
 export async function createOrganization(
   db: Database,
   name = 'Empresa de prueba',
+  modules: (typeof appModule.enumValues)[number][] = [...appModule.enumValues],
 ): Promise<TestOrganization> {
   const [organization] = await db
     .insert(organizations)
-    .values({ name, taxId: randomUUID().slice(0, 20) })
+    .values({ name, taxId: randomUUID().slice(0, 20), modules })
     .returning({ id: organizations.id, name: organizations.name });
   if (!organization) throw new Error('Insert returned no rows');
   await db
