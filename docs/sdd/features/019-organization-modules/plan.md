@@ -101,4 +101,12 @@ La consulta de solo lectura previa al PR 1 (CA-28) es: `SELECT name, status FROM
 
 ## Notas de implementación
 
-_(se llenan durante la implementación)_
+- **Migración 0034 (T002):** la generó `drizzle-kit`; el `UPDATE` de relleno se agregó a mano al final. La base de pruebas se migra vacía, así que la prueba extrae esa sentencia del archivo y la ejecuta sobre una organización recién creada; el orden real de aplicación se confirma en producción (CA-28).
+- **Tipo del formulario (T003):** `.default([])` en `createOrganizationSchema` hace que su entrada y su salida difieran, y el formulario de crear organización dejó de compilar. Se exporta `CreateOrganizationInput = z.input<…>` y el formulario usa `useForm<CreateOrganizationInput, unknown, CreateOrganization>`, como `contract-form-dialog.tsx`.
+- **Typecheck entre tareas (T003–T005):** `authProfileSchema` y `organizationSchema` exigen `modules`, así que el typecheck de la API estuvo en rojo hasta que T004 y T005 llenaron `toProfile` y las filas del listado. El PR 1 se evalúa completo.
+- **Validación (T004):** un paquete inválido responde `422 VALIDATION_ERROR`, como el resto de la API (la spec decía 400 por error y se corrigió).
+- **Auditoría (T004):** se reutilizó `organization.update` con `modules` en el antes y el después, en vez de una acción nueva.
+- **Fixtures (T002, T005):** `createOrganization` y el seed crean con los cuatro paquetes. Una prueba que inserte una organización directamente nace con `[]` y recibiría `MODULE_DISABLED` en las rutas de un paquete (`auth.test.ts` lo hace, pero solo usa rutas de Base).
+- **Guard (T006):** `ModuleGuard` falla cerrado: sin actor también responde 403. No se registró en `AuthModule`; Nest lo instancia en cada módulo con `UseGuards`, y solo necesita `Reflector` y `ClsService`.
+- **Cobertura (T006):** la prueba usa `ModulesContainer` en vez de `DiscoveryService`, para no importar otro módulo. Compara la ruta de cada controlador con una lista esperada y comprueba que los de Plataforma lleven `SuperAdminGuard`.
+- **Entorno:** en Windows, `vitest` cierra un worker al arrancar (`0xC0000409`) en uno o dos archivos de la API por corrida; repetir el archivo lo resuelve (ya está en `CLAUDE.md`).
