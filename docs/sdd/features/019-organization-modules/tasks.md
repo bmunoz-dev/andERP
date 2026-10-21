@@ -50,7 +50,7 @@
       - pruebas: una ruta `GET` por controlador de cada paquete, apagado (403) y encendido (200, datos intactos); el super admin; A contra B; el libro de Egresos con `staff_payments` apagado; la prueba de cobertura con `DiscoveryService`;
       - código: `RequiresModule` y `ModuleGuard` en `guards.ts`, y el decorador en los 12 controladores.
       Depende de: F19-T005 · Verificación: CA-3, CA-9, CA-10, CA-12–CA-14, CA-25
-- [ ] F19-T007 Cierre del PR 1:
+- [x] F19-T007 Cierre del PR 1:
       - verificación completa (`pnpm format:check && pnpm lint && pnpm typecheck && pnpm test`);
       - notas de implementación en `plan.md` y roadmap;
       - consulta de solo lectura en producción, con confirmación del usuario (CA-28);
