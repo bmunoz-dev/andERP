@@ -22,6 +22,7 @@ import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
 import { DomainError } from '../../shared/errors/domain-error';
 import { ContractDocumentsService, type UploadedFile as File } from './contract-documents.service';
 import { ObjectStorage } from './object-storage';
+import { RequiresModule } from '../auth/http/guards';
 
 registerConstraintCodes({
   contract_documents_type_ck: 'VALIDATION_ERROR',
@@ -52,6 +53,7 @@ class DocumentUploadInterceptor extends FileInterceptor('file', {
 
 /** F17: documento del contrato en Supabase Storage. */
 @ApiTags('contract-documents')
+@RequiresModule('staff_payments')
 @Controller('contracts/:id/document')
 export class ContractDocumentsController {
   constructor(private readonly documents: ContractDocumentsService) {}

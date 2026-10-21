@@ -26,6 +26,7 @@ import { createZodDto } from 'nestjs-zod';
 import { DomainError } from '../../shared/errors/domain-error';
 import { ContractsService } from './contracts.service';
 import { ServiceProvidersService } from './service-providers.service';
+import { RequiresModule } from '../auth/http/guards';
 
 class CreateServiceProviderDto extends createZodDto(createServiceProviderSchema) {}
 class UpdateServiceProviderDto extends createZodDto(updateServiceProviderSchema) {}
@@ -37,6 +38,7 @@ const booleanQuery = (value?: string): boolean | undefined =>
 
 /** F03 CA-1 a CA-8: prestadores y sus contratos. */
 @ApiTags('service-providers')
+@RequiresModule('staff_payments')
 @Controller('service-providers')
 export class ServiceProvidersController {
   constructor(
@@ -95,6 +97,7 @@ export class ServiceProvidersController {
 }
 
 @ApiTags('service-providers')
+@RequiresModule('staff_payments')
 @Controller('contracts')
 export class ContractsController {
   constructor(private readonly contracts: ContractsService) {}

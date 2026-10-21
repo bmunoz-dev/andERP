@@ -1,11 +1,20 @@
-import { APP_MODULES, type AuthProfile, type Organization } from '@anderp/shared';
+import {
+  type AppModule,
+  APP_MODULES,
+  type AuthProfile,
+  type LedgerEntry,
+  type Organization,
+} from '@anderp/shared';
+import { GUARDS_METADATA, PATH_METADATA } from '@nestjs/common/constants';
+import { ModulesContainer } from '@nestjs/core';
 import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DB, type Database } from '../src/db/database.module';
-import { appModule, auditLogs } from '../src/db/schema';
+import { appModule, auditLogs, documentTypes } from '../src/db/schema';
+import { REQUIRED_MODULE, SuperAdminGuard } from '../src/modules/auth/http/guards';
 import { createTestApp, type TestApp } from './setup/create-test-app';
 import { as, seedTwoOrgs, TEST_PASSWORD, type TwoOrgs } from './setup/fixtures';
 import { resetDb, withOwnerSql } from './setup/reset-db';
@@ -70,7 +79,7 @@ describe('F19 módulos: base de datos', () => {
   });
 });
 
-describe('F19 módulos: Plataforma', () => {
+describe('F19 módulos: API', () => {
   let t: TestApp;
   let db: Database;
   let s: TwoOrgs;
@@ -79,6 +88,7 @@ describe('F19 módulos: Plataforma', () => {
     await resetDb();
     t = await createTestApp();
     db = t.app.get<Database>(DB);
+    await db.insert(documentTypes).values({ code: 'CC', name: 'Cédula' });
   });
 
   beforeEach(async () => {
@@ -192,5 +202,156 @@ describe('F19 módulos: Plataforma', () => {
       .patch(`/platform/organizations/${s.orgA.id}`, { modules: ['agenda'] })
       .expect(200);
     expect(((await me().expect(200)).body as AuthProfile).modules).toEqual(['agenda']);
+  });
+
+  const anyId = randomUUID();
+  /** Una ruta GET de cada controlador del paquete (el guard corre antes de que exista el recurso). */
+  const ROUTES: Record<AppModule, string[]> = {
+    staff_payments: [
+      '/service-providers',
+      '/contracts',
+      '/fee-payments',
+      '/fixed-payments',
+      `/contracts/${anyId}/document/url`,
+    ],
+    credentials: ['/credentials', '/responsible-persons'],
+    air_accounts: ['/air-operators', '/air-accounts', `/air-accounts/${anyId}/movements`],
+    agenda: ['/obligations', '/notifications'],
+  };
+
+  const setModules = (orgId: string, modules: AppModule[]) =>
+    as(t, s.superAdmin.token).patch(`/platform/organizations/${orgId}`, { modules }).expect(200);
+
+  it('CA-9 cada paquete abre sus rutas y cierra las de los demás con 403 MODULE_DISABLED', async () => {
+    for (const open of APP_MODULES) {
+      await setModules(s.orgA.id, [open]);
+      for (const [module, routes] of Object.entries(ROUTES)) {
+        for (const route of routes) {
+          const res = await as(t, s.orgA.admin.token).get(route);
+          if (module === open) {
+            expect(res.status, `${open} abre ${route}`).not.toBe(403);
+          } else {
+            expect(res.status, `${open} cierra ${route}`).toBe(403);
+            expect(res.body).toMatchObject({ code: 'MODULE_DISABLED' });
+          }
+        }
+      }
+    }
+  });
+
+  it('CA-9 Base sigue abierta sin ningún paquete', async () => {
+    await setModules(s.orgA.id, []);
+    for (const route of ['/auth/me', '/expense-categories', '/members', '/catalogs/banks']) {
+      await as(t, s.orgA.admin.token).get(route).expect(200);
+    }
+  });
+
+  it('CA-10 el super admin también recibe 403, pero Plataforma sigue abierta', async () => {
+    await setModules(s.orgA.id, []);
+    const res = await as(t, s.superAdmin.token).get('/air-accounts').expect(403);
+    expect(res.body).toMatchObject({ code: 'MODULE_DISABLED' });
+    await as(t, s.superAdmin.token).get('/platform/organizations').expect(200);
+  });
+
+  it('CA-3 CA-11 apagar corta con el mismo token y encender devuelve los mismos datos', async () => {
+    const operator = (
+      await as(t, s.orgA.admin.token).post('/air-operators', { name: 'Satena' }).expect(201)
+    ).body as { id: string };
+
+    await setModules(s.orgA.id, ['agenda']);
+    await as(t, s.orgA.admin.token).get('/air-operators').expect(403);
+
+    await setModules(s.orgA.id, [...APP_MODULES]);
+    const list = (await as(t, s.orgA.admin.token).get('/air-operators').expect(200)).body as {
+      id: string;
+    }[];
+    expect(list.map((o) => o.id)).toContain(operator.id);
+  });
+
+  it('CA-13 apagar un paquete en A no afecta a B', async () => {
+    await setModules(s.orgA.id, []);
+    await as(t, s.orgA.admin.token).get('/air-accounts').expect(403);
+    await as(t, s.orgB.admin.token).get('/air-accounts').expect(200);
+  });
+
+  it('CA-14 con Personal y pagos apagado, el libro de Egresos sigue incluyendo los pagos', async () => {
+    const api = () => as(t, s.orgA.admin.token);
+    const [cc] = await db.select().from(documentTypes);
+    const provider = (
+      await api()
+        .post('/service-providers', {
+          name: 'Persona de prueba',
+          documentTypeId: cc?.id,
+          documentNumber: '123456789',
+        })
+        .expect(201)
+    ).body as { id: string };
+    const contract = (
+      await api()
+        .post(`/service-providers/${provider.id}/contracts`, {
+          startDate: '2026-08-01',
+          endDate: '2026-12-31',
+          workAgreement: 'Asistente',
+          paymentFrequency: 'monthly',
+          monthlyAmount: '2000000.00',
+          paymentMode: 'fixed',
+        })
+        .expect(201)
+    ).body as { id: string };
+    const payment = (
+      await api()
+        .post('/fixed-payments', {
+          contractId: contract.id,
+          periodYear: 2026,
+          periodMonth: 8,
+          paymentDate: '2026-09-02',
+          amount: '1000000.00',
+        })
+        .expect(201)
+    ).body as { id: string };
+
+    await setModules(s.orgA.id, []);
+    await api().get('/fixed-payments').expect(403);
+    const ledger = (await api().get('/reports/expenses/ledger?year=2026&month=9').expect(200))
+      .body as LedgerEntry[];
+    expect(ledger.find((e) => e.sourceId === payment.id)).toMatchObject({ amount: '1000000.00' });
+  });
+
+  it('CA-12 todo controlador declara su paquete o está en la lista de Base o de Plataforma', () => {
+    const expected: Record<string, AppModule | 'base' | 'platform'> = {
+      'service-providers': 'staff_payments',
+      contracts: 'staff_payments',
+      'contracts/:id/document': 'staff_payments',
+      'fee-payments': 'staff_payments',
+      'fixed-payments': 'staff_payments',
+      credentials: 'credentials',
+      'responsible-persons': 'credentials',
+      'air-operators': 'air_accounts',
+      'air-accounts': 'air_accounts',
+      'air-accounts/:accountId/movements': 'air_accounts',
+      obligations: 'agenda',
+      notifications: 'agenda',
+      auth: 'base',
+      health: 'base',
+      expenses: 'base',
+      'reports/expenses': 'base',
+      'expense-categories': 'base',
+      members: 'base',
+      catalogs: 'base',
+      'platform/organizations': 'platform',
+      'platform/catalogs': 'platform',
+    };
+
+    const controllers = [...t.app.get(ModulesContainer).values()]
+      .flatMap((m) => [...m.controllers.values()])
+      .flatMap((c) => (c.metatype ? [c.metatype] : []));
+    const found: Record<string, AppModule | 'base' | 'platform'> = {};
+    for (const controller of controllers) {
+      const route = Reflect.getMetadata(PATH_METADATA, controller) as string;
+      const required = Reflect.getMetadata(REQUIRED_MODULE, controller) as AppModule | undefined;
+      const guards = (Reflect.getMetadata(GUARDS_METADATA, controller) ?? []) as unknown[];
+      found[route] = required ?? (guards.includes(SuperAdminGuard) ? 'platform' : 'base');
+    }
+    expect(found).toEqual(expected);
   });
 });

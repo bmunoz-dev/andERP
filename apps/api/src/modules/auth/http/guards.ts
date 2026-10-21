@@ -1,9 +1,11 @@
-import { ErrorCode } from '@anderp/shared';
+import { type AppModule, ErrorCode } from '@anderp/shared';
 import {
+  applyDecorators,
   type CanActivate,
   type ExecutionContext,
   Inject,
   Injectable,
+  SetMetadata,
   UseGuards,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -98,6 +100,33 @@ export class SuperAdminGuard implements CanActivate {
 }
 
 export const SuperAdminOnly = () => UseGuards(SuperAdminGuard);
+
+export const REQUIRED_MODULE = 'requiredModule';
+
+/**
+ * Paquetes de la organización (F19 CA-9): sin el paquete, 403 `MODULE_DISABLED`. Lee
+ * `actor.modules`, que el guard global llena en cada petición, así que apagar un paquete
+ * corta el acceso de inmediato. No exime al super admin (CA-10).
+ */
+@Injectable()
+export class ModuleGuard implements CanActivate {
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly cls: ClsService<RequestContext>,
+  ) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    const required = this.reflector.get<AppModule | undefined>(REQUIRED_MODULE, context.getClass());
+    if (required && this.cls.get('actor')?.modules.includes(required) !== true) {
+      throw new DomainError(ErrorCode.MODULE_DISABLED, 403);
+    }
+    return true;
+  }
+}
+
+/** Marca un controlador como parte de un paquete que se puede apagar por organización. */
+export const RequiresModule = (module: AppModule) =>
+  applyDecorators(SetMetadata(REQUIRED_MODULE, module), UseGuards(ModuleGuard));
 
 /** Actor de la petición. Solo se usa en rutas protegidas, donde el guard ya lo dejó. */
 export function requireActor(cls: ClsService<RequestContext>): Actor {

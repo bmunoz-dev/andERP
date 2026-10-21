@@ -4,11 +4,13 @@ import { ApiTags } from '@nestjs/swagger';
 import { createZodDto } from 'nestjs-zod';
 import { ObligationsModule } from '../obligations/obligations.module';
 import { NotificationsService } from './notifications.service';
+import { RequiresModule } from '../auth/http/guards';
 
 class DismissNotificationDto extends createZodDto(dismissNotificationSchema) {}
 
 /** F14: panel de notificaciones (las alertas de la Agenda). */
 @ApiTags('notifications')
+@RequiresModule('agenda')
 @Controller('notifications')
 export class NotificationsController {
   constructor(private readonly notifications: NotificationsService) {}

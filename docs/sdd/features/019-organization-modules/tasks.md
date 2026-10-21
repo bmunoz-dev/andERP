@@ -46,7 +46,7 @@
       - `/auth/me` con `modules`;
       - mismo token antes y después de apagar un paquete.
       Depende de: F19-T004 · Verificación: CA-8, CA-11, CA-15
-- [ ] F19-T006 [TDD] Casos de cumplimiento y después el código:
+- [x] F19-T006 [TDD] Casos de cumplimiento y después el código:
       - pruebas: una ruta `GET` por controlador de cada paquete, apagado (403) y encendido (200, datos intactos); el super admin; A contra B; el libro de Egresos con `staff_payments` apagado; la prueba de cobertura con `DiscoveryService`;
       - código: `RequiresModule` y `ModuleGuard` en `guards.ts`, y el decorador en los 12 controladores.
       Depende de: F19-T005 · Verificación: CA-3, CA-9, CA-10, CA-12–CA-14, CA-25

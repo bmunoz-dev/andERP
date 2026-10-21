@@ -27,6 +27,7 @@ import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
 import { ObligationsService } from './obligations.service';
+import { RequiresModule } from '../auth/http/guards';
 
 registerConstraintCodes({
   payment_obligations_name_uq: ErrorCode.DUPLICATE_OBLIGATION,
@@ -44,6 +45,7 @@ class AgendaQueryDto extends createZodDto(
 
 /** F13: agenda de pagos a entidades. */
 @ApiTags('obligations')
+@RequiresModule('agenda')
 @Controller('obligations')
 export class ObligationsController {
   constructor(private readonly obligations: ObligationsService) {}
