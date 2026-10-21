@@ -60,7 +60,7 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 ## Bloqueos y notas
 
-**F19 en curso (rama `feat/019-organization-modules`):** el PR 1 (migración, shared y API) está abierto, con T001–T007 hechas y la verificación del usuario hecha; el PR 2 (web) se abre cuando el PR 1 esté en producción. **Antes de crear la primera organización cliente real, hacer el respaldo de producción (pendiente 1 de F07).**
+**F19 en curso (rama `feat/019-organization-modules`):** el PR 1 (migración, shared y API) está en producción (PR #39, 2026-10-21). El PR 2 (web, T008–T009) está abierto; falta T010: tras su despliegue, la verificación manual del usuario (CA-28), y con ella F19 pasa a Hecho. **Antes de crear la primera organización cliente real, hacer el respaldo de producción (pendiente 1 de F07).**
 
 **F18 terminada y en producción (PR #37, 2026-10-20):** cuentas aéreas con operadores, cupo prepago/crédito y emisión de tiquetes; reemplaza a Clic Kiu. Verificación manual del usuario hecha.
 

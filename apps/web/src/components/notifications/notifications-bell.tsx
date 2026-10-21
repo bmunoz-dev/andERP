@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useAuth } from '@/lib/auth-store';
 import { formatDate } from '@/lib/format';
 import {
   dismissNotification,
@@ -22,14 +23,20 @@ const statusOf = (n: NotificationItem) =>
 /**
  * Campana de la cabecera (F14 CA-12–CA-17): un punto si hay algo sin revisar; el panel lista las
  * alertas de la Agenda. Abrirlo las marca como vistas; las que eran nuevas se señalan mientras
- * sigue abierto.
+ * sigue abierto. Solo aparece si la organización tiene la Agenda (F19 CA-18).
  */
 export function NotificationsBell() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [fresh, setFresh] = useState<Set<string>>(new Set());
-  const { data } = useQuery({ queryKey: notificationKeys.all, queryFn: getNotifications });
+  const auth = useAuth();
+  const hasAgenda = auth.status === 'authenticated' && auth.user.modules.includes('agenda');
+  const { data } = useQuery({
+    queryKey: notificationKeys.all,
+    queryFn: getNotifications,
+    enabled: hasAgenda,
+  });
   const refresh = () => queryClient.invalidateQueries({ queryKey: notificationKeys.all });
   const markSeen = useMutation({ mutationFn: markNotificationsSeen, onSuccess: refresh });
   const dismiss = useMutation({ mutationFn: dismissNotification, onSuccess: refresh });
@@ -41,6 +48,8 @@ export function NotificationsBell() {
     setFresh(new Set(items.filter((n) => !n.seen).map(keyOf)));
     if (data?.unseen) markSeen.mutate();
   }
+
+  if (!hasAgenda) return null;
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
