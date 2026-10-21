@@ -15,8 +15,8 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { createZodDto } from 'nestjs-zod';
 import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
-import { FeePaymentsService } from './fee-payments.service';
 import { RequiresModule } from '../auth/http/guards';
+import { FeePaymentsService } from './fee-payments.service';
 
 registerConstraintCodes({
   fee_payments_period_uq: 'FEE_PAYMENT_ALREADY_EXISTS',

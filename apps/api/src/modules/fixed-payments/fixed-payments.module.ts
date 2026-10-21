@@ -19,8 +19,8 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { createZodDto } from 'nestjs-zod';
 import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
-import { FixedPaymentsService } from './fixed-payments.service';
 import { RequiresModule } from '../auth/http/guards';
+import { FixedPaymentsService } from './fixed-payments.service';
 
 registerConstraintCodes({ fixed_payments_amount_ck: 'VALIDATION_ERROR' });
 

@@ -26,8 +26,8 @@ import { ApiTags } from '@nestjs/swagger';
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
-import { ObligationsService } from './obligations.service';
 import { RequiresModule } from '../auth/http/guards';
+import { ObligationsService } from './obligations.service';
 
 registerConstraintCodes({
   payment_obligations_name_uq: ErrorCode.DUPLICATE_OBLIGATION,

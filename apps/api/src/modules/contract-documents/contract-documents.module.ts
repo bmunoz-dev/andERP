@@ -20,9 +20,9 @@ import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import type { Observable } from 'rxjs';
 import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
 import { DomainError } from '../../shared/errors/domain-error';
+import { RequiresModule } from '../auth/http/guards';
 import { ContractDocumentsService, type UploadedFile as File } from './contract-documents.service';
 import { ObjectStorage } from './object-storage';
-import { RequiresModule } from '../auth/http/guards';
 
 registerConstraintCodes({
   contract_documents_type_ck: 'VALIDATION_ERROR',

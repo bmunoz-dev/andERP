@@ -1,4 +1,4 @@
-import type { AuthSessionResponse } from '@anderp/shared';
+import type { AppModule, AuthSessionResponse } from '@anderp/shared';
 import { randomUUID } from 'node:crypto';
 import type { Database } from '../../src/db/database.module';
 import {
@@ -32,7 +32,7 @@ export interface TestUser {
 export async function createOrganization(
   db: Database,
   name = 'Empresa de prueba',
-  modules: (typeof appModule.enumValues)[number][] = [...appModule.enumValues],
+  modules: AppModule[] = [...appModule.enumValues],
 ): Promise<TestOrganization> {
   const [organization] = await db
     .insert(organizations)

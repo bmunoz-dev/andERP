@@ -2,9 +2,9 @@ import { dismissNotificationSchema, type Notifications } from '@anderp/shared';
 import { Body, Controller, Get, HttpCode, Module, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { createZodDto } from 'nestjs-zod';
+import { RequiresModule } from '../auth/http/guards';
 import { ObligationsModule } from '../obligations/obligations.module';
 import { NotificationsService } from './notifications.service';
-import { RequiresModule } from '../auth/http/guards';
 
 class DismissNotificationDto extends createZodDto(dismissNotificationSchema) {}
 

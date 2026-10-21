@@ -31,10 +31,10 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { createZodDto, ZodValidationPipe } from 'nestjs-zod';
 import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
+import { RequiresModule } from '../auth/http/guards';
 import { AirAccountMovementsService } from './air-account-movements.service';
 import { AirAccountsService } from './air-accounts.service';
 import { AirOperatorsService } from './air-operators.service';
-import { RequiresModule } from '../auth/http/guards';
 
 // Los `code` de los triggers (cupo, inmutables) llegan como P0001 y el mapper ya los traduce.
 registerConstraintCodes({

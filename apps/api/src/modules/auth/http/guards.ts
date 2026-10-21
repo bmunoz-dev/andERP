@@ -116,7 +116,10 @@ export class ModuleGuard implements CanActivate {
   ) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const required = this.reflector.get<AppModule | undefined>(REQUIRED_MODULE, context.getClass());
+    const required = this.reflector.getAllAndOverride<AppModule | undefined>(REQUIRED_MODULE, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
     if (required && this.cls.get('actor')?.modules.includes(required) !== true) {
       throw new DomainError(ErrorCode.MODULE_DISABLED, 403);
     }

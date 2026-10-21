@@ -23,9 +23,9 @@ import { ApiTags } from '@nestjs/swagger';
 import { createZodDto } from 'nestjs-zod';
 import { ENV, type Env } from '../../config/env';
 import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
+import { RequiresModule } from '../auth/http/guards';
 import { CredentialCipher } from './credential-cipher';
 import { CredentialsService } from './credentials.service';
-import { RequiresModule } from '../auth/http/guards';
 
 registerConstraintCodes({ entity_credentials_uq: ErrorCode.DUPLICATE_CREDENTIAL });
 

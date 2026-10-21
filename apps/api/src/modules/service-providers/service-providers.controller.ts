@@ -24,9 +24,9 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { createZodDto } from 'nestjs-zod';
 import { DomainError } from '../../shared/errors/domain-error';
+import { RequiresModule } from '../auth/http/guards';
 import { ContractsService } from './contracts.service';
 import { ServiceProvidersService } from './service-providers.service';
-import { RequiresModule } from '../auth/http/guards';
 
 class CreateServiceProviderDto extends createZodDto(createServiceProviderSchema) {}
 class UpdateServiceProviderDto extends createZodDto(updateServiceProviderSchema) {}
