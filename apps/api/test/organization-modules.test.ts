@@ -1,9 +1,13 @@
-import { APP_MODULES } from '@anderp/shared';
+import { APP_MODULES, type Organization } from '@anderp/shared';
+import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { appModule } from '../src/db/schema';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { DB, type Database } from '../src/db/database.module';
+import { appModule, auditLogs } from '../src/db/schema';
+import { createTestApp, type TestApp } from './setup/create-test-app';
+import { as, seedTwoOrgs, type TwoOrgs } from './setup/fixtures';
 import { resetDb, withOwnerSql } from './setup/reset-db';
 
 /** Paquetes por organización de F19 (design.md decisión 19). */
@@ -62,6 +66,115 @@ describe('F19 módulos: base de datos', () => {
       await sql.unsafe(backfill ?? '');
       const [row] = await sql<{ modules: string[] }[]>`select modules from anderp.organizations`;
       expect(row?.modules).toEqual(['staff_payments', 'credentials', 'air_accounts', 'agenda']);
+    });
+  });
+});
+
+describe('F19 módulos: Plataforma', () => {
+  let t: TestApp;
+  let db: Database;
+  let s: TwoOrgs;
+
+  beforeAll(async () => {
+    await resetDb();
+    t = await createTestApp();
+    db = t.app.get<Database>(DB);
+  });
+
+  beforeEach(async () => {
+    s = await seedTwoOrgs(t, db);
+  });
+
+  afterAll(async () => {
+    await t.close();
+  });
+
+  const newOrg = () => ({
+    name: `Cliente ${randomUUID().slice(0, 6)}`,
+    taxId: randomUUID().slice(0, 18),
+    admin: { email: `admin-${randomUUID()}@cliente.co`, firstName: 'Laura', lastName: 'Ríos' },
+  });
+
+  const getOrg = async (id: string) =>
+    (await as(t, s.superAdmin.token).get(`/platform/organizations/${id}`).expect(200))
+      .body as Organization;
+
+  it('CA-4 sin `modules` la organización nace solo con Base', async () => {
+    const res = await as(t, s.superAdmin.token)
+      .post('/platform/organizations', newOrg())
+      .expect(201);
+    expect((res.body as Organization).modules).toEqual([]);
+  });
+
+  it('CA-4 crea con los paquetes elegidos y descarta los repetidos', async () => {
+    const res = await as(t, s.superAdmin.token)
+      .post('/platform/organizations', {
+        ...newOrg(),
+        modules: ['agenda', 'credentials', 'agenda'],
+      })
+      .expect(201);
+    expect((res.body as Organization).modules).toEqual(['agenda', 'credentials']);
+  });
+
+  it('CA-4 CA-5 `modules` reemplaza el conjunto completo y se lee en el detalle y el listado', async () => {
+    const url = `/platform/organizations/${s.orgA.id}`;
+    expect((await getOrg(s.orgA.id)).modules).toEqual([...APP_MODULES]);
+
+    await as(t, s.superAdmin.token)
+      .patch(url, { modules: ['air_accounts'] })
+      .expect(200);
+    expect((await getOrg(s.orgA.id)).modules).toEqual(['air_accounts']);
+    const list = (await as(t, s.superAdmin.token).get('/platform/organizations').expect(200))
+      .body as Organization[];
+    expect(list.find((o) => o.id === s.orgA.id)?.modules).toEqual(['air_accounts']);
+
+    await as(t, s.superAdmin.token).patch(url, { name: 'Renombrada' }).expect(200);
+    expect((await getOrg(s.orgA.id)).modules).toEqual(['air_accounts']);
+
+    await as(t, s.superAdmin.token).patch(url, { modules: [] }).expect(200);
+    expect((await getOrg(s.orgA.id)).modules).toEqual([]);
+  });
+
+  it('CA-4 un paquete que no existe → 422 VALIDATION_ERROR', async () => {
+    const res = await as(t, s.superAdmin.token)
+      .patch(`/platform/organizations/${s.orgA.id}`, { modules: ['base'] })
+      .expect(422);
+    expect(res.body).toMatchObject({ code: 'VALIDATION_ERROR' });
+    await as(t, s.superAdmin.token)
+      .post('/platform/organizations', { ...newOrg(), modules: ['inventado'] })
+      .expect(422);
+  });
+
+  it('CA-6 un admin de la organización no puede cambiar los paquetes', async () => {
+    const res = await as(t, s.orgA.admin.token)
+      .patch(`/platform/organizations/${s.orgA.id}`, { modules: [] })
+      .expect(403);
+    expect(res.body).toMatchObject({ code: 'FORBIDDEN' });
+    expect((await getOrg(s.orgA.id)).modules).toEqual([...APP_MODULES]);
+  });
+
+  it('CA-7 crear y cambiar paquetes se audita con el antes y el después', async () => {
+    const created = (
+      await as(t, s.superAdmin.token)
+        .post('/platform/organizations', { ...newOrg(), modules: ['agenda'] })
+        .expect(201)
+    ).body as Organization;
+    const [createLog] = await db
+      .select()
+      .from(auditLogs)
+      .where(and(eq(auditLogs.action, 'organization.create'), eq(auditLogs.entityId, created.id)));
+    expect(createLog?.changes).toMatchObject({ after: { modules: ['agenda'] } });
+
+    await as(t, s.superAdmin.token)
+      .patch(`/platform/organizations/${created.id}`, { modules: ['agenda', 'credentials'] })
+      .expect(200);
+    const [updateLog] = await db
+      .select()
+      .from(auditLogs)
+      .where(and(eq(auditLogs.action, 'organization.update'), eq(auditLogs.entityId, created.id)));
+    expect(updateLog?.changes).toMatchObject({
+      before: { modules: ['agenda'] },
+      after: { modules: ['agenda', 'credentials'] },
     });
   });
 });

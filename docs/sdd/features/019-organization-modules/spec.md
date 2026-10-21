@@ -47,7 +47,7 @@ No son permisos por usuario: todos los admins de una organización ven los mismo
 
 **Plataforma (super admin)**
 
-- **CA-4.** `POST /platform/organizations` acepta `modules: AppModule[]` opcional (por defecto `[]`). `PATCH /platform/organizations/:id` acepta `modules` además de `name` y `status`; `modules` reemplaza el conjunto completo. Los repetidos se descartan; un valor fuera del enum devuelve `400 VALIDATION_ERROR`. El esquema Zod `appModuleSchema` vive en `packages/shared`.
+- **CA-4.** `POST /platform/organizations` acepta `modules: AppModule[]` opcional (por defecto `[]`). `PATCH /platform/organizations/:id` acepta `modules` además de `name` y `status`; `modules` reemplaza el conjunto completo. Los repetidos se descartan; un valor fuera del enum devuelve `422 VALIDATION_ERROR`. El esquema Zod `appModuleSchema` vive en `packages/shared`.
 - **CA-5.** `GET /platform/organizations` y `GET /platform/organizations/:id` devuelven `modules`.
 - **CA-6.** Un admin que no es super admin recibe `403 FORBIDDEN` en estas rutas (como hoy).
 - **CA-7.** Un cambio de `modules` se audita como `organization.update` (acción existente) con `modules` antes y después, en la misma transacción.

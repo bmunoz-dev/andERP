@@ -35,7 +35,7 @@
 
 ## Bloque C — API
 
-- [ ] F19-T004 [TDD] Casos de Plataforma en `organization-modules.test.ts` y después `organizations.service.ts`:
+- [x] F19-T004 [TDD] Casos de Plataforma en `organization-modules.test.ts` y después `organizations.service.ts`:
       - `POST` y `PATCH` con `modules`;
       - repetidos y valor inválido;
       - `modules` en `get` y en el listado;
