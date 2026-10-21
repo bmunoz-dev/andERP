@@ -59,7 +59,7 @@
 
 ## Bloque D — Web (PR 2)
 
-- [ ] F19-T008 [TDD] Menú y guardia:
+- [x] F19-T008 [TDD] Menú y guardia:
       - `module` en `NavItem`;
       - `navigationFor` que filtra y quita los grupos vacíos;
       - `moduleForPath`;

@@ -13,13 +13,15 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useAuth } from '@/lib/auth-store';
 import { errorMessage } from '@/lib/error-messages.es';
 import { deleteExpense, expenseKeys, getLedger, type LedgerFilter } from '@/lib/expenses-api';
 import { formatDate } from '@/lib/format';
 
 /**
  * Detalle del libro de una celda de la matriz (F05 CA-14): los egresos manuales se editan y
- * borran aquí; los pagos al personal enlazan a su pago.
+ * borran aquí; los pagos al personal enlazan a su pago si la organización tiene ese paquete
+ * (F19 CA-19).
  */
 export function LedgerSheet({
   year,
@@ -36,6 +38,9 @@ export function LedgerSheet({
 }) {
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState<LedgerEntry | null>(null);
+  const auth = useAuth();
+  const canOpenPayments =
+    auth.status === 'authenticated' && auth.user.modules.includes('staff_payments');
   const filter = selection?.filter ?? {};
   const ledger = useQuery({
     queryKey: expenseKeys.ledger(year, month, filter),
@@ -103,7 +108,7 @@ export function LedgerSheet({
                       Eliminar
                     </Button>
                   </>
-                ) : entry.source === 'fee_payment' ? (
+                ) : !canOpenPayments ? null : entry.source === 'fee_payment' ? (
                   <Button asChild variant="link" size="sm">
                     <Link to="/pagos/$id" params={{ id: entry.sourceId }}>
                       Ver pago por días

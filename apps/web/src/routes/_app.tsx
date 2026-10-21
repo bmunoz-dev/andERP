@@ -4,13 +4,20 @@ import { NotificationsBell } from '@/components/notifications/notifications-bell
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { UserMenu } from '@/components/user-menu';
 import { authStore, useAuth } from '@/lib/auth-store';
+import { moduleForPath } from '@/lib/navigation';
 
-/** Layout de las rutas privadas (F01 CA-20, F02 CA-18): sin sesión, redirige al login. */
+/**
+ * Layout de las rutas privadas (F01 CA-20, F02 CA-18): sin sesión, redirige al login. Una ruta
+ * de un paquete que la organización no tiene redirige a Egresos (F19 CA-17).
+ */
 export const Route = createFileRoute('/_app')({
   beforeLoad: ({ location }) => {
-    if (authStore.get().status !== 'authenticated') {
+    const auth = authStore.get();
+    if (auth.status !== 'authenticated') {
       throw redirect({ to: '/login', search: { redirect: location.href } });
     }
+    const module = moduleForPath(location.pathname);
+    if (module && !auth.user.modules.includes(module)) throw redirect({ to: '/egresos' });
   },
   component: AppLayout,
 });
