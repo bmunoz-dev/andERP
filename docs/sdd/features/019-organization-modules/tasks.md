@@ -67,7 +67,7 @@
       - campana solo con `agenda`;
       - concepto sin enlace en `ledger-sheet.tsx`.
       Depende de: F19-T007 (PR 1 en producción) · Verificación: CA-16–CA-20, CA-24
-- [ ] F19-T009 [TDD] Plataforma → Organizaciones:
+- [x] F19-T009 [TDD] Plataforma → Organizaciones:
       - `ModuleCheckboxes` y casillas en `CreateOrganizationDialog`;
       - `ModulesDialog` con la acción **Módulos**;
       - confirmación al quitar un paquete;
