@@ -60,6 +60,7 @@ export class DrizzleUserRepository implements UserRepository {
         organizationId: organizations.id,
         organizationName: organizations.name,
         organizationStatus: organizations.status,
+        modules: organizations.modules,
         role: organizationMembers.role,
       })
       .from(organizationMembers)

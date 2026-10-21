@@ -80,6 +80,7 @@ describe('LoginUseCase', () => {
       organization: { id: 'org-1', name: 'Empresa' },
       role: 'admin',
       isSuperAdmin: false,
+      modules: ['staff_payments', 'credentials', 'air_accounts', 'agenda'],
     });
     expect(result.refreshExpiresAt.getTime()).toBe(t.clock.now().getTime() + REFRESH_TOKEN_TTL_MS);
     expect(t.accessTokens.issued[0]).toMatchObject({ sub: user.id, org: 'org-1', sa: false });
@@ -238,6 +239,7 @@ describe('Contraseñas', () => {
       organizationId: 'org-1',
       role: 'admin',
       isSuperAdmin: false,
+      modules: [],
       sessionFamilyId: t.sessions.rows[0]!.familyId,
     };
   });

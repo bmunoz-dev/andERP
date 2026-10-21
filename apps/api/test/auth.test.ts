@@ -111,6 +111,7 @@ describe('Login', () => {
       isSuperAdmin: false,
       organization: { id: u.organizationId, name: 'Empresa de prueba' },
       role: 'admin',
+      modules: [],
     });
     expect(res.headers['cache-control']).toBe('no-store');
 

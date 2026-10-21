@@ -32,5 +32,6 @@ export function toProfile({ user, membership }: Access): AuthProfile {
     isSuperAdmin: user.isSuperAdmin,
     organization: { id: membership.organizationId, name: membership.organizationName },
     role: membership.role,
+    modules: membership.modules,
   };
 }

@@ -1,4 +1,4 @@
-import { APP_MODULES, type Organization } from '@anderp/shared';
+import { APP_MODULES, type AuthProfile, type Organization } from '@anderp/shared';
 import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
@@ -7,7 +7,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DB, type Database } from '../src/db/database.module';
 import { appModule, auditLogs } from '../src/db/schema';
 import { createTestApp, type TestApp } from './setup/create-test-app';
-import { as, seedTwoOrgs, type TwoOrgs } from './setup/fixtures';
+import { as, seedTwoOrgs, TEST_PASSWORD, type TwoOrgs } from './setup/fixtures';
 import { resetDb, withOwnerSql } from './setup/reset-db';
 
 /** Paquetes por organización de F19 (design.md decisión 19). */
@@ -176,5 +176,21 @@ describe('F19 módulos: Plataforma', () => {
       before: { modules: ['agenda'] },
       after: { modules: ['agenda', 'credentials'] },
     });
+  });
+
+  it('CA-8 CA-11 CA-15 /auth/me y el login llevan `modules`; apagar uno se ve con el mismo token', async () => {
+    const login = await t.http
+      .post('/api/v1/auth/login')
+      .send({ email: s.orgA.admin.email, password: TEST_PASSWORD })
+      .expect(200);
+    expect((login.body as { user: AuthProfile }).user.modules).toEqual([...APP_MODULES]);
+
+    const me = () => as(t, s.orgA.admin.token).get('/auth/me');
+    expect(((await me().expect(200)).body as AuthProfile).modules).toEqual([...APP_MODULES]);
+
+    await as(t, s.superAdmin.token)
+      .patch(`/platform/organizations/${s.orgA.id}`, { modules: ['agenda'] })
+      .expect(200);
+    expect(((await me().expect(200)).body as AuthProfile).modules).toEqual(['agenda']);
   });
 });

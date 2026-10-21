@@ -1,3 +1,4 @@
+import { APP_MODULES } from '@anderp/shared';
 import { createHash, randomUUID } from 'node:crypto';
 import type { AuditEntry, AuditLogger } from '../../../audit/audit.service';
 import type { MailMessage, Mailer } from '../../../mail/mailer';
@@ -127,6 +128,7 @@ export class InMemoryUsers implements UserRepository {
         organizationName: 'Empresa',
         organizationStatus: 'active',
         role: 'admin',
+        modules: [...APP_MODULES],
         ...membership,
       });
     }

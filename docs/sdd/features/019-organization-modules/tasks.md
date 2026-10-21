@@ -41,7 +41,7 @@
       - `modules` en `get` y en el listado;
       - `modules` en la auditoría de `organization.create` y `organization.update`.
       Depende de: F19-T002, F19-T003 · Verificación: CA-4–CA-7
-- [ ] F19-T005 [TDD] Casos de perfil y token y después el cambio en auth:
+- [x] F19-T005 [TDD] Casos de perfil y token y después el cambio en auth:
       - `modules` en `MembershipRecord`, `findMembership`, `in-memory-auth.ts`, `Actor`, `JwtAuthGuard` y `toProfile`;
       - `/auth/me` con `modules`;
       - mismo token antes y después de apagar un paquete.

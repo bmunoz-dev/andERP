@@ -75,6 +75,7 @@ export class JwtAuthGuard implements CanActivate {
       userId: user.id,
       organizationId: membership.organizationId,
       role: membership.role,
+      modules: membership.modules,
       isSuperAdmin: user.isSuperAdmin,
       sessionFamilyId: claims.sid,
     };
