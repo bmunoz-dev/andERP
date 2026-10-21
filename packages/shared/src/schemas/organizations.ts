@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { emailSchema, memberRoleSchema } from './auth';
+import { appModuleSchema, appModulesSchema, emailSchema, memberRoleSchema } from './auth';
 
 const personName = z
   .string()
@@ -15,6 +15,7 @@ export const organizationSchema = z.object({
   name: z.string(),
   taxId: z.string(),
   status: organizationStatusSchema,
+  modules: z.array(appModuleSchema),
   memberCount: z.number().int(),
   createdAt: z.string(),
 });
@@ -27,15 +28,22 @@ export const createOrganizationSchema = z.object({
     .trim()
     .regex(/^[0-9A-Za-z-]{3,20}$/, 'Usa de 3 a 20 números, letras o guiones (p. ej. 900123456-7)'),
   admin: z.object({ email: emailSchema, firstName: personName, lastName: personName }),
+  modules: appModulesSchema.default([]),
 });
 export type CreateOrganization = z.infer<typeof createOrganizationSchema>;
+/** Lo que escribe el formulario: `modules` es opcional porque el esquema le pone `[]`. */
+export type CreateOrganizationInput = z.input<typeof createOrganizationSchema>;
 
 export const updateOrganizationSchema = z
   .object({
     name: z.string().trim().min(1).max(100).optional(),
     status: organizationStatusSchema.optional(),
+    modules: appModulesSchema.optional(),
   })
-  .refine((v) => v.name !== undefined || v.status !== undefined, 'Nada que actualizar');
+  .refine(
+    (v) => v.name !== undefined || v.status !== undefined || v.modules !== undefined,
+    'Nada que actualizar',
+  );
 export type UpdateOrganization = z.infer<typeof updateOrganizationSchema>;
 
 export const memberSchema = z.object({

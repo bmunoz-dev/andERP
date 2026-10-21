@@ -17,6 +17,7 @@ const MESSAGES = {
   UNPROCESSABLE: 'No se pudo completar la operación con esos datos.',
   UNAUTHORIZED: 'Tu sesión terminó. Inicia sesión de nuevo.',
   FORBIDDEN: 'No tienes permiso para hacer esto.',
+  MODULE_DISABLED: 'Tu organización no tiene activo este módulo.',
   TOO_MANY_REQUESTS: 'Demasiados intentos. Espera un momento e inténtalo de nuevo.',
   SERVICE_UNAVAILABLE: 'El servicio no está disponible en este momento. Intenta más tarde.',
   // F01 — auth

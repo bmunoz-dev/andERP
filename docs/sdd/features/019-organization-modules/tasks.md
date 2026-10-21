@@ -25,7 +25,7 @@
 
 ## Bloque B — Compartido
 
-- [ ] F19-T003 [P] [TDD] En shared:
+- [x] F19-T003 [P] [TDD] En shared:
       - `APP_MODULES`, `appModuleSchema` y `appModulesSchema` (descarta repetidos);
       - `modules` en `organizationSchema`, `createOrganizationSchema`, `updateOrganizationSchema` y `authProfileSchema`;
       - `MODULE_DISABLED` con su mensaje en español;

@@ -1,12 +1,18 @@
+import { APP_MODULES } from '@anderp/shared';
 import { randomUUID } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { appModule } from '../src/db/schema';
 import { resetDb, withOwnerSql } from './setup/reset-db';
 
 /** Paquetes por organización de F19 (design.md decisión 19). */
 describe('F19 módulos: base de datos', () => {
   beforeEach(resetDb);
+
+  it('la lista de la API y la de @anderp/shared son la misma', () => {
+    expect(appModule.enumValues).toEqual([...APP_MODULES]);
+  });
 
   it('el enum `app_module` tiene los cuatro paquetes', async () => {
     await withOwnerSql(async (sql) => {
