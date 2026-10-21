@@ -23,6 +23,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { createZodDto } from 'nestjs-zod';
 import { ENV, type Env } from '../../config/env';
 import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
+import { RequiresModule } from '../auth/http/guards';
 import { CredentialCipher } from './credential-cipher';
 import { CredentialsService } from './credentials.service';
 
@@ -32,6 +33,7 @@ class SaveCredentialDto extends createZodDto(saveCredentialSchema) {}
 class UpdateCredentialDto extends createZodDto(updateCredentialSchema) {}
 
 @ApiTags('credentials')
+@RequiresModule('credentials')
 @Controller('credentials')
 export class CredentialsController {
   constructor(private readonly credentials: CredentialsService) {}

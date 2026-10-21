@@ -31,6 +31,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { createZodDto, ZodValidationPipe } from 'nestjs-zod';
 import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
+import { RequiresModule } from '../auth/http/guards';
 import { AirAccountMovementsService } from './air-account-movements.service';
 import { AirAccountsService } from './air-accounts.service';
 import { AirOperatorsService } from './air-operators.service';
@@ -56,6 +57,7 @@ class AirMovementFiltersDto extends createZodDto(airMovementFiltersSchema) {}
 
 /** F18: catálogo de operadores aéreos. */
 @ApiTags('air-accounts')
+@RequiresModule('air_accounts')
 @Controller('air-operators')
 export class AirOperatorsController {
   constructor(private readonly operators: AirOperatorsService) {}
@@ -81,6 +83,7 @@ export class AirOperatorsController {
 
 /** F18: cuentas con los operadores, su saldo y el consolidado por operador. */
 @ApiTags('air-accounts')
+@RequiresModule('air_accounts')
 @Controller('air-accounts')
 export class AirAccountsController {
   constructor(private readonly accounts: AirAccountsService) {}
@@ -117,6 +120,7 @@ export class AirAccountsController {
 
 /** F18: libro de una cuenta (saldo inicial, recargas, pagos, reembolsos y emisiones). */
 @ApiTags('air-accounts')
+@RequiresModule('air_accounts')
 @Controller('air-accounts/:accountId/movements')
 export class AirAccountMovementsController {
   constructor(private readonly movements: AirAccountMovementsService) {}

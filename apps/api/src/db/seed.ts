@@ -57,7 +57,11 @@ export async function seed(
       ? [existingOrganization]
       : await tx
           .insert(organizations)
-          .values({ name: input.SEED_ORG_NAME, taxId: input.SEED_ORG_TAX_ID })
+          .values({
+            name: input.SEED_ORG_NAME,
+            taxId: input.SEED_ORG_TAX_ID,
+            modules: schema.appModule.enumValues,
+          })
           .returning({ id: organizations.id });
 
     const [existingUser] = await tx

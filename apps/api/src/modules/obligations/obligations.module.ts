@@ -26,6 +26,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
+import { RequiresModule } from '../auth/http/guards';
 import { ObligationsService } from './obligations.service';
 
 registerConstraintCodes({
@@ -44,6 +45,7 @@ class AgendaQueryDto extends createZodDto(
 
 /** F13: agenda de pagos a entidades. */
 @ApiTags('obligations')
+@RequiresModule('agenda')
 @Controller('obligations')
 export class ObligationsController {
   constructor(private readonly obligations: ObligationsService) {}

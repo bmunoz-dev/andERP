@@ -20,6 +20,7 @@ import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import type { Observable } from 'rxjs';
 import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
 import { DomainError } from '../../shared/errors/domain-error';
+import { RequiresModule } from '../auth/http/guards';
 import { ContractDocumentsService, type UploadedFile as File } from './contract-documents.service';
 import { ObjectStorage } from './object-storage';
 
@@ -52,6 +53,7 @@ class DocumentUploadInterceptor extends FileInterceptor('file', {
 
 /** F17: documento del contrato en Supabase Storage. */
 @ApiTags('contract-documents')
+@RequiresModule('staff_payments')
 @Controller('contracts/:id/document')
 export class ContractDocumentsController {
   constructor(private readonly documents: ContractDocumentsService) {}

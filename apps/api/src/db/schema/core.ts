@@ -14,7 +14,7 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 import { auditColumns, citext, id } from '../columns';
-import { anderp, memberRole, organizationStatus, userStatus } from './enums';
+import { anderp, appModule, memberRole, organizationStatus, userStatus } from './enums';
 
 const timestamptz = () => timestamp({ withTimezone: true, mode: 'date' });
 
@@ -26,6 +26,11 @@ export const organizations = anderp.table(
     name: varchar({ length: 100 }).notNull(),
     taxId: varchar({ length: 20 }).notNull(),
     status: organizationStatus().notNull().default('active'),
+    /** Paquetes encendidos (F19). Base no se guarda. */
+    modules: appModule()
+      .array()
+      .notNull()
+      .default(sql`'{}'::anderp.app_module[]`),
     ...auditColumns,
   },
   (t) => [

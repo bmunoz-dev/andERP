@@ -31,6 +31,7 @@ const columns = {
   name: organizations.name,
   taxId: organizations.taxId,
   status: organizations.status,
+  modules: organizations.modules,
   memberCount: activeMemberCount,
   createdAt: organizations.createdAt,
 };
@@ -80,7 +81,13 @@ export class OrganizationsService {
     const organizationId = await this.db.transaction(async (tx) => {
       const [organization] = await tx
         .insert(organizations)
-        .values({ name: input.name, taxId: input.taxId, createdBy: actorId, updatedBy: actorId })
+        .values({
+          name: input.name,
+          taxId: input.taxId,
+          modules: input.modules,
+          createdBy: actorId,
+          updatedBy: actorId,
+        })
         .returning({ id: organizations.id });
       if (!organization) throw new Error('Insert returned no rows');
 
@@ -104,7 +111,14 @@ export class OrganizationsService {
           action: 'organization.create',
           entityType: 'organization',
           entityId: organization.id,
-          changes: { after: { name: input.name, taxId: input.taxId, admin: input.admin.email } },
+          changes: {
+            after: {
+              name: input.name,
+              taxId: input.taxId,
+              modules: input.modules,
+              admin: input.admin.email,
+            },
+          },
         },
         tx,
       );
@@ -130,8 +144,8 @@ export class OrganizationsService {
           entityType: 'organization',
           entityId: id,
           changes: {
-            before: { name: before.name, status: before.status },
-            after: { name: after.name, status: after.status },
+            before: { name: before.name, status: before.status, modules: before.modules },
+            after: { name: after.name, status: after.status, modules: after.modules },
           },
         },
         tx,

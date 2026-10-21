@@ -1,5 +1,6 @@
 import {
   type CreateOrganization,
+  type CreateOrganizationInput,
   createOrganizationSchema,
   type Organization,
 } from '@anderp/shared';
@@ -156,7 +157,7 @@ function CreateOrganizationDialog({
   onSaved: () => Promise<void>;
 }) {
   const [error, setError] = useState<string | null>(null);
-  const form = useForm<CreateOrganization>({
+  const form = useForm<CreateOrganizationInput, unknown, CreateOrganization>({
     resolver: zodResolver(createOrganizationSchema),
     defaultValues: { name: '', taxId: '', admin: { email: '', firstName: '', lastName: '' } },
   });

@@ -28,6 +28,7 @@ import { responsiblePersons } from '../../db/schema';
 import { OrgScope } from '../../shared/db/org-scope';
 import { DomainError } from '../../shared/errors/domain-error';
 import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
+import { RequiresModule } from '../auth/http/guards';
 
 registerConstraintCodes({ responsible_persons_contact_ck: ErrorCode.CONTACT_REQUIRED });
 
@@ -104,6 +105,7 @@ class SaveResponsiblePersonDto extends createZodDto(saveResponsiblePersonSchema)
 class UpdateResponsiblePersonDto extends createZodDto(updateResponsiblePersonSchema) {}
 
 @ApiTags('responsible-persons')
+@RequiresModule('credentials')
 @Controller('responsible-persons')
 export class ResponsiblePersonsController {
   constructor(private readonly persons: ResponsiblePersonsService) {}

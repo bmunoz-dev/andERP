@@ -1,4 +1,4 @@
-import type { MemberRole } from '@anderp/shared';
+import type { AppModule, MemberRole } from '@anderp/shared';
 import type { Request } from 'express';
 import { ClsModule, type ClsStore } from 'nestjs-cls';
 import { requestIdOf } from '../http/request-id';
@@ -8,6 +8,8 @@ export interface Actor {
   userId: string;
   organizationId: string;
   role: MemberRole;
+  /** Paquetes de la organización, leídos de la base en cada petición (F19). */
+  modules: AppModule[];
   isSuperAdmin: boolean;
   /** `family_id` de la sesión con la que se emitió el access token. */
   sessionFamilyId: string;

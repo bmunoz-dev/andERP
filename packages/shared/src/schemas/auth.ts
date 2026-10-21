@@ -39,6 +39,15 @@ export type ResetPasswordRequest = z.infer<typeof resetPasswordRequestSchema>;
 export const memberRoleSchema = z.enum(['admin']);
 export type MemberRole = z.infer<typeof memberRoleSchema>;
 
+/** Paquetes que se pueden encender por organización (F19). Base no está: siempre está. */
+export const APP_MODULES = ['staff_payments', 'credentials', 'air_accounts', 'agenda'] as const;
+export const appModuleSchema = z.enum(APP_MODULES);
+export type AppModule = z.infer<typeof appModuleSchema>;
+/** Lista de paquetes sin repetidos. */
+export const appModulesSchema = z
+  .array(appModuleSchema)
+  .transform((modules) => [...new Set(modules)]);
+
 export const authProfileSchema = z.object({
   id: z.uuid(),
   email: z.string(),
@@ -47,6 +56,7 @@ export const authProfileSchema = z.object({
   isSuperAdmin: z.boolean(),
   organization: z.object({ id: z.uuid(), name: z.string() }),
   role: memberRoleSchema,
+  modules: z.array(appModuleSchema),
 });
 export type AuthProfile = z.infer<typeof authProfileSchema>;
 

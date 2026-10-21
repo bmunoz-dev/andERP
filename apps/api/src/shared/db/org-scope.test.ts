@@ -10,6 +10,7 @@ const actor: Actor = {
   organizationId: '018f0000-0000-7000-8000-00000000000b',
   role: 'admin',
   isSuperAdmin: false,
+  modules: [],
   sessionFamilyId: 'family',
 };
 

@@ -40,6 +40,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-17 | **Pagos de monto fijo** (F16): `provider_contracts.payment_mode` (`daily` / `fixed`) y tabla `fixed_payments` (contrato, mes trabajado, fecha de pago, valor). Entran en `v_expense_ledger` (categoría `FEES`) y en `v_contract_month_totals`. En la interfaz, "Prestadores" → "Personal" y "Honorarios" → "Pagos"; el código conserva sus nombres (§3). | A la empresa ahora también le trabajan personas con pago fijo por periodo (empleados); solo se registra lo pagado, sin calcular nómina. Una tabla aparte evita romper las invariantes de F04 (semana, días, un pago por semana). El renombrado del código se pospone a una feature de solo refactor (decisión del usuario). |
 | 2026-10-15 | **Vistas para el celular** (F15): por debajo de 768 px las tablas se muestran como tarjetas generadas de sus mismas columnas, sin ocultar ninguna (§8). | El usuario consulta la Agenda, las credenciales y Clic Kiu, y registra movimientos, desde el teléfono; con tablas había que desplazarse de lado para ver columnas y acciones. Generar las tarjetas de las columnas evita mantener dos maquetaciones por pantalla. |
 | 2026-10-20 | **Cuentas aéreas** (F18) **reemplaza a Clic Kiu** (F11): catálogo `air_operators`, `air_accounts` con `credit_limit` (0 = prepago) y libro `air_account_movements` (saldo inicial, recarga, pago, reembolso y emisión con PNR, tiquete, pasajero, tarifa neta e impuestos). Una sola regla para prepago y crédito: `saldo ≥ −credit_limit`, con trigger diferido y bloqueo por cuenta (clase `18`). Se eliminan `clickiu_movements`, `v_clickiu_balance` y sus enums; la clase `11` queda retirada. Libro editable, sin saldo guardado, sin ciclos de facturación ni comisión (§5.10). | La agencia emite tiquetes con varios operadores (aerolíneas y consolidadores), en cuentas prepago y a crédito con cupo, y varias cuentas por operador (sucursales, portal B2B). Producción no tenía datos de Clic Kiu, así que se reemplaza sin migrar datos. El vencimiento del pago a un operador va en la Agenda (F13). |
+| 2026-10-20 | **Módulos por organización** (F19): `organizations.modules` (enum `app_module`) decide qué paquetes tiene cada organización: Personal y pagos, Credenciales, Cuentas aéreas y Agenda; Base siempre está. La API responde `403 MODULE_DISABLED` y la web oculta el menú. Una organización nueva nace solo con Base. Decisiones 1 y 12 actualizadas; los permisos por usuario siguen fuera del alcance (§11). | AndERP pasa a servir a varias empresas cliente y el super admin necesita dar a cada una solo lo que contrató. Se agrupan en paquetes para que no existan combinaciones rotas por dependencias (Pagos necesita Personal; Credenciales, Responsables). |
 
 ---
 
@@ -68,7 +69,7 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 
 | # | Tema | Decisión |
 |---|---|---|
-| 1 | Tenencia | Uso interno. Todas las tablas de negocio llevan `organization_id`; hoy existe una sola organización. |
+| 1 | Tenencia | Varias empresas cliente, cada una una organización (F19). Todas las tablas de negocio llevan `organization_id`; hoy producción opera una sola. |
 | 2 | Autenticación | Propia (no Supabase Auth). Supabase se usa **solo como PostgreSQL gestionado**. |
 | 3 | Usuarios vs. credenciales | Son dos conceptos distintos: `users` (personas que inician sesión en la app) y `entity_credentials` (accesos a portales externos). |
 | 4 | Semanas del mes | **Formato B, bloques fijos:** S1 = días 1–7, S2 = 8–14, S3 = 15–21, S4 = 22–fin de mes (7 a 10 días). |
@@ -79,13 +80,14 @@ Sistema administrativo-financiero para controlar los egresos de una empresa por 
 | 9 | Pago de honorarios | Se registra un **valor en dinero por fecha trabajada**, sin tarifas. Festivo es una marca (`is_holiday`) sugerida por el sistema. |
 | 10 | Prestadores | Separados en `service_providers` (identidad y cuenta bancaria) y `provider_contracts` (fechas, acuerdo, periodicidad, monto mensual de referencia). |
 | 11 | Monto del contrato | Es un **monto mensual de referencia** (F10). Lo pagado se calcula por mes trabajado; superarlo genera un aviso, no un bloqueo. No hay saldo total del contrato. |
-| 12 | Roles | `super_admin` (plataforma: gestiona organizaciones y catálogos globales) y `admin` (todo dentro de su organización, incluidos ver credenciales y gestionar usuarios de la organización). |
+| 12 | Roles | `super_admin` (plataforma: gestiona organizaciones y catálogos globales) y `admin` (todo dentro de los paquetes de su organización, incluidos ver credenciales y gestionar usuarios de la organización). Los paquetes los define el super admin por organización (decisión 19). |
 | 13 | Idioma | Base de datos y código en **inglés**. Interfaz en **español**. |
 | 14 | Responsables | Personas de contacto, independientes de los usuarios de la app. |
 | 15 | Cuentas aéreas | Módulo aparte: sus movimientos **no** entran en la matriz de Egresos. Cada cuenta de un operador aéreo tiene un límite de crédito (0 = prepago) y su saldo nunca baja de `−límite`. Una emisión resta saldo esté Por cobrar o Cobrada (F18; reemplaza a Clic Kiu, F11). |
 | 16 | Agenda de pagos | Registra obligaciones y sus fechas límite, **no los pagos**. Las fechas las ingresa el usuario: AndERP no calcula el calendario tributario. Alertas solo dentro de la app (F13). |
 | 17 | Forma de pago | El contrato se paga **por días trabajados** (F04) o con un **monto fijo** por mes trabajado (F16), nunca de las dos formas. AndERP registra lo pagado; **no calcula nómina** (seguridad social, prestaciones, retenciones). |
 | 18 | Documento del contrato | Un archivo vigente por contrato (PDF, `.doc` o `.docx`, hasta 10 MB) en Supabase Storage. Se lee con URL firmada; nunca se borra del bucket (F17). Sin respaldo de archivos: riesgo aceptado por el usuario. |
+| 19 | Módulos por organización | El super admin enciende o apaga **paquetes** por organización (F19): Base (Egresos, Departamentos, Usuarios; siempre), Personal y pagos (`staff_payments`), Credenciales y Responsables (`credentials`), Cuentas aéreas y Operadores aéreos (`air_accounts`), Agenda y notificaciones (`agenda`). Una organización nueva nace solo con Base. Apagar un paquete no borra datos; los pagos ya registrados siguen en Egresos. El super admin tampoco se salta los paquetes dentro de una organización. |
 
 ---
 
@@ -203,6 +205,7 @@ packages/
 | `organization_status` | `active`, `suspended` |
 | `user_status` | `active`, `locked`, `inactive` |
 | `member_role` | `admin` |
+| `app_module` | `staff_payments`, `credentials`, `air_accounts`, `agenda` |
 | `payment_frequency` | `weekly`, `biweekly`, `monthly`, `bimonthly` |
 | `payment_mode` | `daily`, `fixed` |
 | `air_movement_type` | `opening_balance`, `recharge`, `payment`, `refund`, `issue` |
@@ -219,6 +222,7 @@ packages/
 | name | varchar(100) NOT NULL | |
 | tax_id | varchar(20) NOT NULL | NIT. UNIQUE parcial |
 | status | organization_status NOT NULL | default `active` |
+| modules | app_module[] NOT NULL | default `{}`. Paquetes encendidos (F19); Base no se guarda |
 | audit | | |
 
 **`users`** (global: un usuario puede pertenecer a varias organizaciones)
@@ -646,7 +650,8 @@ Las notificaciones **no se guardan**: son los vencimientos pendientes en estado 
 
 ### 6.4 Aislamiento por organización y permisos
 
-- **Contexto:** el JWT lleva `userId` y la organización activa. Un guard verifica la membresía en `organization_members` (o `is_super_admin`) en cada petición.
+- **Contexto:** el JWT lleva `userId` y la organización activa. Un guard verifica la membresía en `organization_members` (o `is_super_admin`) en cada petición y deja en el `Actor` los `modules` de la organización, leídos en esa misma consulta (el JWT no los lleva, así apagar un paquete corta el acceso en la siguiente petición).
+- **Paquetes (F19):** cada controlador de un paquete declara `@RequiresModule(...)`; sin el paquete responde `403 MODULE_DISABLED`, también al super admin. Una prueba recorre los controladores y falla si alguno no tiene paquete ni está en la lista de Base o de Plataforma.
 - **`OrgScope`:** `nestjs-cls` guarda `userId` y `organizationId`. El servicio `OrgScope` (`where`, `forInsert`, `forUpdate`, `forSoftDelete`) aplica `organization_id = :orgId` y `deleted_at IS NULL` en toda consulta y llena `created_by` y `updated_by`. Cumple el papel del "repositorio base" de la constitución (principio IV); se eligió un servicio explícito porque los genéricos de Drizzle hacen incómoda una clase base tipada (F02).
 - **Base de datos:** las FK compuestas impiden referencias entre organizaciones aunque falle el backend.
 - **Permisos:**
@@ -657,7 +662,9 @@ Las notificaciones **no se guardan**: son los vencimientos pendientes en estado 
 | Gestionar usuarios de su organización | ✔ | ✔ |
 | Gestionar categorías de egreso de su organización | ✔ | ✔ |
 | Gestionar catálogos globales (bancos, tipos de cuenta, tipos de documento) | ✘ | ✔ |
-| Crear y suspender organizaciones | ✘ | ✔ |
+| Crear y suspender organizaciones, y elegir sus paquetes | ✘ | ✔ |
+
+Las filas de egresos, honorarios, prestadores, responsables y credenciales aplican solo si la organización tiene el paquete correspondiente (F19).
 
 ### 6.5 Almacenamiento de archivos (F17)
 
@@ -711,7 +718,9 @@ Las notificaciones **no se guardan**: son los vencimientos pendientes en estado 
 | Agenda | Obligaciones por urgencia (pestañas Vencidos, Próximos, Programados, Sin próximo), completar con la fecha siguiente sugerida e historial. El menú muestra un contador de vencidas y próximas. |
 | Notificaciones (cabecera) | Campana con un punto si hay notificaciones sin revisar (sin número). Abre un panel con las alertas de la Agenda: pulsar lleva a la pestaña de la Agenda, la X la descarta; abrir el panel las marca como vistas (F14). |
 | Configuración (admin) | Categorías de egreso, operadores aéreos y usuarios de la organización. |
-| Plataforma (super admin) | Organizaciones y catálogos globales. |
+| Plataforma (super admin) | Organizaciones (con una casilla por paquete y la acción **Módulos**, que pide confirmación al quitar uno) y catálogos globales. |
+
+El menú y las rutas solo muestran los paquetes que tiene la organización (F19): una ruta de un paquete apagado redirige a Egresos y la campana de notificaciones solo aparece con `agenda`.
 
 La interfaz está en español y el formato de moneda es COP (`es-CO`).
 
@@ -755,7 +764,7 @@ La interfaz está en español y el formato de moneda es COP (`es-CO`).
 
 - Autenticación de dos factores (MFA).
 - Registro autoservicio de organizaciones y selector de organización en la interfaz (el modelo lo soporta; la v1 opera una sola organización).
-- Permisos granulares (tablas `permissions` y `role_permissions`) y roles adicionales.
+- Permisos granulares por usuario (tablas `permissions` y `role_permissions`) y roles adicionales. Los paquetes por organización (F19) no son esto: son iguales para todos los admins de la organización.
 - Alertas por `payment_frequency`.
 - Adjuntar facturas a los egresos (el documento del contrato llegó con F17).
 - Exportar a Excel o PDF.

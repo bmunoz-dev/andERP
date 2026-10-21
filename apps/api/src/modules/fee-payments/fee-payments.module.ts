@@ -15,6 +15,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { createZodDto } from 'nestjs-zod';
 import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
+import { RequiresModule } from '../auth/http/guards';
 import { FeePaymentsService } from './fee-payments.service';
 
 registerConstraintCodes({
@@ -28,6 +29,7 @@ const intQuery = (value?: string) => (value && /^\d+$/.test(value) ? Number(valu
 
 /** F04: pagos semanales de honorarios. */
 @ApiTags('fee-payments')
+@RequiresModule('staff_payments')
 @Controller('fee-payments')
 export class FeePaymentsController {
   constructor(private readonly payments: FeePaymentsService) {}

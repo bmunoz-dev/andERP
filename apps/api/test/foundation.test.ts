@@ -177,6 +177,7 @@ describe('CA-8 migración base', () => {
       expect(enums.map((e) => e.typname)).toEqual([
         'air_collection_status',
         'air_movement_type',
+        'app_module',
         'member_role',
         'notification_kind',
         'obligation_frequency',

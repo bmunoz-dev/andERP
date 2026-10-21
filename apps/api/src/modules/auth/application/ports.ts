@@ -1,4 +1,4 @@
-import type { AuthProfile, MemberRole } from '@anderp/shared';
+import type { AppModule, AuthProfile, MemberRole } from '@anderp/shared';
 
 // ── Datos que la capa de aplicación necesita de la persistencia ───────────────────────────
 
@@ -23,6 +23,8 @@ export interface MembershipRecord {
   organizationName: string;
   organizationStatus: OrganizationStatus;
   role: MemberRole;
+  /** Paquetes encendidos de la organización (F19). */
+  modules: AppModule[];
 }
 
 export interface SessionRecord {
