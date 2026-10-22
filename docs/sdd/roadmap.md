@@ -61,6 +61,8 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 ## Bloqueos y notas
 
+**F20 en progreso (selector de organización):** PR 1 (migración 0035, shared y API) listo para revisión en `feat/020-organization-switcher`; el PR 2 (web) queda pendiente hasta que el PR 1 esté en producción (T008 a T010). Hasta entonces la web ignora `organizations` y no llama al endpoint nuevo.
+
 **F19 terminada y en producción (PRs #39 y #40, 2026-10-21/22):** paquetes de módulos por organización en la API y la web. Verificación manual del usuario (CA-28) hecha el 2026-10-22. El respaldo de producción sigue aplazado (pendiente 1 de F07).
 
 **F18 terminada y en producción (PR #37, 2026-10-20):** cuentas aéreas con operadores, cupo prepago/crédito y emisión de tiquetes; reemplaza a Clic Kiu. Verificación manual del usuario hecha.
@@ -85,7 +87,7 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 **Decisiones tomadas:** la skill `ponytail` se versiona en el repo (`.agents/`, `skills-lock.json` y una copia real en `.claude/skills/ponytail/`, sin enlace simbólico). La skill `ui-ux-pro-max` (`nextlevelbuilder/ui-ux-pro-max-skill`, instalada por el usuario el 2026-10-18) se versiona solo como copia real en `.claude/skills/ui-ux-pro-max/`, sin `scripts/tests/` (llaman a scripts que no vienen en la instalación) y sin la copia duplicada en `.agents/`. Auditada ese día: sin binarios, sin red ni procesos en sus scripts, que solo usan la biblioteca estándar de Python; el texto no trae instrucciones para el agente. Su `SKILL.md` usa `${CLAUDE_PLUGIN_ROOT}`, que solo existe como plugin: se invoca con `python .claude/skills/ui-ux-pro-max/scripts/search.py`. `--persist` (escribe `design-system/`) solo con permiso del usuario. Prettier la ignora (`.prettierignore`). Al actualizarla con `npx skills`, repetir la auditoría. No se protege `main`: es un proyecto personal.
 
-**Pendiente (multi-organización):** un usuario que ya tiene contraseña y es agregado a una segunda organización queda en las dos, pero el login siempre entra en la más antigua. Resolverlo requiere el selector de organización, fuera de la v1 (design.md §fuera de alcance). **Con F19 (varias empresas cliente) deja de ser teórico:** el selector va como feature aparte y debe estar antes de dar acceso a alguien que pertenezca a dos organizaciones (decisión del usuario, 2026-10-20).
+**Pendiente (multi-organización):** un usuario que ya tiene contraseña y es agregado a una segunda organización queda en las dos, pero el login siempre entra en la más antigua. Lo resuelve F20 (API en el PR 1, selector en la web en el PR 2). **Con F19 (varias empresas cliente) deja de ser teórico:** el selector va como feature aparte y debe estar antes de dar acceso a alguien que pertenezca a dos organizaciones (decisión del usuario, 2026-10-20).
 
 **Entorno:**
 - En el árbol `New folder\personal`, el trabajador de Vitest a veces termina al arrancar un archivo de la API con `0xC0000409`, antes de ejecutar pruebas. Cuando arranca, todo pasa. El CI en Linux no lo presenta.

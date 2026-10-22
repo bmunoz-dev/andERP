@@ -104,4 +104,13 @@ Dos PR (CA-18), en la rama `feat/020-organization-switcher`:
 
 ## Notas de implementación
 
-(Se completan durante la implementación.)
+- **Migración 0035 (T002):** la generó `drizzle-kit` y se editó a mano en el orden del plan (columna nula, relleno, `DELETE` de huérfanas, `NOT NULL`, FK). La base de pruebas se migra vacía, así que la prueba extrae del archivo el `UPDATE` y el `DELETE`, y los ejecuta en una transacción que se revierte, tras quitar el `NOT NULL` y la FK de `sessions`. Cubre: la más antigua activa gana sobre una inactiva más vieja, sin activas toma la más antigua sin filtrar, y sin membresía se borra. El orden real de aplicación sobre las filas de producción queda por confirmar al desplegar.
+- **`sessions_membership_fk` → 404 (T002):** `mapPostgresError` responde `422` a toda violación de FK y solo deja cambiar el `code`. Queda registrada como `NOT_FOUND`, así que en la carrera (la membresía desaparece entre la validación y el `INSERT`/`UPDATE`) la respuesta es `422 NOT_FOUND`, no `404`. No se toca el mapper: el caso normal de CA-9 es el `404` del caso de uso y esta ventana es mínima.
+- **Typecheck entre tareas (T002–T004):** al agregar `sessions.organization_id` y exigir `organizations` en el perfil, el typecheck estuvo en rojo hasta que T003 (web) y T004 (API) llenaron los datos. El PR 1 se evalúa completo.
+- **Web (T003):** solo se agregó `organizations` a los tres perfiles de prueba que dejaron de compilar (`ledger-sheet`, `notifications-bell`, `api-client.refresh`) y el mensaje de `ORGANIZATION_CHANGED`. Nada de interfaz: es el PR 2.
+- **Guard (T004–T005):** en T004 se usó `claims.org` como organización preferida mientras la sesión no la devolvía; T005 la reemplazó por `findActiveFamilyOrganization`. Siguen siendo una consulta de sesión y una de membresías por petición.
+- **`findMemberships` (T004):** ordena en SQL con `last_selected_at DESC NULLS LAST, created_at ASC`. El doble en memoria devuelve las membresías en el orden en que se agregan (`addMembership`), y las pruebas de `requireAccess` pasan la lista ya ordenada.
+- **`organizations` del perfil (T004):** se ordenan por nombre con `localeCompare('es')`; la organización activa no se separa de la lista.
+- **Cambio (T006):** `SwitchOrganizationUseCase` reutiliza `requireAccess` para saber cuáles están disponibles (suspendidas fuera, salvo para el super admin) y no repite la regla. La auditoría lleva `organizationId` de destino y `changes: { from, to }`.
+- **Pruebas (T002–T006):** `createMember` ya inicia una sesión, así que los casos de sesión borran las filas del usuario antes de empezar; las de auditoría filtran por usuario porque la tabla es de solo inserción y no se limpia entre casos.
+- **Entorno:** en Windows, `vitest` cierra un worker al arrancar (`0xC0000409`) en algún archivo de la API; repetir el archivo lo resuelve.

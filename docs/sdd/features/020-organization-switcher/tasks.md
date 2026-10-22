@@ -44,7 +44,7 @@
       - `switchOrganization` en el puerto, Drizzle e `in-memory-auth.ts`;
       - `SwitchOrganizationUseCase` y `POST /auth/organization` (`204`, `404`, sin escritura si es la activa, auditoría `auth.organization_switch`).
       Depende de: F20-T005 · Verificación: CA-8, CA-9, CA-10
-- [ ] F20-T007 Cierre del PR 1:
+- [x] F20-T007 Cierre del PR 1:
       - verificación completa (`pnpm format:check && pnpm lint && pnpm typecheck && pnpm test`);
       - notas de implementación en `plan.md` y roadmap;
       - PR 1. Lo mergea el usuario.
