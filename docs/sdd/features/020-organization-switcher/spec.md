@@ -1,6 +1,6 @@
 # F20 — Selector de organización · Spec
 
-- **Estado:** En revisión (2026-10-22)
+- **Estado:** Aprobado (2026-10-22)
 - **Diseño:** `design.md` §5.3 (`sessions.organization_id`, `organization_members.last_selected_at`), §6 (sesión y token con organización activa), §8 (selector en la cabecera), §11 (sale "selector de organización" de fuera de alcance) e historial. Los cambios a `design.md` se hacen en la primera tarea, antes del código.
 - **Depende de:** F01 (sesiones, token, guard), F02 (organizaciones y membresías), F12 (auditoría atómica), F15 (vista de celular), F19 (paquetes por organización en el perfil).
 
