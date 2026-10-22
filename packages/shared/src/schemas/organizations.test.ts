@@ -38,6 +38,7 @@ describe('módulos de la organización (F19)', () => {
       lastName: 'Pérez',
       isSuperAdmin: false,
       organization: { id: crypto.randomUUID(), name: 'Cliente' },
+      organizations: [],
       role: 'admin',
     };
     expect(authProfileSchema.safeParse(profile).success).toBe(false);

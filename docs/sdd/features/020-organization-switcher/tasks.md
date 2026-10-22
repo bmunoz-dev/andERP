@@ -21,7 +21,7 @@
 
 ## Bloque B — Compartido
 
-- [ ] F20-T003 [P] [TDD] En shared:
+- [x] F20-T003 [P] [TDD] En shared:
       - `organizations` en `authProfileSchema`;
       - `switchOrganizationSchema`;
       - `ORGANIZATION_CHANGED` con su mensaje en español.

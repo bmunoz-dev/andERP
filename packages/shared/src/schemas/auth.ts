@@ -54,11 +54,17 @@ export const authProfileSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
   isSuperAdmin: z.boolean(),
+  /** Organización activa de la sesión. */
   organization: z.object({ id: z.uuid(), name: z.string() }),
+  /** Organizaciones disponibles para el usuario, por nombre (F20). */
+  organizations: z.array(z.object({ id: z.uuid(), name: z.string() })),
   role: memberRoleSchema,
   modules: z.array(appModuleSchema),
 });
 export type AuthProfile = z.infer<typeof authProfileSchema>;
+
+export const switchOrganizationSchema = z.object({ organizationId: z.uuid() });
+export type SwitchOrganization = z.infer<typeof switchOrganizationSchema>;
 
 /** Respuesta de login y refresh. El refresh token nunca viaja en el cuerpo, solo en la cookie. */
 export const authSessionResponseSchema = z.object({
