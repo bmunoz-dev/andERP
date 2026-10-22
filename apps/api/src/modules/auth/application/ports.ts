@@ -80,10 +80,12 @@ export interface SessionRepository {
   revokeFamily(familyId: string, at: Date): Promise<void>;
   revokeAllForUser(userId: string, at: Date, exceptFamilyId?: string): Promise<void>;
   /**
-   * `true` si la familia tiene una sesión sin revocar ni vencer. El guard lo consulta en cada
-   * petición: así un logout o un cambio de contraseña invalidan también los access tokens.
+   * Organización activa de la familia si tiene una sesión sin revocar ni vencer; si no, `null`.
+   * El guard lo consulta en cada petición: así un logout o un cambio de contraseña invalidan
+   * también los access tokens, y un cambio de organización (F20) deja obsoletos los de la
+   * anterior.
    */
-  isFamilyActive(familyId: string, at: Date): Promise<boolean>;
+  findActiveFamilyOrganization(familyId: string, at: Date): Promise<string | null>;
 }
 
 export interface PasswordResetRepository {

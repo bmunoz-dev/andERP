@@ -156,9 +156,9 @@ export class DrizzleSessionRepository implements SessionRepository {
       .where(and(eq(sessions.familyId, familyId), isNull(sessions.revokedAt)));
   }
 
-  async isFamilyActive(familyId: string, at: Date): Promise<boolean> {
+  async findActiveFamilyOrganization(familyId: string, at: Date): Promise<string | null> {
     const [row] = await this.db
-      .select({ id: sessions.id })
+      .select({ organizationId: sessions.organizationId })
       .from(sessions)
       .where(
         and(
@@ -168,7 +168,7 @@ export class DrizzleSessionRepository implements SessionRepository {
         ),
       )
       .limit(1);
-    return row !== undefined;
+    return row?.organizationId ?? null;
   }
 
   async revokeAllForUser(userId: string, at: Date, exceptFamilyId?: string): Promise<void> {

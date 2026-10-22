@@ -36,7 +36,7 @@
       - `organizationId` en `NewSession`, `SessionRecord` y `SessionIssuer`;
       - login, refresh y `GetCurrentUserUseCase` con la organización de la sesión.
       Depende de: F20-T002, F20-T003 · Verificación: CA-3–CA-7
-- [ ] F20-T005 [TDD] Casos del guard y después:
+- [x] F20-T005 [TDD] Casos del guard y después:
       - `findActiveFamilyOrganization` en lugar de `isFamilyActive`;
       - `409 ORGANIZATION_CHANGED` si el `org` del token no es el de la sesión, o si la organización de la sesión dejó de estar disponible.
       Depende de: F20-T004 · Verificación: CA-10–CA-12

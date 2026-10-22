@@ -7,7 +7,7 @@ import path from 'node:path';
 import type postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DB, type Database } from '../src/db/database.module';
-import { organizationMembers, organizations, sessions } from '../src/db/schema';
+import { expenseCategories, organizationMembers, organizations, sessions } from '../src/db/schema';
 import '../src/modules/auth/auth.module'; // registra las restricciones
 import { mapPostgresError } from '../src/shared/errors/pg-error.mapper';
 import { createTestApp, type TestApp } from './setup/create-test-app';
@@ -291,6 +291,68 @@ describe('F20 selector: API', () => {
         .from(sessions)
         .where(and(eq(sessions.userId, user.id), isNull(sessions.revokedAt)));
       expect(active).toHaveLength(0);
+    });
+  });
+
+  describe('guard: token y organización de la sesión (CA-10)', () => {
+    let orgA: TestOrganization;
+    let orgB: TestOrganization;
+    let user: TestUser;
+
+    beforeEach(async () => {
+      [orgA, orgB] = [await newOrg('Alfa'), await newOrg('Bravo')];
+      user = await userIn([orgA, orgB]);
+    });
+
+    const moveSessionsTo = (organizationId: string) =>
+      db.update(sessions).set({ organizationId }).where(eq(sessions.userId, user.id));
+
+    const categoriesOf = async (organizationId: string) =>
+      (
+        await db
+          .select({ name: expenseCategories.name })
+          .from(expenseCategories)
+          .where(eq(expenseCategories.organizationId, organizationId))
+      ).map((c) => c.name);
+
+    const expectCode = (res: Response, status: number, code: string) => {
+      expect(res.status).toBe(status);
+      expect((res.body as { code: string }).code).toBe(code);
+    };
+
+    it('un token de la organización de la sesión funciona', async () => {
+      await as(t, user.token).get('/expense-categories').expect(200);
+    });
+
+    it('CA-10 si la sesión cambió de organización, el token viejo recibe 409 en cualquier ruta', async () => {
+      await moveSessionsTo(orgB.id);
+      expectCode(await as(t, user.token).get('/expense-categories'), 409, 'ORGANIZATION_CHANGED');
+      expectCode(await as(t, user.token).get('/auth/me'), 409, 'ORGANIZATION_CHANGED');
+    });
+
+    it('CA-10 una escritura con el token viejo no se guarda', async () => {
+      await moveSessionsTo(orgB.id);
+      await as(t, user.token).post('/expense-categories', { name: 'Intrusa' }).expect(409);
+      expect(await categoriesOf(orgA.id)).not.toContain('Intrusa');
+      expect(await categoriesOf(orgB.id)).not.toContain('Intrusa');
+    });
+
+    it('CA-10 el actor se arma con la membresía de la organización de la sesión', async () => {
+      const cookie = cookieOf(await loginAs(user.email).expect(200));
+      await moveSessionsTo(orgB.id);
+      const { accessToken } = (await refresh(cookie).expect(200)).body as AuthSessionResponse;
+
+      await as(t, accessToken).post('/expense-categories', { name: 'Nueva B' }).expect(201);
+      expect(await categoriesOf(orgB.id)).toContain('Nueva B');
+      expect(await categoriesOf(orgA.id)).not.toContain('Nueva B');
+    });
+
+    it('CA-10 si desactivan al usuario en la organización de la sesión: 409 si le queda otra, 401 si no', async () => {
+      await setMembership(user.id, orgA.id, { isActive: false });
+      expectCode(await as(t, user.token).get('/auth/me'), 409, 'ORGANIZATION_CHANGED');
+
+      await setMembership(user.id, orgB.id, { isActive: false });
+      expectCode(await as(t, user.token).get('/auth/me'), 401, 'ACCOUNT_DISABLED');
     });
   });
 });

@@ -209,13 +209,12 @@ export class InMemorySessions implements SessionRepository {
     }
     return Promise.resolve();
   }
-  isFamilyActive(familyId: string, at: Date): Promise<boolean> {
-    return Promise.resolve(
-      this.rows.some(
-        (r) =>
-          r.familyId === familyId && r.revokedAt === null && r.expiresAt.getTime() > at.getTime(),
-      ),
+  findActiveFamilyOrganization(familyId: string, at: Date): Promise<string | null> {
+    const row = this.rows.find(
+      (r) =>
+        r.familyId === familyId && r.revokedAt === null && r.expiresAt.getTime() > at.getTime(),
     );
+    return Promise.resolve(row?.organizationId ?? null);
   }
   active(): SessionRecord[] {
     return this.rows.filter((r) => r.revokedAt === null);
