@@ -76,8 +76,9 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 **Pendiente de F07:**
 1. **Aplazado hasta que el usuario decida hacerlo** (decisiones del 2026-10-17 y 2026-10-22). Respaldo diario gratuito con GitHub Actions (`pg_dump` cifrado) mientras no haya plan Pro. Riesgo aceptado: sin respaldo, cualquier dato cargado en producción se pierde si Supabase falla. No se propone de nuevo como siguiente paso.
 2. ~~Cloudflare Workers Builds falla en las ramas de PR (vistas previas)~~ resuelto (confirmado por el usuario el 2026-10-15).
-3. Avisos de Supabase `function_search_path_mutable` en los triggers (migración pequeña).
+3. ~~Avisos de Supabase `function_search_path_mutable` en los triggers~~ resuelto el 2026-10-22: migración `0036_function_search_path` (las 9 funciones anteriores a 0028 fijan `search_path = ''`) y una prueba en `foundation.test.ts` que falla si una función de `anderp` no lo fija.
 4. T012 (migración rota a propósito), T013 (primera corrida de Playwright, requiere autorización del navegador), T015 (ensayo de restauración) y T016 (hito M4).
+5. Avisos de rendimiento de Supabase (nivel INFO, revisados el 2026-10-22), **anotados sin acción**: 15 FK sin índice que las cubra (p. ej. `expenses_category_fk`, `fee_payments_contract_fk`, `sessions_membership_fk`) y `audit_logs_entity_idx` sin uso. Con el volumen actual no tienen efecto. Revisar con `get_advisors` cuando haya volumen real (p. ej. miles de egresos en una organización) y agregar solo los índices que pidan las consultas lentas.
 
 **Pendiente (documentación, revisión del 2026-10-13):**
 1. Constitución IX dice que `fee-payments` y `credentials` son hexagonales; solo `auth` lo es (`design.md` §4.1 ya está corregido). Constitución IV dice "repositorio base"; es `OrgScope`.

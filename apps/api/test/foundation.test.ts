@@ -216,4 +216,17 @@ describe('CA-8 migración base', () => {
       await withOwnerSql((sql) => sql`drop table anderp.privileges_probe`);
     }
   });
+
+  it('toda función de `anderp` fija su search_path (aviso function_search_path_mutable)', async () => {
+    await withOwnerSql(async (sql) => {
+      const mutable = await sql<{ proname: string }[]>`
+        select proname from pg_proc
+        where pronamespace = 'anderp'::regnamespace
+          and not exists (
+            select 1 from unnest(coalesce(proconfig, '{}')) c where c like 'search_path=%'
+          )
+        order by proname`;
+      expect(mutable.map((f) => f.proname)).toEqual([]);
+    });
+  });
 });
