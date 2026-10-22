@@ -37,14 +37,14 @@ F20 deja que ese usuario **cambie de organización dentro de la app, sin volver 
 
 **Login, refresh y perfil**
 
-- **CA-4.** El login entra en la organización de entrada (CA-3), la guarda en la sesión nueva y marca su `last_selected_at`.
+- **CA-4.** El login entra en la organización de entrada (CA-3) y la guarda en la sesión nueva. No marca `last_selected_at`: solo lo marca una elección del usuario (CA-8).
 - **CA-5.** Sin organizaciones disponibles, el login y el refresh responden `ACCOUNT_DISABLED` como hoy, y el refresh revoca la familia.
 - **CA-6.** El refresh emite el token de la organización de la sesión. Si esa ya no está disponible (por ejemplo, desactivaron al usuario en ella), pasa a la organización de entrada (CA-3) y actualiza la sesión.
 - **CA-7.** El perfil (`/auth/me`, login y refresh) incluye `organizations: { id, name }[]` con las organizaciones disponibles, ordenadas por nombre. `organization`, `role` y `modules` son los de la organización activa.
 
 **Cambio de organización**
 
-- **CA-8.** `POST /auth/organization` con `{ organizationId }` hacia una organización disponible responde `204`. En una transacción: cambia `organization_id` de todas las filas de la familia de la sesión, marca `last_selected_at` y registra `auth.organization_switch` con la organización de origen y la de destino.
+- **CA-8.** `POST /auth/organization` con `{ organizationId }` hacia una organización disponible responde `204`. En una transacción cambia `organization_id` de las filas sin revocar de la familia de la sesión y marca `last_selected_at`. Después registra `auth.organization_switch` con la organización de origen y la de destino, fuera de la transacción, como los demás eventos de auth (F12 CA-3).
 - **CA-9.** Si la organización no está disponible para el usuario (no es miembro, membresía inactiva, organización suspendida o borrada, o no existe), responde `404 NOT_FOUND` y no cambia ni audita nada. Elegir la organización activa responde `204` sin auditar.
 - **CA-10.** `JwtAuthGuard` obtiene la organización de la sesión en la misma consulta que hoy comprueba que la familia esté activa. Si no coincide con el `org` del token, responde `409 ORGANIZATION_CHANGED` (código nuevo, con su mensaje en español) en cualquier ruta, y una escritura con ese token no se guarda. El actor se arma con la membresía de la organización de la sesión, no con la más antigua.
 - **CA-11.** Dos sesiones del mismo usuario son independientes: cambiar de organización en una no afecta a la otra.
