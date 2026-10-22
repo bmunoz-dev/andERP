@@ -57,7 +57,7 @@
       - `lib/organization-switch.ts` (`goHome`, `announceSwitch`, `listenForSwitch`);
       - `OrganizationSwitcher` y su uso en `_app.tsx`.
       Depende de: F20-T007 (PR 1 en producción) · Verificación: CA-13, CA-14, CA-16
-- [ ] F20-T009 [TDD] Otras pestañas:
+- [x] F20-T009 [TDD] Otras pestañas:
       - `ORGANIZATION_CHANGED` en `api-client.ts` llama a `goHome`;
       - `listenForSwitch()` en `main.tsx`.
       Depende de: F20-T008 · Verificación: CA-15

@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ApiError, apiFetch } from './api-client';
 import { errorMessage } from './error-messages.es';
+import { goHome } from './organization-switch';
+
+vi.mock('./organization-switch', () => ({ goHome: vi.fn() }));
 
 function stubFetch(response: Response | Error) {
   const fetchMock = vi.fn(() =>
@@ -88,6 +91,22 @@ describe('apiFetch', () => {
   it('un fallo de red → NETWORK_ERROR', async () => {
     stubFetch(new TypeError('Failed to fetch'));
     await expect(apiFetch('/things')).rejects.toMatchObject({ status: 0, code: 'NETWORK_ERROR' });
+  });
+});
+
+describe('apiFetch · ORGANIZATION_CHANGED (F20)', () => {
+  it('CA-15 un 409 ORGANIZATION_CHANGED recarga en /egresos y relanza el error', async () => {
+    stubFetch(problem(409, { code: 'ORGANIZATION_CHANGED' }));
+
+    await expect(apiFetch('/things')).rejects.toMatchObject({ code: 'ORGANIZATION_CHANGED' });
+    expect(goHome).toHaveBeenCalledOnce();
+  });
+
+  it('otros errores no recargan', async () => {
+    stubFetch(problem(404, { code: 'NOT_FOUND' }));
+
+    await expect(apiFetch('/things')).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    expect(goHome).not.toHaveBeenCalled();
   });
 });
 
