@@ -1,6 +1,6 @@
 # F20 — Selector de organización · Plan
 
-- **Estado:** En revisión (2026-10-22)
+- **Estado:** Aprobado (2026-10-22)
 - **Spec:** [spec.md](spec.md)
 
 ## Datos
