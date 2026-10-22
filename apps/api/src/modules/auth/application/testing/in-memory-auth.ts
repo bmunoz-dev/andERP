@@ -176,6 +176,8 @@ export class InMemoryUsers implements UserRepository {
 
 export class InMemorySessions implements SessionRepository {
   rows: (SessionRecord & { tokenHash: string })[] = [];
+  /** Membresías marcadas como "última elegida" por `switchOrganization`. */
+  selections: { userId: string; organizationId: string; at: Date }[] = [];
 
   create(session: NewSession): Promise<void> {
     this.rows.push({
@@ -200,6 +202,18 @@ export class InMemorySessions implements SessionRepository {
   revokeFamily(familyId: string, at: Date): Promise<void> {
     for (const row of this.rows)
       if (row.familyId === familyId && !row.revokedAt) row.revokedAt = at;
+    return Promise.resolve();
+  }
+  switchOrganization(
+    familyId: string,
+    userId: string,
+    organizationId: string,
+    at: Date,
+  ): Promise<void> {
+    for (const row of this.rows) {
+      if (row.familyId === familyId && !row.revokedAt) row.organizationId = organizationId;
+    }
+    this.selections.push({ userId, organizationId, at });
     return Promise.resolve();
   }
   revokeAllForUser(userId: string, at: Date, exceptFamilyId?: string): Promise<void> {

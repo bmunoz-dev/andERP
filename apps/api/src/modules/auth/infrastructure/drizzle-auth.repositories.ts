@@ -171,6 +171,29 @@ export class DrizzleSessionRepository implements SessionRepository {
     return row?.organizationId ?? null;
   }
 
+  async switchOrganization(
+    familyId: string,
+    userId: string,
+    organizationId: string,
+    at: Date,
+  ): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(sessions)
+        .set({ organizationId })
+        .where(and(eq(sessions.familyId, familyId), isNull(sessions.revokedAt)));
+      await tx
+        .update(organizationMembers)
+        .set({ lastSelectedAt: at })
+        .where(
+          and(
+            eq(organizationMembers.userId, userId),
+            eq(organizationMembers.organizationId, organizationId),
+          ),
+        );
+    });
+  }
+
   async revokeAllForUser(userId: string, at: Date, exceptFamilyId?: string): Promise<void> {
     await this.db
       .update(sessions)

@@ -86,6 +86,16 @@ export interface SessionRepository {
    * anterior.
    */
   findActiveFamilyOrganization(familyId: string, at: Date): Promise<string | null>;
+  /**
+   * Cambia la organización de las sesiones sin revocar de la familia y marca la membresía como
+   * la última elegida, en una sola transacción (F20 CA-8).
+   */
+  switchOrganization(
+    familyId: string,
+    userId: string,
+    organizationId: string,
+    at: Date,
+  ): Promise<void>;
 }
 
 export interface PasswordResetRepository {

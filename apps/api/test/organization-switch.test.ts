@@ -7,7 +7,13 @@ import path from 'node:path';
 import type postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DB, type Database } from '../src/db/database.module';
-import { expenseCategories, organizationMembers, organizations, sessions } from '../src/db/schema';
+import {
+  auditLogs,
+  expenseCategories,
+  organizationMembers,
+  organizations,
+  sessions,
+} from '../src/db/schema';
 import '../src/modules/auth/auth.module'; // registra las restricciones
 import { mapPostgresError } from '../src/shared/errors/pg-error.mapper';
 import { createTestApp, type TestApp } from './setup/create-test-app';
@@ -353,6 +359,162 @@ describe('F20 selector: API', () => {
 
       await setMembership(user.id, orgB.id, { isActive: false });
       expectCode(await as(t, user.token).get('/auth/me'), 401, 'ACCOUNT_DISABLED');
+    });
+  });
+
+  describe('cambio de organización (CA-8 a CA-12)', () => {
+    let orgA: TestOrganization;
+    let orgB: TestOrganization;
+    let user: TestUser;
+    let cookie: string;
+    let token: string;
+
+    beforeEach(async () => {
+      [orgA, orgB] = [await newOrg('Alfa'), await newOrg('Bravo')];
+      user = await userIn([orgA, orgB]);
+      await db.delete(sessions).where(eq(sessions.userId, user.id));
+      const res = await loginAs(user.email).expect(200);
+      cookie = cookieOf(res);
+      token = (res.body as AuthSessionResponse).accessToken;
+    });
+
+    const switchTo = (accessToken: string, organizationId: string) =>
+      as(t, accessToken).post('/auth/organization', { organizationId });
+
+    const auditOf = (action: string) =>
+      db
+        .select()
+        .from(auditLogs)
+        .where(and(eq(auditLogs.action, action), eq(auditLogs.userId, user.id)));
+
+    const lastSelected = async (organizationId: string) => {
+      const [row] = await db
+        .select({ at: organizationMembers.lastSelectedAt })
+        .from(organizationMembers)
+        .where(
+          and(
+            eq(organizationMembers.userId, user.id),
+            eq(organizationMembers.organizationId, organizationId),
+          ),
+        );
+      return row?.at ?? null;
+    };
+
+    it('CA-8 cambia la organización de la sesión, marca `last_selected_at` y audita origen y destino', async () => {
+      await switchTo(token, orgB.id).expect(204);
+
+      const rows = await db.select().from(sessions).where(eq(sessions.userId, user.id));
+      expect(rows.every((r) => r.organizationId === orgB.id)).toBe(true);
+      expect(await lastSelected(orgB.id)).not.toBeNull();
+      expect(await lastSelected(orgA.id)).toBeNull();
+
+      const [entry] = await auditOf('auth.organization_switch');
+      expect(entry).toMatchObject({
+        userId: user.id,
+        organizationId: orgB.id,
+        changes: { from: orgA.id, to: orgB.id },
+      });
+    });
+
+    it('CA-8 el token viejo queda obsoleto y el refresh entrega el de la nueva organización', async () => {
+      await switchTo(token, orgB.id).expect(204);
+
+      const stale = await as(t, token).get('/auth/me');
+      expect(stale.status).toBe(409);
+      expect((stale.body as { code: string }).code).toBe('ORGANIZATION_CHANGED');
+      // Una pestaña con el token viejo tampoco puede volver a cambiar.
+      await switchTo(token, orgA.id).expect(409);
+
+      const refreshed = await refresh(cookie).expect(200);
+      expect(activeOrgOf(refreshed)).toBe(orgB.id);
+      const me = await as(t, (refreshed.body as AuthSessionResponse).accessToken)
+        .get('/auth/me')
+        .expect(200);
+      expect((me.body as AuthSessionResponse['user']).organization.id).toBe(orgB.id);
+    });
+
+    it('CA-8 el próximo login entra en la organización elegida', async () => {
+      await switchTo(token, orgB.id).expect(204);
+      expect(activeOrgOf(await loginAs(user.email).expect(200))).toBe(orgB.id);
+    });
+
+    it('CA-9 elegir la organización activa responde 204 sin escribir ni auditar', async () => {
+      await switchTo(token, orgA.id).expect(204);
+      expect(await lastSelected(orgA.id)).toBeNull();
+      expect(await auditOf('auth.organization_switch')).toHaveLength(0);
+    });
+
+    it('CA-9 una organización no disponible responde 404 y no cambia ni audita nada', async () => {
+      const stranger = await newOrg('Ajena');
+      const suspended = await newOrg('Suspendida');
+      const deleted = await newOrg('Borrada');
+      const inactive = await newOrg('Inactiva');
+      for (const org of [suspended, deleted, inactive]) {
+        await db.insert(organizationMembers).values({
+          userId: user.id,
+          organizationId: org.id,
+          role: 'admin',
+          isActive: org !== inactive,
+        });
+      }
+      await db
+        .update(organizations)
+        .set({ status: 'suspended' })
+        .where(eq(organizations.id, suspended.id));
+      await db
+        .update(organizations)
+        .set({ deletedAt: new Date() })
+        .where(eq(organizations.id, deleted.id));
+
+      for (const id of [stranger.id, suspended.id, deleted.id, inactive.id, randomUUID()]) {
+        const res = await switchTo(token, id);
+        expect(res.status).toBe(404);
+        expect((res.body as { code: string }).code).toBe('NOT_FOUND');
+      }
+      const rows = await db.select().from(sessions).where(eq(sessions.userId, user.id));
+      expect(rows.every((r) => r.organizationId === orgA.id)).toBe(true);
+      expect(await auditOf('auth.organization_switch')).toHaveLength(0);
+    });
+
+    it('CA-9 un cuerpo inválido → 422 VALIDATION_ERROR', async () => {
+      const res = await switchTo(token, 'no-es-uuid');
+      expect(res.status).toBe(422);
+      expect((res.body as { code: string }).code).toBe('VALIDATION_ERROR');
+    });
+
+    it('CA-3 el super admin sí puede elegir una organización suspendida de la que es miembro', async () => {
+      const root = await userIn([orgA, orgB], { isSuperAdmin: true });
+      await db
+        .update(organizations)
+        .set({ status: 'suspended' })
+        .where(eq(organizations.id, orgB.id));
+      await switchTo(root.token, orgB.id).expect(204);
+    });
+
+    it('CA-11 dos sesiones del mismo usuario son independientes', async () => {
+      const other = await loginAs(user.email).expect(200);
+      const otherToken = (other.body as AuthSessionResponse).accessToken;
+
+      await switchTo(token, orgB.id).expect(204);
+
+      await as(t, otherToken).get('/auth/me').expect(200);
+      expect(activeOrgOf(await refresh(cookieOf(other)).expect(200))).toBe(orgA.id);
+      expect(activeOrgOf(await refresh(cookie).expect(200))).toBe(orgB.id);
+    });
+
+    it('CA-12 después de cambiar de A a B, el usuario no ve ni toca datos de A', async () => {
+      const [category] = await db
+        .select()
+        .from(expenseCategories)
+        .where(eq(expenseCategories.organizationId, orgA.id));
+      await switchTo(token, orgB.id).expect(204);
+      const { accessToken } = (await refresh(cookie).expect(200)).body as AuthSessionResponse;
+
+      const list = await as(t, accessToken).get('/expense-categories').expect(200);
+      expect((list.body as { id: string }[]).map((c) => c.id)).not.toContain(category!.id);
+      await as(t, accessToken)
+        .patch(`/expense-categories/${category!.id}`, { name: 'Robada' })
+        .expect(404);
     });
   });
 });

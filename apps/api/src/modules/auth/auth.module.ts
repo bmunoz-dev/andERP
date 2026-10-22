@@ -20,6 +20,7 @@ import {
   SESSION_REPOSITORY,
   USER_REPOSITORY,
 } from './application/ports';
+import { SwitchOrganizationUseCase } from './application/switch-organization.use-case';
 import { SessionIssuer } from './application/session-issuer';
 import {
   GetCurrentUserUseCase,
@@ -75,6 +76,7 @@ registerConstraintCodes({ sessions_membership_fk: 'NOT_FOUND' });
     LoginUseCase,
     RefreshSessionUseCase,
     LogoutUseCase,
+    SwitchOrganizationUseCase,
     GetCurrentUserUseCase,
     ChangePasswordUseCase,
     RequestPasswordResetUseCase,

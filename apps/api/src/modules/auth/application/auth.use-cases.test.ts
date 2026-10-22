@@ -11,6 +11,7 @@ import {
   ResetPasswordUseCase,
 } from './password.use-cases';
 import { REFRESH_TOKEN_TTL_MS, SessionIssuer } from './session-issuer';
+import { SwitchOrganizationUseCase } from './switch-organization.use-case';
 import { LogoutUseCase, RefreshSessionUseCase } from './session.use-cases';
 import {
   FakeAccessTokens,
@@ -53,6 +54,7 @@ function setup() {
     login: new LoginUseCase(users, hasher, clock, audit, issuer),
     refresh: new RefreshSessionUseCase(users, sessions, tokens, clock, audit, issuer),
     logout: new LogoutUseCase(sessions, tokens, clock, audit),
+    switchOrganization: new SwitchOrganizationUseCase(users, sessions, clock, audit),
     changePassword: new ChangePasswordUseCase(users, sessions, hasher, common, clock, audit),
     requestReset: new RequestPasswordResetUseCase(users, resets, tokens, clock, audit, mailer, env),
     reset: new ResetPasswordUseCase(users, sessions, resets, hasher, tokens, common, clock, audit),
@@ -271,6 +273,59 @@ describe('RefreshSessionUseCase y LogoutUseCase', () => {
     await t.logout.execute(undefined);
     expect(t.sessions.active()).toHaveLength(0);
     expect(t.audit.actions().filter((a) => a === 'auth.logout')).toHaveLength(1);
+  });
+});
+
+describe('SwitchOrganizationUseCase (F20 CA-8, CA-9)', () => {
+  let t: Ctx;
+  let actor: Actor;
+  beforeEach(async () => {
+    t = setup();
+    const user = t.users.add({ email: 'ana@empresa.co' }, {});
+    t.users.addMembership(user.id, { organizationId: 'org-2', organizationName: 'Dos' });
+    t.users.addMembership(user.id, {
+      organizationId: 'org-3',
+      organizationName: 'Tres',
+      organizationStatus: 'suspended',
+    });
+    await t.login.execute({ email: 'ana@empresa.co', password: PASSWORD }, meta);
+    actor = {
+      userId: user.id,
+      organizationId: 'org-1',
+      role: 'admin',
+      isSuperAdmin: false,
+      modules: [],
+      sessionFamilyId: t.sessions.rows[0]!.familyId,
+    };
+  });
+
+  it('cambia la sesión, marca la elección y audita origen y destino', async () => {
+    await t.switchOrganization.execute(actor, { organizationId: 'org-2' });
+
+    expect(t.sessions.active()[0]?.organizationId).toBe('org-2');
+    expect(t.sessions.selections).toEqual([
+      { userId: actor.userId, organizationId: 'org-2', at: t.clock.now() },
+    ]);
+    expect(t.audit.entries.at(-1)).toMatchObject({
+      action: 'auth.organization_switch',
+      organizationId: 'org-2',
+      changes: { from: 'org-1', to: 'org-2' },
+    });
+  });
+
+  it('una organización suspendida o desconocida → 404 NOT_FOUND sin cambiar ni auditar', async () => {
+    for (const organizationId of ['org-3', 'org-9']) {
+      await expectCode(t.switchOrganization.execute(actor, { organizationId }), 'NOT_FOUND', 404);
+    }
+    expect(t.sessions.active()[0]?.organizationId).toBe('org-1');
+    expect(t.sessions.selections).toEqual([]);
+    expect(t.audit.actions()).toEqual(['auth.login']);
+  });
+
+  it('elegir la organización activa no escribe ni audita', async () => {
+    await t.switchOrganization.execute(actor, { organizationId: 'org-1' });
+    expect(t.sessions.selections).toEqual([]);
+    expect(t.audit.actions()).toEqual(['auth.login']);
   });
 });
 

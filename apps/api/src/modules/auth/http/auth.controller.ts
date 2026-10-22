@@ -5,6 +5,7 @@ import {
   forgotPasswordRequestSchema,
   loginRequestSchema,
   resetPasswordRequestSchema,
+  switchOrganizationSchema,
 } from '@anderp/shared';
 import { Body, Controller, Get, Header, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -26,6 +27,7 @@ import {
   LogoutUseCase,
   RefreshSessionUseCase,
 } from '../application/session.use-cases';
+import { SwitchOrganizationUseCase } from '../application/switch-organization.use-case';
 import { requireActor } from './guards';
 import { clearRefreshCookie, readRefreshCookie, setRefreshCookie } from './refresh-cookie';
 
@@ -33,6 +35,7 @@ class LoginDto extends createZodDto(loginRequestSchema) {}
 class ChangePasswordDto extends createZodDto(changePasswordRequestSchema) {}
 class ForgotPasswordDto extends createZodDto(forgotPasswordRequestSchema) {}
 class ResetPasswordDto extends createZodDto(resetPasswordRequestSchema) {}
+class SwitchOrganizationDto extends createZodDto(switchOrganizationSchema) {}
 
 @ApiTags('auth')
 @Controller('auth')
@@ -42,6 +45,7 @@ export class AuthController {
     private readonly refreshUseCase: RefreshSessionUseCase,
     private readonly logoutUseCase: LogoutUseCase,
     private readonly currentUserUseCase: GetCurrentUserUseCase,
+    private readonly switchOrganizationUseCase: SwitchOrganizationUseCase,
     private readonly changePasswordUseCase: ChangePasswordUseCase,
     private readonly requestResetUseCase: RequestPasswordResetUseCase,
     private readonly resetUseCase: ResetPasswordUseCase,
@@ -90,6 +94,12 @@ export class AuthController {
   @Get('me')
   me(): Promise<AuthProfile> {
     return this.currentUserUseCase.execute(requireActor(this.cls));
+  }
+
+  @Post('organization')
+  @HttpCode(204)
+  switchOrganization(@Body() body: SwitchOrganizationDto): Promise<void> {
+    return this.switchOrganizationUseCase.execute(requireActor(this.cls), body);
   }
 
   @Post('password/change')

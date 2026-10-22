@@ -40,7 +40,7 @@
       - `findActiveFamilyOrganization` en lugar de `isFamilyActive`;
       - `409 ORGANIZATION_CHANGED` si el `org` del token no es el de la sesión, o si la organización de la sesión dejó de estar disponible.
       Depende de: F20-T004 · Verificación: CA-10–CA-12
-- [ ] F20-T006 [TDD] Casos del cambio y después:
+- [x] F20-T006 [TDD] Casos del cambio y después:
       - `switchOrganization` en el puerto, Drizzle e `in-memory-auth.ts`;
       - `SwitchOrganizationUseCase` y `POST /auth/organization` (`204`, `404`, sin escritura si es la activa, auditoría `auth.organization_switch`).
       Depende de: F20-T005 · Verificación: CA-8, CA-9, CA-10
