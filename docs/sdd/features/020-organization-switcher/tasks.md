@@ -5,7 +5,7 @@
 
 ## Bloque A — Diseño y base de datos
 
-- [ ] F20-T001 Actualizar `design.md` antes del código:
+- [x] F20-T001 Actualizar `design.md` antes del código:
       - §5.3: `sessions.organization_id` con `sessions_membership_fk` y `organization_members.last_selected_at`;
       - §6: la organización activa vive en la sesión; el guard compara el `org` del token con ella;
       - §8: selector en la cabecera y recarga en `/egresos`;
