@@ -52,7 +52,7 @@
 
 ## Bloque D — Web (PR 2)
 
-- [ ] F20-T008 [TDD] Selector:
+- [x] F20-T008 [TDD] Selector:
       - `switchOrganization` en `auth-api.ts`;
       - `lib/organization-switch.ts` (`goHome`, `announceSwitch`, `listenForSwitch`);
       - `OrganizationSwitcher` y su uso en `_app.tsx`.

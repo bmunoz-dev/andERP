@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
 import { AppSidebar } from '@/components/app-sidebar';
+import { OrganizationSwitcher } from '@/components/organization-switcher';
 import { NotificationsBell } from '@/components/notifications/notifications-bell';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { UserMenu } from '@/components/user-menu';
@@ -32,9 +33,7 @@ function AppLayout() {
       <SidebarInset>
         <header className="flex h-14 items-center gap-3 border-b px-4">
           <SidebarTrigger aria-label="Mostrar u ocultar el menú" />
-          <span className="truncate text-sm text-muted-foreground">
-            {auth.user.organization.name}
-          </span>
+          <OrganizationSwitcher user={auth.user} />
           <div className="ml-auto flex items-center gap-1">
             <NotificationsBell />
             <UserMenu user={auth.user} />

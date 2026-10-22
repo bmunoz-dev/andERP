@@ -26,6 +26,11 @@ export function changePassword(body: ChangePasswordRequest): Promise<void> {
   return apiFetch('/auth/password/change', { method: 'POST', json: body });
 }
 
+/** F20: cambia la organización activa de la sesión. La web recarga después. */
+export function switchOrganization(organizationId: string): Promise<void> {
+  return apiFetch('/auth/organization', { method: 'POST', json: { organizationId } });
+}
+
 export function requestPasswordReset(email: string): Promise<void> {
   return apiFetch('/auth/password/forgot', { method: 'POST', json: { email } });
 }
