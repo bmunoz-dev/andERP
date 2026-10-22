@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   check,
+  foreignKey,
   index,
   inet,
   jsonb,
@@ -78,6 +79,8 @@ export const organizationMembers = anderp.table(
     role: memberRole().notNull(),
     /** Desactivar a alguien es por organización: `users.status` es global (F02 CA-14). */
     isActive: boolean().notNull().default(true),
+    /** Última vez que el usuario eligió esta organización en el selector (F20). */
+    lastSelectedAt: timestamptz(),
     ...auditColumns,
   },
   (t) => [
@@ -94,6 +97,8 @@ export const sessions = anderp.table(
     userId: uuid()
       .notNull()
       .references(() => users.id),
+    /** Organización activa de la sesión (F20). */
+    organizationId: uuid().notNull(),
     familyId: uuid().notNull(),
     tokenHash: text().notNull(),
     expiresAt: timestamptz().notNull(),
@@ -106,6 +111,11 @@ export const sessions = anderp.table(
     uniqueIndex('sessions_token_hash_uq').on(t.tokenHash),
     index('sessions_family_idx').on(t.familyId),
     index('sessions_user_idx').on(t.userId),
+    foreignKey({
+      name: 'sessions_membership_fk',
+      columns: [t.userId, t.organizationId],
+      foreignColumns: [organizationMembers.userId, organizationMembers.organizationId],
+    }),
   ],
 );
 

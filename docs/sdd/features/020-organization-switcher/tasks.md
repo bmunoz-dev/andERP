@@ -12,7 +12,7 @@
       - §11: sale "selector de organización" de fuera de alcance (sigue el registro autoservicio);
       - historial de cambios.
       Archivos: `docs/sdd/design.md`
-- [ ] F20-T002 [TDD] Primero los casos de FK y relleno en `organization-switch.test.ts`; después:
+- [x] F20-T002 [TDD] Primero los casos de FK y relleno en `organization-switch.test.ts`; después:
       - `lastSelectedAt` y `sessions.organizationId` con la FK en `core.ts`;
       - `0035_organization_switcher` generada y editada a mano (columna nula, relleno, borrado de huérfanas, `NOT NULL`, FK);
       - `sessions_membership_fk` en `registerConstraintCodes`.
