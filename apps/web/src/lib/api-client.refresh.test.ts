@@ -10,6 +10,7 @@ const profile = {
   lastName: 'Gómez',
   isSuperAdmin: false,
   organization: { id: '018f0000-0000-7000-8000-000000000002', name: 'Empresa' },
+  organizations: [{ id: '018f0000-0000-7000-8000-000000000002', name: 'Empresa' }],
   role: 'admin' as const,
   modules: [],
 };

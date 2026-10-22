@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ENV, type Env } from '../../config/env';
+import { registerConstraintCodes } from '../../shared/errors/pg-error.mapper';
 import { LoginUseCase } from './application/login.use-case';
 import {
   ChangePasswordUseCase,
@@ -19,6 +20,7 @@ import {
   SESSION_REPOSITORY,
   USER_REPOSITORY,
 } from './application/ports';
+import { SwitchOrganizationUseCase } from './application/switch-organization.use-case';
 import { SessionIssuer } from './application/session-issuer';
 import {
   GetCurrentUserUseCase,
@@ -40,6 +42,9 @@ import {
   JwtAccessTokenIssuer,
   SystemClock,
 } from './infrastructure/tokens';
+
+// Solo ocurre si la membresía desaparece entre la validación y el INSERT/UPDATE de la sesión (F20).
+registerConstraintCodes({ sessions_membership_fk: 'NOT_FOUND' });
 
 @Module({
   imports: [
@@ -71,6 +76,7 @@ import {
     LoginUseCase,
     RefreshSessionUseCase,
     LogoutUseCase,
+    SwitchOrganizationUseCase,
     GetCurrentUserUseCase,
     ChangePasswordUseCase,
     RequestPasswordResetUseCase,

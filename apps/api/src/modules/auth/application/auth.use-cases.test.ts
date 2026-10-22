@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { Env } from '../../../config/env';
 import type { Actor } from '../../../shared/context/request-context';
 import { LOCK_DURATION_MS } from '../domain/login-attempts';
+import { requireAccess } from './access';
 import { LoginUseCase } from './login.use-case';
 import {
   ChangePasswordUseCase,
@@ -10,6 +11,7 @@ import {
   ResetPasswordUseCase,
 } from './password.use-cases';
 import { REFRESH_TOKEN_TTL_MS, SessionIssuer } from './session-issuer';
+import { SwitchOrganizationUseCase } from './switch-organization.use-case';
 import { LogoutUseCase, RefreshSessionUseCase } from './session.use-cases';
 import {
   FakeAccessTokens,
@@ -52,6 +54,7 @@ function setup() {
     login: new LoginUseCase(users, hasher, clock, audit, issuer),
     refresh: new RefreshSessionUseCase(users, sessions, tokens, clock, audit, issuer),
     logout: new LogoutUseCase(sessions, tokens, clock, audit),
+    switchOrganization: new SwitchOrganizationUseCase(users, sessions, clock, audit),
     changePassword: new ChangePasswordUseCase(users, sessions, hasher, common, clock, audit),
     requestReset: new RequestPasswordResetUseCase(users, resets, tokens, clock, audit, mailer, env),
     reset: new ResetPasswordUseCase(users, sessions, resets, hasher, tokens, common, clock, audit),
@@ -169,6 +172,21 @@ describe('LoginUseCase', () => {
     expect(result.user.isSuperAdmin).toBe(true);
   });
 
+  it('F20 CA-3 CA-4 entra en la primera organización disponible y la guarda en la sesión', async () => {
+    const user = t.users.add(
+      { email: 'ana@empresa.co' },
+      { organizationId: 'org-1', organizationStatus: 'suspended' },
+    );
+    t.users.addMembership(user.id, { organizationId: 'org-2', organizationName: 'Dos' });
+    const result = await t.login.execute({ email: 'ana@empresa.co', password: PASSWORD }, meta);
+
+    expect(result.user.organization).toEqual({ id: 'org-2', name: 'Dos' });
+    expect(result.user.organizations).toEqual([{ id: 'org-2', name: 'Dos' }]);
+    expect(t.accessTokens.issued[0]).toMatchObject({ org: 'org-2' });
+    expect(t.sessions.active()[0]?.organizationId).toBe('org-2');
+    expect(t.audit.entries[0]).toMatchObject({ action: 'auth.login', organizationId: 'org-2' });
+  });
+
   it('CA-6 vuelve a hashear si los parámetros guardados son antiguos', async () => {
     const user = t.users.add({ email: 'ana@empresa.co', passwordHash: `old:${PASSWORD}` }, {});
     await t.login.execute({ email: 'ana@empresa.co', password: PASSWORD }, meta);
@@ -217,12 +235,153 @@ describe('RefreshSessionUseCase y LogoutUseCase', () => {
     expect(t.sessions.active()).toHaveLength(0);
   });
 
+  it('F20 CA-6 el refresh emite el token de la organización de la sesión', async () => {
+    const [user] = [...t.users.users.values()];
+    t.users.addMembership(user!.id, { organizationId: 'org-2', organizationName: 'Dos' });
+    t.sessions.rows[0]!.organizationId = 'org-2';
+
+    const rotated = await t.refresh.execute(refreshToken, meta);
+    expect(rotated.user.organization.id).toBe('org-2');
+    expect(rotated.user.organizations.map((o) => o.id)).toEqual(['org-2', 'org-1']);
+    expect(t.accessTokens.issued.at(-1)).toMatchObject({ org: 'org-2' });
+    expect(t.sessions.active()[0]?.organizationId).toBe('org-2');
+  });
+
+  it('F20 CA-6 si la organización de la sesión ya no está disponible, pasa a la de entrada', async () => {
+    const [user] = [...t.users.users.values()];
+    t.users.addMembership(user!.id, {
+      organizationId: 'org-2',
+      organizationName: 'Dos',
+      organizationStatus: 'suspended',
+    });
+    t.sessions.rows[0]!.organizationId = 'org-2';
+
+    const rotated = await t.refresh.execute(refreshToken, meta);
+    expect(rotated.user.organization.id).toBe('org-1');
+    expect(t.sessions.active()[0]?.organizationId).toBe('org-1');
+  });
+
+  it('F20 CA-5 sin organizaciones disponibles el refresh responde ACCOUNT_DISABLED y revoca la familia', async () => {
+    t.users.memberships.set([...t.users.users.keys()][0]!, []);
+    await expectCode(t.refresh.execute(refreshToken, meta), 'ACCOUNT_DISABLED', 401);
+    expect(t.sessions.active()).toHaveLength(0);
+  });
+
   it('CA-10 logout revoca la sesión y es idempotente', async () => {
     await t.logout.execute(refreshToken);
     await t.logout.execute(refreshToken);
     await t.logout.execute(undefined);
     expect(t.sessions.active()).toHaveLength(0);
     expect(t.audit.actions().filter((a) => a === 'auth.logout')).toHaveLength(1);
+  });
+});
+
+describe('SwitchOrganizationUseCase (F20 CA-8, CA-9)', () => {
+  let t: Ctx;
+  let actor: Actor;
+  beforeEach(async () => {
+    t = setup();
+    const user = t.users.add({ email: 'ana@empresa.co' }, {});
+    t.users.addMembership(user.id, { organizationId: 'org-2', organizationName: 'Dos' });
+    t.users.addMembership(user.id, {
+      organizationId: 'org-3',
+      organizationName: 'Tres',
+      organizationStatus: 'suspended',
+    });
+    await t.login.execute({ email: 'ana@empresa.co', password: PASSWORD }, meta);
+    actor = {
+      userId: user.id,
+      organizationId: 'org-1',
+      role: 'admin',
+      isSuperAdmin: false,
+      modules: [],
+      sessionFamilyId: t.sessions.rows[0]!.familyId,
+    };
+  });
+
+  it('cambia la sesión, marca la elección y audita origen y destino', async () => {
+    await t.switchOrganization.execute(actor, { organizationId: 'org-2' });
+
+    expect(t.sessions.active()[0]?.organizationId).toBe('org-2');
+    expect(t.sessions.selections).toEqual([
+      { userId: actor.userId, organizationId: 'org-2', at: t.clock.now() },
+    ]);
+    expect(t.audit.entries.at(-1)).toMatchObject({
+      action: 'auth.organization_switch',
+      organizationId: 'org-2',
+      changes: { from: 'org-1', to: 'org-2' },
+    });
+  });
+
+  it('una organización suspendida o desconocida → 404 NOT_FOUND sin cambiar ni auditar', async () => {
+    for (const organizationId of ['org-3', 'org-9']) {
+      await expectCode(t.switchOrganization.execute(actor, { organizationId }), 'NOT_FOUND', 404);
+    }
+    expect(t.sessions.active()[0]?.organizationId).toBe('org-1');
+    expect(t.sessions.selections).toEqual([]);
+    expect(t.audit.actions()).toEqual(['auth.login']);
+  });
+
+  it('elegir la organización activa no escribe ni audita', async () => {
+    await t.switchOrganization.execute(actor, { organizationId: 'org-1' });
+    expect(t.sessions.selections).toEqual([]);
+    expect(t.audit.actions()).toEqual(['auth.login']);
+  });
+});
+
+describe('requireAccess (F20 CA-3)', () => {
+  const user = {
+    id: 'u1',
+    email: 'a@b.co',
+    passwordHash: null,
+    firstName: 'A',
+    lastName: 'B',
+    isSuperAdmin: false,
+    status: 'active' as const,
+    failedLoginAttempts: 0,
+    lockedUntil: null,
+  };
+  const org = (id: string, organizationStatus: 'active' | 'suspended' = 'active') => ({
+    organizationId: id,
+    organizationName: id,
+    organizationStatus,
+    role: 'admin' as const,
+    modules: [],
+  });
+
+  it('toma la primera disponible; las suspendidas no se ofrecen a un usuario normal', () => {
+    const access = requireAccess(user, [org('a', 'suspended'), org('b'), org('c')], null);
+    expect(access.membership.organizationId).toBe('b');
+    expect(access.organizations.map((m) => m.organizationId)).toEqual(['b', 'c']);
+  });
+
+  it('el super admin sí puede entrar a una suspendida', () => {
+    const access = requireAccess(
+      { ...user, isSuperAdmin: true },
+      [org('a', 'suspended'), org('b')],
+      null,
+    );
+    expect(access.membership.organizationId).toBe('a');
+    expect(access.organizations).toHaveLength(2);
+  });
+
+  it('usa la preferida si está disponible y, si no, la primera', () => {
+    const memberships = [org('a'), org('b'), org('c', 'suspended')];
+    expect(requireAccess(user, memberships, 'b').membership.organizationId).toBe('b');
+    expect(requireAccess(user, memberships, 'c').membership.organizationId).toBe('a');
+    expect(requireAccess(user, memberships, 'zzz').membership.organizationId).toBe('a');
+  });
+
+  it('sin usuario activo o sin organizaciones disponibles → ACCOUNT_DISABLED', () => {
+    const disabled = { status: 403, code: 'ACCOUNT_DISABLED' };
+    expect(() => requireAccess(null, [org('a')], null)).toThrow(expect.objectContaining(disabled));
+    expect(() => requireAccess({ ...user, status: 'inactive' }, [org('a')], null)).toThrow(
+      expect.objectContaining(disabled),
+    );
+    expect(() => requireAccess(user, [], null)).toThrow(expect.objectContaining(disabled));
+    expect(() => requireAccess(user, [org('a', 'suspended')], null, 401)).toThrow(
+      expect.objectContaining({ status: 401, code: 'ACCOUNT_DISABLED' }),
+    );
   });
 });
 

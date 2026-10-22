@@ -54,8 +54,8 @@ export class DrizzleUserRepository implements UserRepository {
     return row ?? null;
   }
 
-  async findMembership(userId: string): Promise<MembershipRecord | null> {
-    const [row] = await this.db
+  async findMemberships(userId: string): Promise<MembershipRecord[]> {
+    return this.db
       .select({
         organizationId: organizations.id,
         organizationName: organizations.name,
@@ -73,9 +73,10 @@ export class DrizzleUserRepository implements UserRepository {
           isNull(organizations.deletedAt),
         ),
       )
-      .orderBy(asc(organizationMembers.createdAt))
-      .limit(1);
-    return row ?? null;
+      .orderBy(
+        sql`${organizationMembers.lastSelectedAt} desc nulls last`,
+        asc(organizationMembers.createdAt),
+      );
   }
 
   async recordFailedLogin(
@@ -128,6 +129,7 @@ export class DrizzleSessionRepository implements SessionRepository {
       .select({
         id: sessions.id,
         userId: sessions.userId,
+        organizationId: sessions.organizationId,
         familyId: sessions.familyId,
         expiresAt: sessions.expiresAt,
         revokedAt: sessions.revokedAt,
@@ -154,9 +156,9 @@ export class DrizzleSessionRepository implements SessionRepository {
       .where(and(eq(sessions.familyId, familyId), isNull(sessions.revokedAt)));
   }
 
-  async isFamilyActive(familyId: string, at: Date): Promise<boolean> {
+  async findActiveFamilyOrganization(familyId: string, at: Date): Promise<string | null> {
     const [row] = await this.db
-      .select({ id: sessions.id })
+      .select({ organizationId: sessions.organizationId })
       .from(sessions)
       .where(
         and(
@@ -166,7 +168,30 @@ export class DrizzleSessionRepository implements SessionRepository {
         ),
       )
       .limit(1);
-    return row !== undefined;
+    return row?.organizationId ?? null;
+  }
+
+  async switchOrganization(
+    familyId: string,
+    userId: string,
+    organizationId: string,
+    at: Date,
+  ): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(sessions)
+        .set({ organizationId })
+        .where(and(eq(sessions.familyId, familyId), isNull(sessions.revokedAt)));
+      await tx
+        .update(organizationMembers)
+        .set({ lastSelectedAt: at })
+        .where(
+          and(
+            eq(organizationMembers.userId, userId),
+            eq(organizationMembers.organizationId, organizationId),
+          ),
+        );
+    });
   }
 
   async revokeAllForUser(userId: string, at: Date, exceptFamilyId?: string): Promise<void> {

@@ -1,5 +1,6 @@
 import type { AuthProfile } from '@anderp/shared';
 import { Inject, Injectable } from '@nestjs/common';
+import type { Actor } from '../../../shared/context/request-context';
 import { AUDIT_LOGGER, type AuditLogger } from '../../audit/audit.service';
 import { authErrors } from '../domain/auth-errors';
 import { type Access, requireAccess, toProfile } from './access';
@@ -52,10 +53,10 @@ export class RefreshSessionUseCase {
     }
 
     const user = await this.users.findById(session.userId);
-    const membership = user ? await this.users.findMembership(user.id) : null;
+    const memberships = user ? await this.users.findMemberships(user.id) : [];
     let access: Access;
     try {
-      access = requireAccess(user, membership, 401);
+      access = requireAccess(user, memberships, session.organizationId, 401);
     } catch (error) {
       await this.sessions.revokeFamily(session.familyId, now);
       throw error;
@@ -89,9 +90,9 @@ export class LogoutUseCase {
 export class GetCurrentUserUseCase {
   constructor(@Inject(USER_REPOSITORY) private readonly users: UserRepository) {}
 
-  async execute(userId: string): Promise<AuthProfile> {
-    const user = await this.users.findById(userId);
-    const membership = user ? await this.users.findMembership(user.id) : null;
-    return toProfile(requireAccess(user, membership, 401));
+  async execute(actor: Actor): Promise<AuthProfile> {
+    const user = await this.users.findById(actor.userId);
+    const memberships = user ? await this.users.findMemberships(user.id) : [];
+    return toProfile(requireAccess(user, memberships, actor.organizationId, 401));
   }
 }

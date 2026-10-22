@@ -92,6 +92,8 @@ export const ErrorCode = {
   DUE_DATE_ALREADY_EXISTS: 'DUE_DATE_ALREADY_EXISTS',
   // F14 — notificaciones
   NOTIFICATION_NOT_FOUND: 'NOTIFICATION_NOT_FOUND',
+  // F20 — selector de organización
+  ORGANIZATION_CHANGED: 'ORGANIZATION_CHANGED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

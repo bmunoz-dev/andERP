@@ -110,6 +110,7 @@ describe('Login', () => {
       lastName: 'Gómez',
       isSuperAdmin: false,
       organization: { id: u.organizationId, name: 'Empresa de prueba' },
+      organizations: [{ id: u.organizationId, name: 'Empresa de prueba' }],
       role: 'admin',
       modules: [],
     });

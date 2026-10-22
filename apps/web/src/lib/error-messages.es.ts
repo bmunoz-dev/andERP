@@ -116,6 +116,8 @@ const MESSAGES = {
   DUE_DATE_COMPLETED_IMMUTABLE: 'Un vencimiento ya completado no se puede cambiar.',
   DUE_DATE_ALREADY_EXISTS: 'Esta obligación ya tiene un vencimiento en esa fecha. Elige otra.',
   NOTIFICATION_NOT_FOUND: 'La notificación ya no está disponible.',
+  // F20 — selector de organización
+  ORGANIZATION_CHANGED: 'Cambiaste de organización en otra pestaña. Recargando…',
 } satisfies Record<ErrorCode, string>;
 
 const CLIENT_MESSAGES: Record<string, string> = {

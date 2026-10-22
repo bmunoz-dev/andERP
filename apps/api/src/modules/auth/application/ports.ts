@@ -30,6 +30,8 @@ export interface MembershipRecord {
 export interface SessionRecord {
   id: string;
   userId: string;
+  /** Organización activa de la sesión (F20). */
+  organizationId: string;
   familyId: string;
   expiresAt: Date;
   revokedAt: Date | null;
@@ -48,8 +50,12 @@ export interface PasswordResetRecord {
 export interface UserRepository {
   findByEmail(email: string): Promise<UserRecord | null>;
   findById(id: string): Promise<UserRecord | null>;
-  /** Membresía activa más antigua del usuario (la v1 opera una sola organización). */
-  findMembership(userId: string): Promise<MembershipRecord | null>;
+  /**
+   * Membresías activas del usuario, ordenadas por preferencia: la última elegida primero y,
+   * entre las que nunca se eligieron, la más antigua (F20). Incluye las organizaciones
+   * suspendidas: qué se ofrece depende del usuario y lo decide `requireAccess`.
+   */
+  findMemberships(userId: string): Promise<MembershipRecord[]>;
   recordFailedLogin(userId: string, attempts: number, lockedUntil: Date | null): Promise<void>;
   recordSuccessfulLogin(userId: string, at: Date, rehashedPassword: string | null): Promise<void>;
   /** Cambia la contraseña y reinicia el contador de intentos y el bloqueo. */
@@ -58,6 +64,7 @@ export interface UserRepository {
 
 export interface NewSession {
   userId: string;
+  organizationId: string;
   familyId: string;
   tokenHash: string;
   expiresAt: Date;
@@ -73,10 +80,22 @@ export interface SessionRepository {
   revokeFamily(familyId: string, at: Date): Promise<void>;
   revokeAllForUser(userId: string, at: Date, exceptFamilyId?: string): Promise<void>;
   /**
-   * `true` si la familia tiene una sesión sin revocar ni vencer. El guard lo consulta en cada
-   * petición: así un logout o un cambio de contraseña invalidan también los access tokens.
+   * Organización activa de la familia si tiene una sesión sin revocar ni vencer; si no, `null`.
+   * El guard lo consulta en cada petición: así un logout o un cambio de contraseña invalidan
+   * también los access tokens, y un cambio de organización (F20) deja obsoletos los de la
+   * anterior.
    */
-  isFamilyActive(familyId: string, at: Date): Promise<boolean>;
+  findActiveFamilyOrganization(familyId: string, at: Date): Promise<string | null>;
+  /**
+   * Cambia la organización de las sesiones sin revocar de la familia y marca la membresía como
+   * la última elegida, en una sola transacción (F20 CA-8).
+   */
+  switchOrganization(
+    familyId: string,
+    userId: string,
+    organizationId: string,
+    at: Date,
+  ): Promise<void>;
 }
 
 export interface PasswordResetRepository {

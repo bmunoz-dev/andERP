@@ -1,6 +1,6 @@
 # F19 — Módulos por organización · Tareas
 
-- **Ramas:** `feat/019-organization-modules` (PR 1: bloques A–C) y `feat/019-organization-modules-web` (PR 2: bloque D)
+- **Rama:** `feat/019-organization-modules` (PR 1 #39: bloques A–C; PR 2 #40: bloque D)
 - **Plan:** [plan.md](plan.md)
 
 ## Bloque A — Diseño y base de datos
@@ -74,7 +74,7 @@
       - columna **Módulos** con insignias;
       - `modules` en `admin-api.ts`.
       Depende de: F19-T008 · Verificación: CA-21–CA-23, CA-26
-- [ ] F19-T010 Cierre:
+- [x] F19-T010 Cierre:
       - verificación completa y Definición de Hecho;
       - notas de implementación en `plan.md`;
       - F19 marcada "Hecho" en el roadmap;

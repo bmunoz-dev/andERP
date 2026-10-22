@@ -246,6 +246,13 @@
       "when": 1792541364045,
       "tag": "0034_organization_modules",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1792671297759,
+      "tag": "0035_organization_switcher",
+      "breakpoints": true
     }
   ]
 }

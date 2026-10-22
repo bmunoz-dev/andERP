@@ -41,6 +41,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-15 | **Vistas para el celular** (F15): por debajo de 768 px las tablas se muestran como tarjetas generadas de sus mismas columnas, sin ocultar ninguna (§8). | El usuario consulta la Agenda, las credenciales y Clic Kiu, y registra movimientos, desde el teléfono; con tablas había que desplazarse de lado para ver columnas y acciones. Generar las tarjetas de las columnas evita mantener dos maquetaciones por pantalla. |
 | 2026-10-20 | **Cuentas aéreas** (F18) **reemplaza a Clic Kiu** (F11): catálogo `air_operators`, `air_accounts` con `credit_limit` (0 = prepago) y libro `air_account_movements` (saldo inicial, recarga, pago, reembolso y emisión con PNR, tiquete, pasajero, tarifa neta e impuestos). Una sola regla para prepago y crédito: `saldo ≥ −credit_limit`, con trigger diferido y bloqueo por cuenta (clase `18`). Se eliminan `clickiu_movements`, `v_clickiu_balance` y sus enums; la clase `11` queda retirada. Libro editable, sin saldo guardado, sin ciclos de facturación ni comisión (§5.10). | La agencia emite tiquetes con varios operadores (aerolíneas y consolidadores), en cuentas prepago y a crédito con cupo, y varias cuentas por operador (sucursales, portal B2B). Producción no tenía datos de Clic Kiu, así que se reemplaza sin migrar datos. El vencimiento del pago a un operador va en la Agenda (F13). |
 | 2026-10-20 | **Módulos por organización** (F19): `organizations.modules` (enum `app_module`) decide qué paquetes tiene cada organización: Personal y pagos, Credenciales, Cuentas aéreas y Agenda; Base siempre está. La API responde `403 MODULE_DISABLED` y la web oculta el menú. Una organización nueva nace solo con Base. Decisiones 1 y 12 actualizadas; los permisos por usuario siguen fuera del alcance (§11). | AndERP pasa a servir a varias empresas cliente y el super admin necesita dar a cada una solo lo que contrató. Se agrupan en paquetes para que no existan combinaciones rotas por dependencias (Pagos necesita Personal; Credenciales, Responsables). |
+| 2026-10-22 | **Selector de organización** (F20): `sessions.organization_id` (organización activa de la sesión, FK compuesta `sessions_membership_fk` a `organization_members`) y `organization_members.last_selected_at`. El guard compara el `org` del token con la de la sesión (`409 ORGANIZATION_CHANGED`) y `POST /auth/organization` la cambia. El perfil lista las organizaciones disponibles. §6.2 y §8 actualizadas; el selector sale de §11. | Con F19 un usuario puede pertenecer a varias empresas cliente y hasta ahora el login siempre entraba en la más antigua. La organización activa en la sesión (y no en el token) permite rechazar en el servidor las pestañas que quedaron con la anterior. |
 
 ---
 
@@ -247,6 +248,7 @@ packages/
 | organization_id | uuid FK → organizations | |
 | role | member_role NOT NULL | |
 | is_active | boolean NOT NULL | default `true`. Desactivación por organización |
+| last_selected_at | timestamptz NULL | Última vez que el usuario eligió esta organización en el selector (F20); el login entra en la de fecha más reciente |
 | audit | | |
 
 PK `(user_id, organization_id)`.
@@ -256,6 +258,7 @@ PK `(user_id, organization_id)`.
 |---|---|---|
 | id | uuid PK | |
 | user_id | uuid FK → users | |
+| organization_id | uuid NOT NULL | Organización activa de la sesión (F20). FK compuesta `(user_id, organization_id)` → `organization_members` (`sessions_membership_fk`) |
 | family_id | uuid NOT NULL | agrupa los tokens rotados de un mismo inicio de sesión |
 | token_hash | text NOT NULL | SHA-256 del token; nunca el token en claro |
 | expires_at | timestamptz NOT NULL | |
@@ -638,6 +641,7 @@ Las notificaciones **no se guardan**: son los vencimientos pendientes en estado 
 - **Access token:** JWT de 15 minutos, guardado en memoria en el frontend.
 - **Refresh token:** en una cookie `httpOnly`, `Secure`, `SameSite=Strict`, con duración de 7 días y rotación en cada uso.
 - **Reutilización:** si se reutiliza un refresh token ya rotado, se revocan todos los tokens de esa `family_id`.
+- **Organización activa (F20):** vive en la sesión (`sessions.organization_id`), no en el token ni en el usuario. El login entra en la última organización elegida (`last_selected_at`) o, si nunca eligió, la más antigua; `POST /auth/organization` la cambia para toda la familia. El guard compara el `org` del token con la de la sesión y responde `409 ORGANIZATION_CHANGED` si difieren, así una pestaña con la organización anterior no puede leer ni escribir.
 - **Límites:** `@nestjs/throttler` en los endpoints de auth; tras 5 intentos fallidos, la cuenta se bloquea 15 minutos (`locked_until`).
 - **Recuperación de contraseña:** la respuesta es la misma exista o no el email (no revela qué cuentas existen).
 
@@ -720,6 +724,8 @@ Las filas de egresos, honorarios, prestadores, responsables y credenciales aplic
 | Configuración (admin) | Categorías de egreso, operadores aéreos y usuarios de la organización. |
 | Plataforma (super admin) | Organizaciones (con una casilla por paquete y la acción **Módulos**, que pide confirmación al quitar uno) y catálogos globales. |
 
+**Selector de organización (F20):** con dos o más organizaciones disponibles, el nombre de la organización en la cabecera es un menú desplegable. Al elegir otra, la página se recarga completa en `/egresos` y las demás pestañas se recargan al recibir un aviso por `BroadcastChannel`.
+
 El menú y las rutas solo muestran los paquetes que tiene la organización (F19): una ruta de un paquete apagado redirige a Egresos y la campana de notificaciones solo aparece con `agenda`.
 
 La interfaz está en español y el formato de moneda es COP (`es-CO`).
@@ -763,7 +769,7 @@ La interfaz está en español y el formato de moneda es COP (`es-CO`).
 ## 11. Fuera del alcance de la v1
 
 - Autenticación de dos factores (MFA).
-- Registro autoservicio de organizaciones y selector de organización en la interfaz (el modelo lo soporta; la v1 opera una sola organización).
+- Registro autoservicio de organizaciones (el selector de organización llegó con F20).
 - Permisos granulares por usuario (tablas `permissions` y `role_permissions`) y roles adicionales. Los paquetes por organización (F19) no son esto: son iguales para todos los admins de la organización.
 - Alertas por `payment_frequency`.
 - Adjuntar facturas a los egresos (el documento del contrato llegó con F17).

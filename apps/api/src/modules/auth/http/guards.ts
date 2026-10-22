@@ -27,6 +27,7 @@ import {
 } from '../application/ports';
 
 const unauthorized = () => new DomainError(ErrorCode.UNAUTHORIZED, 401);
+const organizationChanged = () => new DomainError(ErrorCode.ORGANIZATION_CHANGED, 409);
 
 /**
  * Guard global (F01 CA-11): toda ruta exige un access token válido salvo las `@Public()`.
@@ -62,16 +63,24 @@ export class JwtAuthGuard implements CanActivate {
       throw unauthorized();
     }
 
-    if (!(await this.sessions.isFamilyActive(claims.sid, this.clock.now()))) {
-      throw new DomainError(ErrorCode.SESSION_REVOKED, 401);
-    }
+    // La organización activa vive en la sesión (F20): un token de otra es de una pestaña vieja.
+    const sessionOrg = await this.sessions.findActiveFamilyOrganization(
+      claims.sid,
+      this.clock.now(),
+    );
+    if (!sessionOrg) throw new DomainError(ErrorCode.SESSION_REVOKED, 401);
+    if (sessionOrg !== claims.org) throw organizationChanged();
 
     const found = await this.users.findById(claims.sub);
     const { user, membership } = requireAccess(
       found,
-      found ? await this.users.findMembership(found.id) : null,
+      found ? await this.users.findMemberships(found.id) : [],
+      sessionOrg,
       401,
     );
+    // La desactivaron en la organización de la sesión pero le quedan otras: la web recarga y
+    // el refresh pasa a la siguiente (F20 CA-6).
+    if (membership.organizationId !== sessionOrg) throw organizationChanged();
 
     const actor: Actor = {
       userId: user.id,

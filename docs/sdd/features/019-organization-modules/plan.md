@@ -115,4 +115,5 @@ La consulta de solo lectura previa al PR 1 (CA-28) es: `SELECT name, status FROM
 - **Campana (T008):** la condición de `agenda` vive en `NotificationsBell` (con `useAuth`) y no en `_app.tsx`, para probarla sin router; sin el paquete tampoco consulta `/notifications`.
 - **Libro (T008):** el concepto ya era texto; sin `staff_payments` lo que desaparece es el botón "Ver pago…" que enlaza a `/pagos` (CA-19).
 - **Organizaciones (T009):** la prueba está en `-organizaciones.test.tsx` (el prefijo `-` hace que el router la ignore) y renderiza `Route.options.component`. Las casillas del diálogo de crear van con `Controller`: `form.watch` dispara la advertencia `react-hooks/incompatible-library`. `admin-api.ts` no cambió: sus tipos vienen de `packages/shared`, que ya llevan `modules`.
+- **CA-28 (T010):** PR 2 mergeado (#40, 2026-10-22) y desplegado; el usuario hizo la verificación manual en producción el 2026-10-22.
 - **Entorno:** en Windows, `vitest` cierra un worker al arrancar (`0xC0000409`) en uno o dos archivos de la API por corrida; repetir el archivo lo resuelve (ya está en `CLAUDE.md`).
