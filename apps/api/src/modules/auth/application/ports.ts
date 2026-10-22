@@ -30,6 +30,8 @@ export interface MembershipRecord {
 export interface SessionRecord {
   id: string;
   userId: string;
+  /** Organización activa de la sesión (F20). */
+  organizationId: string;
   familyId: string;
   expiresAt: Date;
   revokedAt: Date | null;
@@ -48,8 +50,12 @@ export interface PasswordResetRecord {
 export interface UserRepository {
   findByEmail(email: string): Promise<UserRecord | null>;
   findById(id: string): Promise<UserRecord | null>;
-  /** Membresía activa más antigua del usuario (la v1 opera una sola organización). */
-  findMembership(userId: string): Promise<MembershipRecord | null>;
+  /**
+   * Membresías activas del usuario, ordenadas por preferencia: la última elegida primero y,
+   * entre las que nunca se eligieron, la más antigua (F20). Incluye las organizaciones
+   * suspendidas: qué se ofrece depende del usuario y lo decide `requireAccess`.
+   */
+  findMemberships(userId: string): Promise<MembershipRecord[]>;
   recordFailedLogin(userId: string, attempts: number, lockedUntil: Date | null): Promise<void>;
   recordSuccessfulLogin(userId: string, at: Date, rehashedPassword: string | null): Promise<void>;
   /** Cambia la contraseña y reinicia el contador de intentos y el bloqueo. */
@@ -58,6 +64,7 @@ export interface UserRepository {
 
 export interface NewSession {
   userId: string;
+  organizationId: string;
   familyId: string;
   tokenHash: string;
   expiresAt: Date;

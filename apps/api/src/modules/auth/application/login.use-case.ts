@@ -59,7 +59,7 @@ export class LoginUseCase {
 
     let access: Access;
     try {
-      access = requireAccess(user, await this.users.findMembership(user.id));
+      access = requireAccess(user, await this.users.findMemberships(user.id), null);
     } catch (error) {
       await this.failed(user.id, 'disabled', email);
       throw error;

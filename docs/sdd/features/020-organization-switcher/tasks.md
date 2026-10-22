@@ -30,7 +30,7 @@
 
 ## Bloque C — API
 
-- [ ] F20-T004 [TDD] Casos de entrada, refresh y perfil, y después:
+- [x] F20-T004 [TDD] Casos de entrada, refresh y perfil, y después:
       - `findMemberships` en el puerto, Drizzle e `in-memory-auth.ts`;
       - `requireAccess` con `preferredOrgId` y `organizations`; `toProfile` con `organizations`;
       - `organizationId` en `NewSession`, `SessionRecord` y `SessionIssuer`;

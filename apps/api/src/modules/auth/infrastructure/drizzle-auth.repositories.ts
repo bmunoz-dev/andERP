@@ -54,8 +54,8 @@ export class DrizzleUserRepository implements UserRepository {
     return row ?? null;
   }
 
-  async findMembership(userId: string): Promise<MembershipRecord | null> {
-    const [row] = await this.db
+  async findMemberships(userId: string): Promise<MembershipRecord[]> {
+    return this.db
       .select({
         organizationId: organizations.id,
         organizationName: organizations.name,
@@ -73,9 +73,10 @@ export class DrizzleUserRepository implements UserRepository {
           isNull(organizations.deletedAt),
         ),
       )
-      .orderBy(asc(organizationMembers.createdAt))
-      .limit(1);
-    return row ?? null;
+      .orderBy(
+        sql`${organizationMembers.lastSelectedAt} desc nulls last`,
+        asc(organizationMembers.createdAt),
+      );
   }
 
   async recordFailedLogin(
@@ -128,6 +129,7 @@ export class DrizzleSessionRepository implements SessionRepository {
       .select({
         id: sessions.id,
         userId: sessions.userId,
+        organizationId: sessions.organizationId,
         familyId: sessions.familyId,
         expiresAt: sessions.expiresAt,
         revokedAt: sessions.revokedAt,

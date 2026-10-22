@@ -1,13 +1,27 @@
+import type { AuthSessionResponse } from '@anderp/shared';
+import { and, eq, isNull } from 'drizzle-orm';
+import type { Response } from 'supertest';
 import { randomUUID } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import type postgres from 'postgres';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { DB, type Database } from '../src/db/database.module';
+import { organizationMembers, organizations, sessions } from '../src/db/schema';
 import '../src/modules/auth/auth.module'; // registra las restricciones
 import { mapPostgresError } from '../src/shared/errors/pg-error.mapper';
+import { createTestApp, type TestApp } from './setup/create-test-app';
+import {
+  as,
+  createMember,
+  createOrganization,
+  TEST_PASSWORD,
+  type TestOrganization,
+  type TestUser,
+} from './setup/fixtures';
 import { resetDb, withOwnerSql } from './setup/reset-db';
 
-type Sql = postgres.Sql;
+type Sql = postgres.Sql | postgres.TransactionSql;
 
 /** Selector de organización de F20 (design.md §5.3, §6.2). */
 describe('F20 selector: base de datos', () => {
@@ -117,6 +131,166 @@ describe('F20 selector: base de datos', () => {
         .catch((error: unknown) => {
           if (error !== rollback) throw error;
         });
+    });
+  });
+});
+
+describe('F20 selector: API', () => {
+  let t: TestApp;
+  let db: Database;
+
+  beforeAll(async () => {
+    await resetDb();
+    t = await createTestApp();
+    db = t.app.get<Database>(DB);
+  });
+
+  afterAll(async () => {
+    await t.close();
+  });
+
+  /** Usuario miembro de las organizaciones dadas; la primera es la más antigua. */
+  async function userIn(orgs: TestOrganization[], options: { isSuperAdmin?: boolean } = {}) {
+    const member = await createMember(t, db, orgs[0]!.id, options);
+    for (const [i, org] of orgs.slice(1).entries()) {
+      await db.insert(organizationMembers).values({
+        userId: member.id,
+        organizationId: org.id,
+        role: 'admin',
+        createdAt: new Date(Date.now() + (i + 1) * 1000),
+      });
+    }
+    return member;
+  }
+
+  const newOrg = (name: string) => createOrganization(db, `${name} ${randomUUID().slice(0, 6)}`);
+
+  const loginAs = (email: string) =>
+    t.http.post('/api/v1/auth/login').send({ email, password: TEST_PASSWORD });
+
+  const cookieOf = (res: Response) => {
+    const cookies = ([] as string[]).concat(res.headers['set-cookie'] ?? []);
+    return cookies.find((c) => c.startsWith('anderp_rt='))!.split(';')[0]!;
+  };
+
+  const refresh = (cookie: string) => t.http.post('/api/v1/auth/refresh').set('Cookie', cookie);
+
+  const setMembership = (
+    userId: string,
+    organizationId: string,
+    values: Partial<typeof organizationMembers.$inferInsert>,
+  ) =>
+    db
+      .update(organizationMembers)
+      .set(values)
+      .where(
+        and(
+          eq(organizationMembers.userId, userId),
+          eq(organizationMembers.organizationId, organizationId),
+        ),
+      );
+
+  const activeOrgOf = (res: Response) => (res.body as AuthSessionResponse).user.organization.id;
+
+  describe('entrada, refresh y perfil', () => {
+    let orgA: TestOrganization;
+    let orgB: TestOrganization;
+    let user: TestUser;
+
+    beforeEach(async () => {
+      [orgA, orgB] = [await newOrg('Bravo'), await newOrg('Alfa')];
+      user = await userIn([orgA, orgB]);
+      // `createMember` ya inició una sesión; las pruebas parten de cero.
+      await db.delete(sessions).where(eq(sessions.userId, user.id));
+    });
+
+    it('CA-3 CA-4 entra en la más antigua, o en la última elegida, y no marca `last_selected_at`', async () => {
+      expect(activeOrgOf(await loginAs(user.email))).toBe(orgA.id);
+      const rows = await db
+        .select({ at: organizationMembers.lastSelectedAt })
+        .from(organizationMembers)
+        .where(eq(organizationMembers.userId, user.id));
+      expect(rows.every((r) => r.at === null)).toBe(true);
+
+      await setMembership(user.id, orgB.id, { lastSelectedAt: new Date() });
+      expect(activeOrgOf(await loginAs(user.email))).toBe(orgB.id);
+    });
+
+    it('CA-3 una organización suspendida no se ofrece: entra en la siguiente activa', async () => {
+      await db
+        .update(organizations)
+        .set({ status: 'suspended' })
+        .where(eq(organizations.id, orgA.id));
+      const res = await loginAs(user.email).expect(200);
+      const profile = (res.body as AuthSessionResponse).user;
+      expect(profile.organization.id).toBe(orgB.id);
+      expect(profile.organizations.map((o) => o.id)).toEqual([orgB.id]);
+    });
+
+    it('CA-3 CA-5 sin ninguna disponible: 403 ACCOUNT_DISABLED; el super admin entra a la suspendida', async () => {
+      const lone = await newOrg('Sola');
+      const normal = await userIn([lone]);
+      const root = await userIn([lone], { isSuperAdmin: true });
+      await db
+        .update(organizations)
+        .set({ status: 'suspended' })
+        .where(eq(organizations.id, lone.id));
+
+      const res = await loginAs(normal.email).expect(403);
+      expect((res.body as { code: string }).code).toBe('ACCOUNT_DISABLED');
+      expect(activeOrgOf(await loginAs(root.email).expect(200))).toBe(lone.id);
+    });
+
+    it('CA-7 el perfil del login, el refresh y /auth/me lista las disponibles por nombre', async () => {
+      const res = await loginAs(user.email).expect(200);
+      const profile = (res.body as AuthSessionResponse).user;
+      expect(profile.organizations).toEqual([
+        { id: orgB.id, name: orgB.name },
+        { id: orgA.id, name: orgA.name },
+      ]);
+      expect(profile.organization).toEqual({ id: orgA.id, name: orgA.name });
+
+      const refreshed = await refresh(cookieOf(res)).expect(200);
+      expect((refreshed.body as AuthSessionResponse).user).toEqual(profile);
+
+      const me = await as(t, (res.body as AuthSessionResponse).accessToken)
+        .get('/auth/me')
+        .expect(200);
+      expect(me.body).toEqual(profile);
+    });
+
+    it('CA-6 el refresh conserva la organización de la sesión y, si ya no está, cae a la de entrada', async () => {
+      const res = await loginAs(user.email).expect(200);
+      await db
+        .update(sessions)
+        .set({ organizationId: orgB.id })
+        .where(eq(sessions.userId, user.id));
+
+      const kept = await refresh(cookieOf(res)).expect(200);
+      expect(activeOrgOf(kept)).toBe(orgB.id);
+
+      await setMembership(user.id, orgB.id, { isActive: false });
+      const fallen = await refresh(cookieOf(kept)).expect(200);
+      expect(activeOrgOf(fallen)).toBe(orgA.id);
+      const [row] = await db
+        .select({ organizationId: sessions.organizationId })
+        .from(sessions)
+        .where(and(eq(sessions.userId, user.id), isNull(sessions.revokedAt)));
+      expect(row?.organizationId).toBe(orgA.id);
+    });
+
+    it('CA-5 sin organizaciones disponibles el refresh responde ACCOUNT_DISABLED y revoca la familia', async () => {
+      const res = await loginAs(user.email).expect(200);
+      await setMembership(user.id, orgA.id, { isActive: false });
+      await setMembership(user.id, orgB.id, { isActive: false });
+
+      const failed = await refresh(cookieOf(res)).expect(401);
+      expect((failed.body as { code: string }).code).toBe('ACCOUNT_DISABLED');
+      const active = await db
+        .select()
+        .from(sessions)
+        .where(and(eq(sessions.userId, user.id), isNull(sessions.revokedAt)));
+      expect(active).toHaveLength(0);
     });
   });
 });

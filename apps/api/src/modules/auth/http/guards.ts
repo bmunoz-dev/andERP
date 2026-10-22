@@ -69,7 +69,8 @@ export class JwtAuthGuard implements CanActivate {
     const found = await this.users.findById(claims.sub);
     const { user, membership } = requireAccess(
       found,
-      found ? await this.users.findMembership(found.id) : null,
+      found ? await this.users.findMemberships(found.id) : [],
+      claims.org,
       401,
     );
 

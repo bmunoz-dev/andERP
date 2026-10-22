@@ -37,6 +37,7 @@ export class SessionIssuer {
 
     await this.sessions.create({
       userId: access.user.id,
+      organizationId: access.membership.organizationId,
       familyId,
       tokenHash: this.tokens.hash(refreshToken),
       expiresAt: refreshExpiresAt,

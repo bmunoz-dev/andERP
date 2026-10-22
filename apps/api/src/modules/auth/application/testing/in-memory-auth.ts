@@ -103,7 +103,8 @@ export class FakeMailer implements Mailer {
 
 export class InMemoryUsers implements UserRepository {
   users = new Map<string, UserRecord>();
-  memberships = new Map<string, MembershipRecord>();
+  /** Por usuario, en el orden en que `findMemberships` debe devolverlas. */
+  memberships = new Map<string, MembershipRecord[]>();
   lastLoginAt = new Map<string, Date>();
 
   add(
@@ -122,17 +123,20 @@ export class InMemoryUsers implements UserRepository {
       ...user,
     };
     this.users.set(record.id, record);
-    if (membership !== undefined) {
-      this.memberships.set(record.id, {
-        organizationId: 'org-1',
-        organizationName: 'Empresa',
-        organizationStatus: 'active',
-        role: 'admin',
-        modules: [...APP_MODULES],
-        ...membership,
-      });
-    }
+    this.memberships.set(record.id, []);
+    if (membership !== undefined) this.addMembership(record.id, membership);
     return record;
+  }
+
+  addMembership(userId: string, membership: Partial<MembershipRecord>): void {
+    this.memberships.get(userId)!.push({
+      organizationId: 'org-1',
+      organizationName: 'Empresa',
+      organizationStatus: 'active',
+      role: 'admin',
+      modules: [...APP_MODULES],
+      ...membership,
+    });
   }
 
   findByEmail(email: string): Promise<UserRecord | null> {
@@ -144,8 +148,8 @@ export class InMemoryUsers implements UserRepository {
   findById(id: string): Promise<UserRecord | null> {
     return Promise.resolve(this.users.get(id) ?? null);
   }
-  findMembership(userId: string): Promise<MembershipRecord | null> {
-    return Promise.resolve(this.memberships.get(userId) ?? null);
+  findMemberships(userId: string): Promise<MembershipRecord[]> {
+    return Promise.resolve(this.memberships.get(userId) ?? []);
   }
   recordFailedLogin(userId: string, attempts: number, lockedUntil: Date | null): Promise<void> {
     const user = this.users.get(userId)!;
@@ -177,6 +181,7 @@ export class InMemorySessions implements SessionRepository {
     this.rows.push({
       id: randomUUID(),
       userId: session.userId,
+      organizationId: session.organizationId,
       familyId: session.familyId,
       tokenHash: session.tokenHash,
       expiresAt: session.expiresAt,

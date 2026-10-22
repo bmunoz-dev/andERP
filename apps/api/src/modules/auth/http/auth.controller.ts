@@ -89,7 +89,7 @@ export class AuthController {
 
   @Get('me')
   me(): Promise<AuthProfile> {
-    return this.currentUserUseCase.execute(requireActor(this.cls).userId);
+    return this.currentUserUseCase.execute(requireActor(this.cls));
   }
 
   @Post('password/change')
