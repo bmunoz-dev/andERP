@@ -3,6 +3,7 @@ import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ApiError, onSessionExpired, refreshSession } from './lib/api-client';
+import { listenForSwitch } from './lib/organization-switch';
 import { initTheme } from './lib/theme';
 import { routeTree } from './routeTree.gen';
 import './index.css';
@@ -36,6 +37,9 @@ onSessionExpired(() => {
   queryClient.clear();
   void router.navigate({ to: '/login', search: { redirect: router.state.location.href } });
 });
+
+// F20: si otra pestaña cambia de organización, esta recarga en /egresos.
+listenForSwitch();
 
 // F08: el tema se aplica antes de pintar, sin parpadeo y sin scripts en línea (CSP).
 initTheme();

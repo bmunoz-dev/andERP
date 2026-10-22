@@ -5,6 +5,7 @@ import {
   type ProblemFieldError,
 } from '@anderp/shared';
 import { authStore } from './auth-store';
+import { goHome } from './organization-switch';
 
 export const API_BASE = '/api/v1';
 
@@ -87,9 +88,22 @@ export async function apiFetch<T>(path: string, init: ApiRequestInit = {}): Prom
   try {
     return await send<T>(path, init);
   } catch (error) {
+    if (error instanceof ApiError && error.code === ErrorCode.ORGANIZATION_CHANGED) {
+      // F20: otra pestaña cambió la organización de la sesión; esta ya no puede seguir.
+      goHome();
+      throw error;
+    }
     if (!(error instanceof ApiError && error.code === ErrorCode.TOKEN_EXPIRED)) throw error;
     // El access token venció: se renueva una sola vez y se repite la petición.
-    if (await refreshSession()) return send<T>(path, init);
+    const organizationId = authStore.get().user?.organization.id;
+    if (await refreshSession()) {
+      // F20: si otra pestaña cambió la organización, la petición no se repite en la nueva.
+      if (organizationId && authStore.get().user?.organization.id !== organizationId) {
+        goHome();
+        throw new ApiError(409, ErrorCode.ORGANIZATION_CHANGED);
+      }
+      return send<T>(path, init);
+    }
     for (const listener of sessionExpiredListeners) listener();
     throw error;
   }

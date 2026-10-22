@@ -2,6 +2,9 @@ import type { AuthSessionResponse } from '@anderp/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch, onSessionExpired, refreshSession } from './api-client';
 import { authStore } from './auth-store';
+import { goHome } from './organization-switch';
+
+vi.mock('./organization-switch', () => ({ goHome: vi.fn() }));
 
 const profile = {
   id: '018f0000-0000-7000-8000-000000000001',
@@ -56,6 +59,22 @@ describe('apiFetch con sesión', () => {
     await expect(apiFetch('/things')).resolves.toEqual({ ok: true });
     expect(fetchMock.mock.calls.filter(([url]) => url.endsWith('/auth/refresh'))).toHaveLength(1);
     expect(authStore.get().accessToken).toBe('new-token');
+  });
+
+  it('F20 CA-15 si el refresh trae otra organización, no repite la petición y recarga', async () => {
+    const other = { id: '018f0000-0000-7000-8000-000000000003', name: 'Otra' };
+    const fetchMock = stubServer((url) => {
+      if (url.endsWith('/auth/refresh')) {
+        return json(200, { accessToken: 'new-token', user: { ...profile, organization: other } });
+      }
+      return expired();
+    });
+
+    await expect(apiFetch('/things', { method: 'POST' })).rejects.toMatchObject({
+      code: 'ORGANIZATION_CHANGED',
+    });
+    expect(fetchMock.mock.calls.filter(([url]) => url.endsWith('/things'))).toHaveLength(1);
+    expect(goHome).toHaveBeenCalledOnce();
   });
 
   it('varias peticiones vencidas a la vez comparten un solo refresh', async () => {
