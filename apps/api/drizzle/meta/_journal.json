@@ -253,6 +253,13 @@
       "when": 1792671297759,
       "tag": "0035_organization_switcher",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1792690507363,
+      "tag": "0036_function_search_path",
+      "breakpoints": true
     }
   ]
 }
