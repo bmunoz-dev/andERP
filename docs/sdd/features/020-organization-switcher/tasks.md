@@ -61,7 +61,7 @@
       - `ORGANIZATION_CHANGED` en `api-client.ts` llama a `goHome`;
       - `listenForSwitch()` en `main.tsx`.
       Depende de: F20-T008 · Verificación: CA-15
-- [ ] F20-T010 Cierre:
+- [x] F20-T010 Cierre:
       - verificación completa y Definición de Hecho;
       - notas de implementación en `plan.md`;
       - F20 marcada "Hecho" en el roadmap;
