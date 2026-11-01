@@ -124,4 +124,8 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Edge trae su propio ojo; FormField ya tiene uno. */
+  input::-ms-reveal {
+    display: none;
+  }
 }
