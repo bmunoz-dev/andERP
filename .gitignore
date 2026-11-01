@@ -29,6 +29,7 @@ Thumbs.db
 
 # Claude
 .claude/settings.local.json
+CLAUDE.local.md
 
 # Playwright (e2e/)
 test-results/

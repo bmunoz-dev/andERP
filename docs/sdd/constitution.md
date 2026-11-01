@@ -15,7 +15,7 @@ Toda invariante importante existe en el dominio **y** en la base de datos (CHECK
 
 **IV. Aislamiento por organización.**
 - Toda tabla de una organización tiene `organization_id NOT NULL`, `UNIQUE (organization_id, id)` y FK compuestas.
-- Toda consulta pasa por el repositorio base, que aplica `organization_id` y `deleted_at IS NULL`.
+- Toda consulta pasa por `OrgScope`, que aplica `organization_id` y `deleted_at IS NULL`.
 - Cada módulo tiene al menos una prueba de API que demuestra que la organización A no puede leer ni escribir datos de la B.
 
 **V. Dinero exacto.**
@@ -34,7 +34,7 @@ Totales, saldos y semanas se calculan (vistas o columnas generadas). Si hace fal
 Base de datos, código, `code` de errores y commits de código en **inglés**. Interfaz y documentación en **español**. Se sigue el glosario de `design.md` §3.
 
 **IX. Hexagonal solo donde hay dominio.**
-`auth`, `fee-payments` y `credentials` usan puertos y adaptadores. El resto usa controlador → servicio → repositorio. No se crean capas vacías.
+`auth` usa puertos y adaptadores. El resto usa controlador → servicio → repositorio. No se crean capas vacías.
 
 **X. Trazabilidad.**
 Borrado lógico en las tablas de negocio, columnas `created_by` y `updated_by` en todo registro, y `audit_logs` para dinero, credenciales y auth.
@@ -50,7 +50,7 @@ No se construye nada que no pida una spec aprobada. Las ideas futuras van a `des
 ## Definición de Hecho (para cada feature)
 
 - [ ] Todos los criterios de aceptación de `spec.md` tienen al menos una prueba automatizada y pasan.
-- [ ] `pnpm lint`, `pnpm typecheck` y `pnpm test` en verde en CI.
+- [ ] `pnpm format:check`, `pnpm lint`, `pnpm typecheck` y `pnpm test` en verde en CI.
 - [ ] La prueba de aislamiento entre organizaciones existe y pasa (si la feature toca datos de una organización).
 - [ ] Las migraciones se aplican desde cero sobre una base de datos vacía.
 - [ ] Los endpoints nuevos aparecen documentados en OpenAPI.
