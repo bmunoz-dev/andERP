@@ -26,7 +26,7 @@ docs/sdd/
    - Una rama por feature: `feat/NNN-nombre`.
    - Por cada tarea: prueba que falla → código mínimo → prueba en verde → refactor → marcar `[x]` → commit.
    - Commits con Conventional Commits y el ID de la tarea: `feat(f04): valida días dentro de la semana [F04-T012]`.
-5. **Cierre.** Se verifican todos los criterios de aceptación de la spec y la *Definición de Hecho* de la constitución. Se actualiza `roadmap.md` y se hace merge a `main`.
+5. **Cierre.** Se verifican todos los criterios de aceptación de la spec y la *Definición de Hecho* de la constitución. Se actualiza `roadmap.md` y el usuario hace el merge a `main`.
 
 ## Reglas de cambio
 
