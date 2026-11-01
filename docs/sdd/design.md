@@ -43,6 +43,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-20 | **Módulos por organización** (F19): `organizations.modules` (enum `app_module`) decide qué paquetes tiene cada organización: Personal y pagos, Credenciales, Cuentas aéreas y Agenda; Base siempre está. La API responde `403 MODULE_DISABLED` y la web oculta el menú. Una organización nueva nace solo con Base. Decisiones 1 y 12 actualizadas; los permisos por usuario siguen fuera del alcance (§11). | AndERP pasa a servir a varias empresas cliente y el super admin necesita dar a cada una solo lo que contrató. Se agrupan en paquetes para que no existan combinaciones rotas por dependencias (Pagos necesita Personal; Credenciales, Responsables). |
 | 2026-10-22 | **Selector de organización** (F20): `sessions.organization_id` (organización activa de la sesión, FK compuesta `sessions_membership_fk` a `organization_members`) y `organization_members.last_selected_at`. El guard compara el `org` del token con la de la sesión (`409 ORGANIZATION_CHANGED`) y `POST /auth/organization` la cambia. El perfil lista las organizaciones disponibles. §6.2 y §8 actualizadas; el selector sale de §11. | Con F19 un usuario puede pertenecer a varias empresas cliente y hasta ahora el login siempre entraba en la más antigua. La organización activa en la sesión (y no en el token) permite rechazar en el servidor las pestañas que quedaron con la anterior. |
 | 2026-10-22 | **No se renombran** en el código ni en la base de datos `service_providers` / `fee_payments` (Personal / Pagos en la interfaz); el glosario (§3) hace de traducción. | El refactor tocaba ~59 archivos, 4 tablas, sus vistas, restricciones, triggers, códigos de error y auditoría, con una ventana sin servicio al desplegar, a cambio de nada visible para el usuario. |
+| 2026-11-01 | Los campos de contraseña de usuario (login, activar invitación, restablecer y cambiar contraseña) tienen un botón para mostrarla u ocultarla (§8). | Pedido del usuario: comprobar lo escrito antes de enviar, sobre todo al definir la contraseña de una invitación. |
 
 ---
 
@@ -732,6 +733,8 @@ Las filas de egresos, honorarios, prestadores, responsables y credenciales aplic
 El menú y las rutas solo muestran los paquetes que tiene la organización (F19): una ruta de un paquete apagado redirige a Egresos y la campana de notificaciones solo aparece con `agenda`.
 
 La interfaz está en español y el formato de moneda es COP (`es-CO`).
+
+**Campos de contraseña:** todo campo de contraseña de usuario tiene un botón con un ojo para mostrar u ocultar lo escrito; empieza oculto. Es local al navegador: no cambia lo que se envía.
 
 **Celular (F15):** por debajo de 768 px (`useIsMobile`), `DataTable` muestra cada fila como una tarjeta con una línea "Etiqueta: valor" por columna y las acciones al pie; no se oculta ninguna columna. Los diálogos se desplazan por dentro si no caben en el alto de la pantalla. La matriz de Egresos y la cuadrícula de honorarios siguen siendo vistas de escritorio (desplazamiento horizontal).
 
