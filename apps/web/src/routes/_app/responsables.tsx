@@ -31,7 +31,13 @@ function ResponsiblesPage() {
   const [editing, setEditing] = useState<ResponsiblePerson | null | undefined>(undefined);
   const [deleting, setDeleting] = useState<ResponsiblePerson | null>(null);
   const persons = useQuery({ queryKey: credentialKeys.responsibles, queryFn: listResponsibles });
-  const refresh = () => queryClient.invalidateQueries({ queryKey: credentialKeys.responsibles });
+  // F24 CA-5: el nombre del responsable también aparece en el listado de credenciales.
+  const refresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: credentialKeys.responsibles }),
+      queryClient.invalidateQueries({ queryKey: credentialKeys.all }),
+    ]);
+  };
 
   const remove = useMutation({
     mutationFn: (p: ResponsiblePerson) => deleteResponsible(p.id),
@@ -104,6 +110,7 @@ function ResponsiblesPage() {
         columns={columns}
         data={persons.data}
         isLoading={persons.isPending}
+        error={persons.error}
         emptyMessage="Aún no hay responsables."
         getRowId={(p) => p.id}
       />

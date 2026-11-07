@@ -34,8 +34,8 @@ El contrato decide la forma de pago: **por días trabajados** (como hoy) o **mon
   - `periodMonth` va de 1 a 12.
   - `notes` es opcional.
   - Un dato inválido responde `422 VALIDATION_ERROR`.
-- **CA-5.** Un pago de monto fijo sobre un contrato `daily` responde `422 CONTRACT_PAYMENT_MODE_MISMATCH`. Lo aplican el servicio y un trigger.
-- **CA-6.** El mes trabajado debe cruzarse con las fechas del contrato: el primer día del mes es anterior o igual a `end_date` (o `end_date` es NULL), y el último día es posterior o igual a `start_date`. Si no, responde `422 FIXED_PAYMENT_OUTSIDE_CONTRACT`. Lo aplican el servicio y un trigger.
+- **CA-5.** Un pago de monto fijo sobre un contrato `daily` responde `422 CONTRACT_PAYMENT_MODE_MISMATCH`. Lo aplican el servicio y un trigger. (2026-11-07, F24: lo aplica un trigger; el servicio no lo revisa antes y la respuesta es la misma.)
+- **CA-6.** El mes trabajado debe cruzarse con las fechas del contrato: el primer día del mes es anterior o igual a `end_date` (o `end_date` es NULL), y el último día es posterior o igual a `start_date`. Si no, responde `422 FIXED_PAYMENT_OUTSIDE_CONTRACT`. Lo aplican el servicio y un trigger. (2026-11-07, F24: lo aplica un trigger; el servicio no lo revisa antes y la respuesta es la misma.)
 - **CA-7.** Se permiten varios pagos por contrato y mes; no hay restricción de unicidad. `paymentDate` puede ser cualquier fecha, incluso fuera del mes trabajado (como F04 CA-7).
 - **CA-8.** `GET /fixed-payments?periodYear=&periodMonth=&serviceProviderId=` lista los pagos no borrados, con el nombre de la persona, el mes trabajado, la fecha de pago y el valor.
 - **CA-9.** `PATCH /fixed-payments/:id` solo cambia `paymentDate`, `amount` y `notes`. El contrato y el mes trabajado no se pueden cambiar: el esquema de la API no los acepta y un trigger en la base de datos lo impide.
@@ -44,12 +44,12 @@ El contrato decide la forma de pago: **por días trabajados** (como hoy) o **mon
 
 **Pagos por días (F04)**
 
-- **CA-12.** `POST /fee-payments` sobre un contrato `fixed` responde `422 CONTRACT_PAYMENT_MODE_MISMATCH`. Lo aplican el servicio y un trigger. El resto de F04 no cambia.
+- **CA-12.** `POST /fee-payments` sobre un contrato `fixed` responde `422 CONTRACT_PAYMENT_MODE_MISMATCH`. Lo aplican el servicio y un trigger. El resto de F04 no cambia. (2026-11-07, F24: lo aplica un trigger; el servicio no lo revisa antes y la respuesta es la misma.)
 
 **Reglas sobre contratos (amplían F04 CA-14 y CA-15)**
 
 - **CA-13.** Borrar un contrato con pagos de monto fijo no borrados responde `422 CONTRACT_HAS_PAYMENTS`.
-- **CA-14.** Cambiar las fechas de un contrato de forma que el mes trabajado de algún pago de monto fijo deje de cruzarse con ellas responde `422 CONTRACT_DATES_EXCLUDE_PAYMENTS`. Lo aplican el servicio y un trigger.
+- **CA-14.** Cambiar las fechas de un contrato de forma que el mes trabajado de algún pago de monto fijo deje de cruzarse con ellas responde `422 CONTRACT_DATES_EXCLUDE_PAYMENTS`. Lo aplican el servicio y un trigger. (2026-11-07, F24: lo aplica un trigger; el servicio no lo revisa antes y la respuesta es la misma.)
 
 **Libro, matriz y monto mensual**
 

@@ -28,7 +28,11 @@ export const Route = createFileRoute('/_app/configuracion/usuarios')({
   component: MembersPage,
 });
 
-const dateTime = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
+const dateTime = new Intl.DateTimeFormat('es-CO', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'America/Bogota',
+});
 
 function MembersPage() {
   const auth = useAuth();
@@ -157,6 +161,7 @@ function MembersPage() {
         columns={columns}
         data={members.data}
         isLoading={members.isPending}
+        error={members.error}
         emptyMessage="Aún no hay usuarios."
         getRowId={(m) => m.userId}
       />

@@ -28,7 +28,7 @@
 | F21 | [Sesión y acceso](features/021-session-access-hardening/spec.md) | F01, F02, F12, F20 | Aprobado | Aprobado | Hecho |
 | F22 | [Despliegue y operación](features/022-deploy-operations/spec.md) | F07, F21 | Aprobado | Aprobado | Pendiente |
 | F23 | [Reglas de datos en la base](features/023-data-integrity/spec.md) | F03, F04, F06, F09, F16, F17 | Aprobado | Aprobado | Hecho |
-| F24 | [Robustez y documentación al día](features/024-robustness-docs/spec.md) | F04, F05, F16, F19 | Aprobado | Aprobado | Pendiente |
+| F24 | [Robustez y documentación al día](features/024-robustness-docs/spec.md) | F04, F05, F16, F19 | Aprobado | Aprobado | Hecho |
 
 F06 solo depende de F02, así que se puede desarrollar en paralelo con F03–F05.
 
@@ -64,6 +64,8 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 | §10 Migraciones y despliegue | F00 (local), F07 (producción) |
 
 ## Bloqueos y notas
+
+**F24 terminada (2026-11-07), pendiente de merge (PR encadenado sobre F23):** timeouts SMTP, `categoryId` validado, errores visibles en las tablas, reglas de cuenta y fechas en shared, enlaces de credenciales solo `http(s)`, invalidaciones de caché, hora de Bogotá, perfil actualizado al guardar una organización, y specs de F04 y F16 al día. Queda F22 (despliegue y operación), que va después del merge de F21.
 
 **F23 terminada (2026-11-07), pendiente de merge (PR encadenado sobre F21):** migración `0038`, con una barrera que aborta si hay datos inválidos. En la base: borrado de prestadores con contratos, reapertura de contratos de prestadores inactivos, pagos contra contratos borrados, semana de honorarios en cero (`FEE_PAYMENT_EMPTY`) y credenciales hacia responsables borrados. Además, auditoría de la cuenta bancaria, rotación de llaves por fila, límite de subidas antes de leer el archivo y runbook 07.
 

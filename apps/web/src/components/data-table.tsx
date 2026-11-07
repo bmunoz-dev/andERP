@@ -9,11 +9,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { errorMessage } from '@/lib/error-messages.es';
 
 interface DataTableProps<T> {
   columns: ColumnDef<T>[];
   data: T[] | undefined;
   isLoading?: boolean;
+  /** Error de la consulta: se muestra en lugar del mensaje de vacío (F24 CA-3). */
+  error?: unknown;
   emptyMessage: string;
   getRowId: (row: T) => string;
 }
@@ -23,6 +26,7 @@ export function DataTable<T>({
   columns,
   data,
   isLoading = false,
+  error,
   emptyMessage,
   getRowId,
 }: DataTableProps<T>) {
@@ -36,6 +40,8 @@ export function DataTable<T>({
     getCoreRowModel: getCoreRowModel(),
   });
   const isMobile = useIsMobile();
+  // Sin filas por un error, no "no hay datos": en la Agenda eso haría pasar un vencimiento.
+  const empty = error ? <span role="alert">{errorMessage(error)}</span> : emptyMessage;
 
   if (isMobile) {
     // F15: una tarjeta por fila. Las columnas con cabecera de texto van como "Etiqueta: valor";
@@ -52,7 +58,7 @@ export function DataTable<T>({
     if (table.getRowModel().rows.length === 0) {
       return (
         <div className="flex h-24 items-center justify-center rounded-md border text-center text-sm text-muted-foreground">
-          {emptyMessage}
+          {empty}
         </div>
       );
     }
@@ -121,7 +127,7 @@ export function DataTable<T>({
                 colSpan={columns.length}
                 className="h-24 text-center text-muted-foreground"
               >
-                {emptyMessage}
+                {empty}
               </TableCell>
             </TableRow>
           ) : (

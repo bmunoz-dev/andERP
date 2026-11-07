@@ -164,6 +164,7 @@ function AirAccountPage() {
       <MovementsTable
         data={movements.data}
         isLoading={movements.isPending}
+        error={movements.error}
         onCollect={(m) => {
           collect.mutate(m);
         }}

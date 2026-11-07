@@ -151,6 +151,7 @@ export function FixedPaymentsTab({
         columns={columns}
         data={payments.data}
         isLoading={payments.isPending}
+        error={payments.error}
         emptyMessage="No hay pagos de monto fijo en ese mes."
         getRowId={(p) => p.id}
       />

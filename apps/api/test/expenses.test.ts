@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type {
   Contract,
   Expense,
@@ -256,6 +257,14 @@ describe('Matriz y libro', () => {
     const names = (await monthly()).rows.map((r) => r.name);
     expect(names).toContain('Jurídico');
     expect(names).not.toContain('Nómina');
+  });
+
+  it('F24 CA-2 un categoryId mal formado en el libro → 422, no 500', async () => {
+    const res = await api().get('/reports/expenses/ledger?year=2026&month=9&categoryId=abc');
+    expect(res.status).toBe(422);
+    await api()
+      .get(`/reports/expenses/ledger?year=2026&month=9&categoryId=${randomUUID()}`)
+      .expect(200);
   });
 
   it('CA-12 filtra el libro por categoría y semana', async () => {
