@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   createCredential,
+  credentialBody,
   credentialKeys,
   deleteCredential,
   listCredentials,
@@ -25,6 +26,7 @@ import {
   updateCredential,
 } from '@/lib/credentials-api';
 import { errorMessage } from '@/lib/error-messages.es';
+import { isWebUrl } from '@/lib/format';
 
 export const Route = createFileRoute('/_app/credenciales')({
   component: CredentialsPage,
@@ -64,7 +66,7 @@ function CredentialsPage() {
       id: 'url',
       header: 'Enlace',
       cell: ({ row }) =>
-        row.original.url ? (
+        row.original.url && isWebUrl(row.original.url) ? (
           <a
             href={row.original.url}
             target="_blank"
@@ -75,7 +77,8 @@ function CredentialsPage() {
             <ExternalLink className="size-3" />
           </a>
         ) : (
-          '—'
+          // Un enlace que no es web se muestra como texto, nunca como `href` (F24 CA-6).
+          (row.original.url ?? '—')
         ),
     },
     {
@@ -215,9 +218,7 @@ function CredentialFormDialog({
     queryFn: listResponsibles,
   });
 
-  // La contraseña es de solo escritura: al editar, vacía significa "no cambiar" (CA-7).
-  const { password, ...rest } = values;
-  const body = credential && password === '' ? rest : values;
+  const body = credentialBody(values, credential !== null);
   const schema = credential ? updateCredentialSchema : saveCredentialSchema;
 
   const save = useMutation({

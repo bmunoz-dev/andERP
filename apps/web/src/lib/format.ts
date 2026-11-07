@@ -29,3 +29,8 @@ export function formatContractPeriod(contract: { startDate: string; endDate: str
     contract.endDate ? formatDate(contract.endDate) : 'sin fecha de fin'
   }`;
 }
+
+/** Solo `http(s)://` se pinta como enlace: un `javascript:` guardado quedaría a un clic (F24 CA-6). */
+export function isWebUrl(url: string): boolean {
+  return /^https?:\/\//i.test(url);
+}
