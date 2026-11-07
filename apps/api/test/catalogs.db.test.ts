@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { resetDb, withRuntimeSql } from './setup/reset-db';
+import { resetDb, withOwnerSql, withRuntimeSql } from './setup/reset-db';
 
 /** Reglas de F02 que viven en la base de datos (constitución, principio III). */
 describe('expense_categories en la base de datos', () => {
@@ -29,10 +29,22 @@ describe('expense_categories en la base de datos', () => {
       ['desactivar', `update expense_categories set is_active = false where id = $1`],
       ['borrar (lógico)', `update expense_categories set deleted_at = now() where id = $1`],
       ['quitar el system_code', `update expense_categories set system_code = null where id = $1`],
-      ['borrar (físico)', `delete from expense_categories where id = $1`],
     ])('%s → SYSTEM_CATEGORY_PROTECTED', async (_label, statement) => {
       await withRuntimeSql(async (sql) => {
         await expect(sql.unsafe(statement, [feesId])).rejects.toThrow('SYSTEM_CATEGORY_PROTECTED');
+      });
+    });
+
+    it('borrar (físico): app_runtime no tiene permiso (F22) y el trigger la protege igual', async () => {
+      await withRuntimeSql(async (sql) => {
+        await expect(sql`delete from expense_categories where id = ${feesId}`).rejects.toThrow(
+          /permission denied/,
+        );
+      });
+      await withOwnerSql(async (sql) => {
+        await expect(
+          sql`delete from anderp.expense_categories where id = ${feesId}`,
+        ).rejects.toThrow('SYSTEM_CATEGORY_PROTECTED');
       });
     });
 

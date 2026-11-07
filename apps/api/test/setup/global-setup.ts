@@ -1,11 +1,9 @@
 import path from 'node:path';
 import { CreateBucketCommand, S3Client } from '@aws-sdk/client-s3';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import postgres from 'postgres';
 import { GenericContainer, Wait } from 'testcontainers';
 import type { TestProject } from 'vitest/node';
+import { migrateDatabase } from '../../src/db/migrate';
 
 declare module 'vitest' {
   export interface ProvidedContext {
@@ -55,17 +53,37 @@ export default async function setup(project: TestProject): Promise<() => Promise
     throw new Error(`db/bootstrap.sql failed:\n${bootstrap.output}`);
   }
 
-  const ownerUrl = container.getConnectionUri();
-  const sql = postgres(ownerUrl, { max: 1, onnotice: () => undefined });
-  try {
-    await migrate(drizzle(sql), {
-      migrationsFolder: path.join(API_ROOT, 'drizzle'),
-      migrationsSchema: 'drizzle',
-      migrationsTable: '__drizzle_migrations',
-    });
-  } finally {
-    await sql.end();
-  }
+  // F22 CA-3: en Supabase `postgres` no es superusuario. Las migraciones corren con un dueño sin
+  // superusuario, así una que lo necesite falla aquí y no en producción.
+  const owner = await container.exec([
+    'psql',
+    '-v',
+    'ON_ERROR_STOP=1',
+    '-U',
+    'postgres',
+    '-d',
+    'anderp',
+    '-c',
+    "CREATE ROLE anderp_owner LOGIN PASSWORD 'anderp_owner' NOSUPERUSER CREATEROLE CREATEDB",
+    '-c',
+    'ALTER DATABASE anderp OWNER TO anderp_owner',
+  ]);
+  if (owner.exitCode !== 0) throw new Error(`anderp_owner setup failed:\n${owner.output}`);
+
+  const ownerUrlParts = new URL(container.getConnectionUri());
+  ownerUrlParts.username = 'anderp_owner';
+  ownerUrlParts.password = 'anderp_owner';
+  const ownerUrl = ownerUrlParts.toString();
+  // F22: el mismo migrador que `pnpm db:migrate` en producción.
+  const output: string[] = [];
+  const migrated = await migrateDatabase({
+    url: ownerUrl,
+    migrationsFolder: path.join(API_ROOT, 'drizzle'),
+    write: (line) => {
+      output.push(line);
+    },
+  });
+  if (migrated !== 0) throw new Error(`Migrations failed: ${output.join(' | ')}`);
 
   const runtimeUrl = new URL(ownerUrl);
   runtimeUrl.username = 'app_runtime';

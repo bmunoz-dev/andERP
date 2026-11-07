@@ -26,7 +26,7 @@
 | F19 | [Módulos por organización](features/019-organization-modules/spec.md) | F02, F12 | Aprobado | Aprobado | Hecho |
 | F20 | [Selector de organización](features/020-organization-switcher/spec.md) | F01, F02, F12, F15, F19 | Aprobado | Aprobado | Hecho |
 | F21 | [Sesión y acceso](features/021-session-access-hardening/spec.md) | F01, F02, F12, F20 | Aprobado | Aprobado | Hecho |
-| F22 | [Despliegue y operación](features/022-deploy-operations/spec.md) | F07, F21 | Aprobado | Aprobado | Pendiente |
+| F22 | [Despliegue y operación](features/022-deploy-operations/spec.md) | F07, F21 | Aprobado | Aprobado | Hecho |
 | F23 | [Reglas de datos en la base](features/023-data-integrity/spec.md) | F03, F04, F06, F09, F16, F17 | Aprobado | Aprobado | Hecho |
 | F24 | [Robustez y documentación al día](features/024-robustness-docs/spec.md) | F04, F05, F16, F19 | Aprobado | Aprobado | Hecho |
 
@@ -65,6 +65,8 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 
 ## Bloqueos y notas
 
+**F22 terminada (2026-11-07), pendiente de merge (PR encadenado sobre F24):** TLS obligatorio fuera de local, un migrador que dice por qué falla, migraciones probadas sin superusuario, `DELETE` de `app_runtime` acotado (`0039`), seed sin la contraseña de ejemplo, CI con build, imagen Docker, esquema sincronizado y e2e, deploy hook con el commit del job, y `health.yml`. **Después del despliegue, con confirmación del usuario:** activar "Enforce SSL" en Supabase (runbook 01, paso 2) y ejecutar `health.yml` a mano.
+
 **F24 terminada (2026-11-07), pendiente de merge (PR encadenado sobre F23):** timeouts SMTP, `categoryId` validado, errores visibles en las tablas, reglas de cuenta y fechas en shared, enlaces de credenciales solo `http(s)`, invalidaciones de caché, hora de Bogotá, perfil actualizado al guardar una organización, y specs de F04 y F16 al día. Queda F22 (despliegue y operación), que va después del merge de F21.
 
 **F23 terminada (2026-11-07), pendiente de merge (PR encadenado sobre F21):** migración `0038`, con una barrera que aborta si hay datos inválidos. En la base: borrado de prestadores con contratos, reapertura de contratos de prestadores inactivos, pagos contra contratos borrados, semana de honorarios en cero (`FEE_PAYMENT_EMPTY`) y credenciales hacia responsables borrados. Además, auditoría de la cuenta bancaria, rotación de llaves por fila, límite de subidas antes de leer el archivo y runbook 07.
@@ -89,7 +91,7 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 1. **Aplazado hasta que el usuario decida hacerlo** (decisiones del 2026-10-17 y 2026-10-22). Respaldo diario gratuito con GitHub Actions (`pg_dump` cifrado) mientras no haya plan Pro. Riesgo aceptado: sin respaldo, cualquier dato cargado en producción se pierde si Supabase falla. No se propone de nuevo como siguiente paso.
 2. ~~Cloudflare Workers Builds falla en las ramas de PR (vistas previas)~~ resuelto (confirmado por el usuario el 2026-10-15).
 3. ~~Avisos de Supabase `function_search_path_mutable` en los triggers~~ resuelto el 2026-10-22: migración `0036_function_search_path` (las 9 funciones anteriores a 0028 fijan `search_path = ''`) y una prueba en `foundation.test.ts` que falla si una función de `anderp` no lo fija.
-4. T012 (migración rota a propósito), T013 (primera corrida de Playwright, requiere autorización del navegador), T015 (ensayo de restauración) y T016 (hito M4).
+4. ~~T012 (migración rota a propósito) y T013 (primera corrida de Playwright)~~ cubiertas por F22 (2026-11-07): la prueba del migrador con una migración rota y el smoke de Playwright en el CI. Siguen pendientes T015 (ensayo de restauración, requiere plan de pago) y T016 (hito M4).
 5. Avisos de rendimiento de Supabase (nivel INFO, revisados el 2026-10-22), **anotados sin acción**: 15 FK sin índice que las cubra (p. ej. `expenses_category_fk`, `fee_payments_contract_fk`, `sessions_membership_fk`) y `audit_logs_entity_idx` sin uso. Con el volumen actual no tienen efecto. Revisar con `get_advisors` cuando haya volumen real (p. ej. miles de egresos en una organización) y agregar solo los índices que pidan las consultas lentas.
 
 **Pendiente (documentación, revisión del 2026-10-13):**
