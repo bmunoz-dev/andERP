@@ -33,6 +33,10 @@ Antes del primer arranque, copia `apps/api/.env.example` a `apps/api/.env`.
 | `pnpm lint` | ESLint en todo el monorepo |
 | `pnpm typecheck` | Verificación de tipos en todos los paquetes |
 | `pnpm test` | Pruebas unitarias e integración (requiere Docker) |
+| `pnpm test:e2e` | Pruebas end-to-end con Playwright (`e2e/`) |
+| `pnpm format` / `pnpm format:check` | Formatea con Prettier / verifica el formato |
 | `pnpm db:generate` | Genera una migración a partir del esquema Drizzle |
 | `pnpm db:generate:custom --name=<nombre>` | Crea una migración SQL vacía para escribir a mano |
 | `pnpm db:migrate` | Aplica las migraciones pendientes |
+| `pnpm db:seed` | Carga los datos iniciales (idempotente) |
+| `pnpm credentials:rotate` | Vuelve a cifrar con la llave activa las credenciales cifradas con otra versión (idempotente) |
