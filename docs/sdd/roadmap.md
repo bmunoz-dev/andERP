@@ -25,6 +25,10 @@
 | F18 | [Cuentas aéreas](features/018-air-accounts/spec.md) (reemplaza a F11) | F02, F11, F12, F15 | Aprobado | Aprobado | Hecho |
 | F19 | [Módulos por organización](features/019-organization-modules/spec.md) | F02, F12 | Aprobado | Aprobado | Hecho |
 | F20 | [Selector de organización](features/020-organization-switcher/spec.md) | F01, F02, F12, F15, F19 | Aprobado | Aprobado | Hecho |
+| F21 | [Sesión y acceso](features/021-session-access-hardening/spec.md) | F01, F02, F12, F20 | Aprobado | Aprobado | Pendiente |
+| F22 | [Despliegue y operación](features/022-deploy-operations/spec.md) | F07, F21 | Aprobado | Aprobado | Pendiente |
+| F23 | [Reglas de datos en la base](features/023-data-integrity/spec.md) | F03, F04, F06, F09, F16, F17 | Aprobado | Aprobado | Pendiente |
+| F24 | [Robustez y documentación al día](features/024-robustness-docs/spec.md) | F04, F05, F16, F19 | Aprobado | Aprobado | Pendiente |
 
 F06 solo depende de F02, así que se puede desarrollar en paralelo con F03–F05.
 
@@ -60,6 +64,8 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 | §10 Migraciones y despliegue | F00 (local), F07 (producción) |
 
 ## Bloqueos y notas
+
+**F21–F24 con spec aprobada (2026-11-06):** cubren los hallazgos de la [revisión de huecos](../reviews/2026-11-06-revision-modulos.md). Orden propuesto por riesgo: F21 (sesión y acceso), F22 (despliegue y operación; va después de F21), F23 (reglas de datos) y F24 (robustez y documentación). Riesgos aceptados por el usuario en esa revisión: la web se publica sin esperar a la API (F22), el aviso de cuenta bloqueada (F21), los pagos fijos duplicados (F24), y revelar contraseñas sin visor ni tope (F23).
 
 **F20 terminada y en producción (PRs #41 y #42, 2026-10-22):** selector de organización en la cabecera; la organización activa vive en la sesión y el guard rechaza con `409 ORGANIZATION_CHANGED` los tokens de otra. Verificación manual del usuario (CA-19) hecha el 2026-10-22.
 
