@@ -136,6 +136,13 @@ describe('Registro', () => {
     expect((a.status === 409 ? a : b).body).toMatchObject({ code: 'FEE_PAYMENT_ALREADY_EXISTS' });
   });
 
+  it('F23 CA-6 una semana con todos los días en cero → 422 FEE_PAYMENT_EMPTY', async () => {
+    const res = await api()
+      .post('/fee-payments', payment({ days: [{ ...day('2026-08-24'), amount: '0.00' }] }))
+      .expect(422);
+    expect(res.body).toMatchObject({ code: 'FEE_PAYMENT_EMPTY' });
+  });
+
   it('CA-6 montos inválidos → 422 VALIDATION_ERROR', async () => {
     for (const amount of ['-1.00', '100', 100]) {
       const res = await api()

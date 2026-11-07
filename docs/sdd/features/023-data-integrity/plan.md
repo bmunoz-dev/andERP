@@ -41,7 +41,6 @@ Una migración escrita a mano, `pnpm db:generate:custom --name data_integrity_gu
 
 - `errors/codes.ts`: `FEE_PAYMENT_EMPTY`.
 - `error-messages.es.ts`: "Registra al menos un día con monto mayor que cero."
-- `schemas/fee-payments.ts`: `saveFeePaymentSchema` con `.refine(p => p.days.some(d => Number(d.amount) > 0), { message: 'Registra al menos un día con monto mayor que cero', path: ['days'] })`. `Number` solo se compara contra 0; no hace aritmética de dinero. La API responde `422 VALIDATION_ERROR` con el error en `days`, como cualquier otra regla del schema; `FEE_PAYMENT_EMPTY` es la respuesta del respaldo en la base.
 
 ## API
 
@@ -88,7 +87,7 @@ Una migración escrita a mano, `pnpm db:generate:custom --name data_integrity_gu
 | CA-3 | `provider-deactivation.db.test.ts` | `Promise.all` de desactivar y crear un contrato vigente, en transacciones separadas: exactamente una falla |
 | CA-4 | `service-providers.test.ts` | Las pruebas existentes de `get`, `create` y `update` siguen en verde |
 | CA-5 | `service-providers.test.ts` | Cambiar la cuenta → un `provider.bank_account_update` con `before` y `after`; cambiar solo el nombre → ninguno |
-| CA-6 | `fee-payments.test.ts` y `fee-payments.db.test.ts` | API: todos los días en `0.00` → `422 VALIDATION_ERROR` con error en `days`. SQL: pago con días en 0 → falla al confirmar. Editar reemplazando días con montos → pasa. Schema de shared en `packages/shared` |
+| CA-6 | `fee-payment-rules.test.ts`, `fee-payments.test.ts` y `fee-payments.db.test.ts` | Regla: todos en `0.00` → `FEE_PAYMENT_EMPTY`; uno en 0 y otro con monto pasa. API: todos los días en `0.00` → `422 FEE_PAYMENT_EMPTY`. SQL: pago con días en 0 → falla al confirmar; editar reemplazando días con montos pasa |
 | CA-7 | `fixed-payments.db.test.ts` y `fee-payments.db.test.ts` | Insertar un pago contra un contrato con `deleted_at` → `NOT_FOUND` |
 | CA-8 | `credentials.db.test.ts` y `credentials.test.ts` | Responsable borrado al crear o editar → `422 UNPROCESSABLE`; la lista no muestra el nombre de un responsable borrado |
 | CA-9 | `credentials.test.ts` | Un registro dañado y dos sanos con la llave vieja: `rotated = 2`, `failed = [id]`; la prueba ya no borra el dañado |
@@ -105,4 +104,8 @@ Una migración escrita a mano, `pnpm db:generate:custom --name data_integrity_gu
 
 ## Notas de implementación
 
-(Se completan al implementar.)
+- **T003:** `FEE_PAYMENT_EMPTY` lo lanza `assertValidDays` (`fee-payment-rules.ts`), junto a `FEE_PAYMENT_WITHOUT_DAYS`, sin `refine` en shared. La regla compara el texto del monto (`/[1-9]/`), sin `number`. La restricción diferida vive solo en `fee_payment_days` y exige que un pago **con días** sume más de cero: exigirlo también a un pago sin días obligaba a reescribir los helpers de 4 archivos de pruebas SQL que insertan pagos sin días y cambiaba sus totales. El backend ya rechaza el pago sin días. Si en un pago el contrato no existe o está borrado, los triggers lanzan `NOT_FOUND` (422 por el mapeo de `P0001`).
+- **T004:** no se agregó el filtro `isNull(responsiblePersons.deletedAt)` al `leftJoin` del listado. Con la barrera de la migración, el trigger nuevo y `RESPONSIBLE_IN_USE` (F06), una credencial vigente con su responsable borrado ya no puede existir; el filtro sería código para un estado imposible.
+- **T008:** probar con un archivo de más de 10 MB que la respuesta llega antes de leerlo no sirve: el servidor responde `404` o `429` y cierra la conexión mientras el cliente todavía envía, y supertest recibe `ECONNRESET`. La prueba comprueba el cableado: la ruta de subida tiene `ContractDocumentUploadGuard`, y Nest siempre ejecuta los guards antes que los interceptores. Los `404` y `429` existentes, con un archivo pequeño, prueban que la comprobación funciona a través del guard. El guard no consulta con un id mal formado; lo rechaza después `ParseUUIDPipe`.
+- **Revisión final:** la hizo el mismo autor, sin subagente (regla 8 de `CLAUDE.md`). Sin hallazgos que corregir.
+- **Verificación completa (2026-11-07):** `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test`, 83 archivos y 782 pruebas en verde.

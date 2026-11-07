@@ -1,6 +1,7 @@
 import { CONTRACT_DOCUMENT_MAX_BYTES, type ContractDocument, ErrorCode } from '@anderp/shared';
 import {
   type CallHandler,
+  type CanActivate,
   Controller,
   Delete,
   Get,
@@ -13,8 +14,10 @@ import {
   PayloadTooLargeException,
   Post,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import type { Observable } from 'rxjs';
@@ -51,6 +54,24 @@ class DocumentUploadInterceptor extends FileInterceptor('file', {
   }
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * F23 CA-10: el contrato y el límite de subidas se comprueban antes de que el interceptor lea el
+ * archivo (hasta 10 MB en memoria). Los guards corren antes que los interceptores. Un id mal
+ * formado lo rechaza después `ParseUUIDPipe`.
+ */
+@Injectable()
+export class ContractDocumentUploadGuard implements CanActivate {
+  constructor(private readonly documents: ContractDocumentsService) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const id = context.switchToHttp().getRequest<Request>().params.id;
+    if (typeof id === 'string' && UUID.test(id)) await this.documents.assertUploadAllowed(id);
+    return true;
+  }
+}
+
 /** F17: documento del contrato en Supabase Storage. */
 @ApiTags('contract-documents')
 @RequiresModule('staff_payments')
@@ -60,6 +81,7 @@ export class ContractDocumentsController {
 
   @Post()
   @ApiConsumes('multipart/form-data')
+  @UseGuards(ContractDocumentUploadGuard)
   @UseInterceptors(DocumentUploadInterceptor)
   upload(
     @Param('id', ParseUUIDPipe) id: string,

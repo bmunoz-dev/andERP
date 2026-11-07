@@ -31,6 +31,20 @@ describe('assertValidDays', () => {
     ).toBe('FEE_PAYMENT_WITHOUT_DAYS');
   });
 
+  it('F23 CA-6 todos los días en cero → FEE_PAYMENT_EMPTY; un día en cero con otro con monto pasa', () => {
+    const zero = (workDate: string) => ({ ...day(workDate), amount: '0.00' });
+    expect(
+      code(() => {
+        assertValidDays(period, [zero('2026-08-22'), zero('2026-08-23')]);
+      }),
+    ).toBe('FEE_PAYMENT_EMPTY');
+    expect(
+      code(() => {
+        assertValidDays(period, [zero('2026-08-22'), { ...day('2026-08-23'), amount: '50000.00' }]);
+      }),
+    ).toBeUndefined();
+  });
+
   it('CA-3 fecha repetida → DUPLICATE_WORK_DATE', () => {
     expect(
       code(() => {

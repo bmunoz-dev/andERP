@@ -51,11 +51,16 @@ export class ContractDocumentsService {
     private readonly storage: ObjectStorage,
   ) {}
 
-  async upload(contractId: string, file: UploadedFile | undefined): Promise<ContractDocument> {
-    // Antes de tocar el bucket, para no dejar objetos huérfanos por un 404 (CA-6b, CA-14).
+  /**
+   * Antes de leer el archivo y de tocar el bucket (CA-6b, CA-6c, CA-14): lo llama el guard de la
+   * ruta de subida, antes del interceptor que carga el archivo en memoria (F23 CA-10).
+   */
+  async assertUploadAllowed(contractId: string): Promise<void> {
     await this.assertContract(contractId);
     await this.assertUploadLimit();
+  }
 
+  async upload(contractId: string, file: UploadedFile | undefined): Promise<ContractDocument> {
     const fileName = file ? normalizeFileName(file.originalname) : null;
     if (!file || file.size === 0 || !fileName) {
       throw new DomainError(ErrorCode.VALIDATION_ERROR, 422);

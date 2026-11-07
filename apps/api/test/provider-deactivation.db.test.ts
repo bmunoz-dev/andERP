@@ -81,4 +81,69 @@ describe('F09 en la base de datos', () => {
       await setActive(sql, deleted, false);
     });
   });
+
+  it('F23 CA-1 un prestador con contratos no se borra; sin contratos (o solo borrados) sí', async () => {
+    await withRuntimeSql(async (sql) => {
+      const withContract = await provider(sql);
+      await contract(sql, withContract, '2020-01-01', '2020-12-31');
+      await expect(
+        sql`update service_providers set deleted_at = now() where id = ${withContract}`,
+      ).rejects.toThrow('PROVIDER_HAS_CONTRACTS');
+
+      const bare = await provider(sql);
+      await sql`update service_providers set deleted_at = now() where id = ${bare}`;
+
+      const onlyDeleted = await provider(sql);
+      await contract(sql, onlyDeleted, '2020-01-01', '2020-12-31');
+      await sql`update provider_contracts set deleted_at = now() where service_provider_id = ${onlyDeleted}`;
+      await sql`update service_providers set deleted_at = now() where id = ${onlyDeleted}`;
+    });
+  });
+
+  it('F23 CA-2 un contrato de un prestador inactivo no vuelve a quedar vigente', async () => {
+    await withRuntimeSql(async (sql) => {
+      const id = await provider(sql);
+      await contract(sql, id, '2020-01-01', '2020-12-31');
+      await setActive(sql, id, false);
+
+      await expect(
+        sql`update provider_contracts set end_date = null where service_provider_id = ${id}`,
+      ).rejects.toThrow('PROVIDER_INACTIVE');
+      await expect(
+        sql`update provider_contracts set end_date = '2099-01-01' where service_provider_id = ${id}`,
+      ).rejects.toThrow('PROVIDER_INACTIVE');
+      // Otra fecha pasada, cambiar el acuerdo o borrarlo sí (puntos de revisión 1 y 2).
+      await sql`update provider_contracts set end_date = '2020-06-30' where service_provider_id = ${id}`;
+      await sql`update service_providers set name = 'Ana P.' where id = ${id}`;
+      await sql`update provider_contracts set deleted_at = now() where service_provider_id = ${id}`;
+    });
+  });
+
+  it('F23 CA-2 un prestador borrado no recibe contratos', async () => {
+    await withRuntimeSql(async (sql) => {
+      const id = await provider(sql);
+      await sql`update service_providers set deleted_at = now() where id = ${id}`;
+      await expect(contract(sql, id, '2020-01-01', '2020-12-31')).rejects.toThrow(
+        'PROVIDER_INACTIVE',
+      );
+    });
+  });
+
+  it('F23 CA-3 desactivar y crear un contrato vigente a la vez: una de las dos falla', async () => {
+    const id = await withRuntimeSql((sql) => provider(sql));
+    const results = await withRuntimeSql((a) =>
+      withRuntimeSql((b) =>
+        Promise.allSettled([
+          a.begin(async (tx) => {
+            await setActive(tx as unknown as postgres.Sql, id, false);
+            await tx`select pg_sleep(0.4)`;
+          }),
+          new Promise((resolve) => setTimeout(resolve, 100)).then(() =>
+            contract(b, id, '2026-01-01', null),
+          ),
+        ]),
+      ),
+    );
+    expect(results.filter((r) => r.status === 'rejected')).toHaveLength(1);
+  });
 });

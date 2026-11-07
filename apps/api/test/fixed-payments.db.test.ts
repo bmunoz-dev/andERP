@@ -186,4 +186,12 @@ describe('F16 en la base de datos', () => {
       ).toEqual([{ period_year: 2026, period_month: 3, paid_amount: '30000.00' }]);
     });
   });
+
+  it('F23 CA-7 no se registra un pago fijo contra un contrato borrado', async () => {
+    await withRuntimeSql(async (sql) => {
+      const c = await contract(sql, 'fixed');
+      await sql`update provider_contracts set deleted_at = now() where id = ${c}`;
+      await expect(fixed(sql, c, [2026, 4])).rejects.toThrow('NOT_FOUND');
+    });
+  });
 });
