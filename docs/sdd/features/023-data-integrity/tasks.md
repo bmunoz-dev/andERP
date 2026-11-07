@@ -10,7 +10,7 @@
 
 ## Bloque B — Base de datos
 
-- [ ] F23-T002 [TDD] Primero las pruebas SQL de CA-1, CA-2 y CA-3 y los puntos de revisión 1 y 2. Después, en la migración `data_integrity_guards`:
+- [x] F23-T002 [TDD] Primero las pruebas SQL de CA-1, CA-2 y CA-3 y los puntos de revisión 1 y 2. Después, en la migración `data_integrity_guards`:
       - la barrera;
       - el trigger de borrado de prestadores;
       - el trigger de contratos reemplazado.
