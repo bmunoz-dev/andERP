@@ -11,7 +11,7 @@
 
 ## Bloque B — API y compartido
 
-- [ ] F24-T002 [TDD] Timeouts SMTP.
+- [x] F24-T002 [TDD] Timeouts SMTP.
       Archivos: `apps/api/src/modules/mail/mailer.ts`, `apps/api/test/mail.test.ts`
       Verificación: CA-1
 - [ ] F24-T003 [TDD] `ParseUUIDPipe` en `categoryId`, con el caso vacío (punto de revisión 2).
