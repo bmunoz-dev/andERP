@@ -53,7 +53,7 @@ test('flujo de humo', async ({ page, request }) => {
     startDate: `${year ?? ''}-${month ?? ''}-01`,
     workAgreement: 'Prueba de humo',
     paymentFrequency: 'weekly',
-    totalAmount: '10000000.00',
+    monthlyAmount: '1000000.00',
   });
   await post(request, token, '/credentials', {
     entityName: `Portal E2E ${run}`,
@@ -64,7 +64,8 @@ test('flujo de humo', async ({ page, request }) => {
   // Login
   await page.goto('/login');
   await page.getByLabel('Correo').fill(email);
-  await page.getByLabel('Contraseña').fill(password);
+  // Exacto: el botón 'Mostrar contraseña' (2026-11-01) también contiene la palabra.
+  await page.getByLabel('Contraseña', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Ingresar' }).click();
   await expect(page).toHaveURL(/\/egresos/);
 

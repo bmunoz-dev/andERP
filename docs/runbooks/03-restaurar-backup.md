@@ -1,5 +1,7 @@
 # Runbook 03 — Restaurar un backup
 
+> **Estado actual (2026-11-07):** producción está en Supabase **Free**, sin backups y con pausa tras una semana sin uso. Es una decisión del usuario registrada en `docs/sdd/roadmap.md` (pendiente 1 de F07). Lo que sigue describe el procedimiento para cuando haya plan de pago.
+
 Supabase guarda backups diarios en los planes de pago. Restaurar sobre producción **pierde todo lo registrado después del backup**: primero se ensaya en un proyecto temporal.
 
 ## Ensayo en un proyecto temporal (F07-T015)

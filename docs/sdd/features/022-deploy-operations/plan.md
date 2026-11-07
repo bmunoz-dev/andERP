@@ -120,4 +120,10 @@
 
 ## Notas de implementación
 
-(Se completan al implementar.)
+- **T001:** la documentación de Render (https://render.com/docs/deploy-hooks) confirma que un deploy hook acepta `ref=<commit SHA>` en servicios construidos desde Git, como esta API (Docker desde el repo). Responde `400` si el servicio despliega desde una imagen ya hecha. `deploy.yml` lo pasa.
+- **T004:** `anderp_owner` es `NOSUPERUSER CREATEROLE CREATEDB`, como `postgres` en Supabase. `CREATEDB` lo necesita la prueba del migrador, que crea una base nueva. Las 508 pruebas de la API pasan sin superusuario, y ninguna migración lo necesitaba.
+- **T005:** la prueba de `catalogs.db.test.ts` que borraba físicamente la categoría de sistema como `app_runtime` ahora espera `permission denied`. Como dueño, el trigger sigue lanzando `SYSTEM_CATEGORY_PROTECTED`.
+- **T006:** `credentials:rotate` también usa `sslFor`, porque se conecta a producción igual que el seed.
+- **T008:** el job `e2e` no se puede probar en local sin levantar la app (regla 5 de `CLAUDE.md`). Se verifica en el CI del PR.
+- **Revisión final:** la hizo el mismo autor, sin subagente (regla 8). Sin hallazgos que corregir.
+- **Verificación completa (2026-11-07):** 89 archivos y 812 pruebas en verde.

@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { sslFor } from './connection';
 import { ENV, type Env } from '../config/env';
 import { OrgScope } from '../shared/db/org-scope';
 import * as schema from './schema';
@@ -42,6 +43,7 @@ export class DatabaseModule {
           inject: [ENV],
           useFactory: (env: Env): Sql =>
             postgres(env.DATABASE_URL, {
+              ssl: sslFor(env.DATABASE_URL),
               max: 10,
               idle_timeout: 20,
               connect_timeout: 10,

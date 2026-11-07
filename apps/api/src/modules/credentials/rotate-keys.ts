@@ -2,6 +2,7 @@ import { and, asc, eq, ne, notInArray } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { existsSync } from 'node:fs';
 import postgres from 'postgres';
+import { sslFor } from '../../db/connection';
 import { loadEnv } from '../../config/env';
 import type { Database } from '../../db/database.module';
 import * as schema from '../../db/schema';
@@ -72,7 +73,11 @@ export async function rotateCredentialKeys(
 async function main(): Promise<void> {
   if (existsSync('.env')) process.loadEnvFile('.env');
   const env = loadEnv(process.env);
-  const sql = postgres(env.DATABASE_URL, { max: 1, onnotice: () => undefined });
+  const sql = postgres(env.DATABASE_URL, {
+    max: 1,
+    ssl: sslFor(env.DATABASE_URL),
+    onnotice: () => undefined,
+  });
   try {
     const db = drizzle(sql, { schema, casing: 'snake_case' });
     const cipher = new CredentialCipher(env.CREDENTIALS_KEYS, env.CREDENTIALS_ACTIVE_KEY_VERSION);

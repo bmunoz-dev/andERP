@@ -1,5 +1,7 @@
 # Runbook 01 — Puesta en marcha de producción
 
+> **Estado actual (2026-11-07):** producción está en Supabase **Free**, sin backups y con pausa tras una semana sin uso. Es una decisión del usuario registrada en `docs/sdd/roadmap.md` (pendiente 1 de F07). Lo que sigue describe el procedimiento para cuando haya plan de pago.
+
 Se hace **una sola vez**. Al terminar, cada merge a `main` despliega solo (runbook 02).
 
 ```
@@ -28,8 +30,9 @@ Las contraseñas de la base de datos van en **hexadecimal** (solo letras y núme
    - plan **de pago** (backups diarios y sin pausa por inactividad; el gratuito no sirve para producción);
    - Postgres **17**, la misma versión mayor que en local y en CI.
    Anota el precio en la sección "Costos" al final.
-2. **Desactiva la Data API**: *Project Settings → Data API* → desactivar. AndERP no la usa; así nada queda expuesto por PostgREST.
-3. Crea el rol de la API en el *SQL Editor* (sin contraseña todavía, así no queda escrita en el historial de consultas):
+2. **Exige SSL** (F22): *Project Settings → Database → SSL Configuration* → activa **Enforce SSL on incoming connections**. La API, el migrador y el seed ya se conectan con TLS a todo host que no sea local. Después de activarlo, comprueba que `/api/v1/health` responda.
+3. **Desactiva la Data API**: *Project Settings → Data API* → desactivar. AndERP no la usa; así nada queda expuesto por PostgREST.
+4. Crea el rol de la API en el *SQL Editor* (sin contraseña todavía, así no queda escrita en el historial de consultas):
 
    ```sql
    do $$ begin
@@ -46,12 +49,12 @@ Las contraseñas de la base de datos van en **hexadecimal** (solo letras y núme
 
    Alternativa con psql: `psql "<cadena del usuario postgres>" -v app_runtime_password='<APP_RUNTIME_PASSWORD>' -f db/bootstrap.sql`. En Supabase no se pueden declarar `NOSUPERUSER` y similares (el usuario `postgres` no es superusuario); un rol nuevo ya nace sin esos privilegios.
 
-4. Cadenas de conexión (*Connect → Session pooler*, puerto **5432**, IPv4). Copia el host y el `project-ref` que muestre Supabase (el host puede empezar por `aws-0-` o `aws-1-`); se escriben sin comillas ni corchetes:
+5. Cadenas de conexión (*Connect → Session pooler*, puerto **5432**, IPv4). Copia el host y el `project-ref` que muestre Supabase (el host puede empezar por `aws-0-` o `aws-1-`); se escriben sin comillas ni corchetes:
    - **Migraciones** (dueño del esquema): `postgres://postgres.<project-ref>:<contraseña de postgres>@aws-0-sa-east-1.pooler.supabase.com:5432/postgres`
    - **API** (`app_runtime`): `postgres://app_runtime.<project-ref>:<APP_RUNTIME_PASSWORD>@aws-0-sa-east-1.pooler.supabase.com:5432/postgres`
 
    Si Supavisor rechaza `app_runtime`, contrata el complemento IPv4 y usa la conexión directa (`db.<project-ref>.supabase.co:5432`) con el usuario `app_runtime`.
-5. Primera migración y datos iniciales, desde tu equipo (PowerShell; en bash usa `export`):
+6. Primera migración y datos iniciales, desde tu equipo (PowerShell; en bash usa `export`):
 
    ```powershell
    $env:DATABASE_URL_MIGRATIONS = '<cadena de migraciones>'
@@ -64,7 +67,7 @@ Las contraseñas de la base de datos van en **hexadecimal** (solo letras y núme
    ```
 
    Si `apps/api/.env` existe, el seed lo carga; las variables de la sesión tienen prioridad.
-6. Comprobaciones (CA-2, CA-3), en el SQL Editor:
+7. Comprobaciones (CA-2, CA-3), en el SQL Editor:
 
    ```sql
    -- anon y authenticated sin privilegios sobre anderp: ambas deben dar false.

@@ -274,6 +274,13 @@
       "when": 1794047763990,
       "tag": "0038_data_integrity_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1794051215635,
+      "tag": "0039_runtime_delete_grants",
+      "breakpoints": true
     }
   ]
 }
