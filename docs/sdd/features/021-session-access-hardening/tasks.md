@@ -5,7 +5,7 @@
 
 ## Bloque A — Diseño y datos
 
-- [ ] F21-T001 Actualizar los documentos antes del código:
+- [x] F21-T001 Actualizar los documentos antes del código:
       - `design.md` §5.3: `organization_members.last_access_at` e invitaciones por organización;
       - `design.md` §6.2: contador atómico, revocación por organización, limpieza al iniciar sesión y riesgo aceptado del aviso "cuenta bloqueada";
       - historial de `design.md`: la entrada nueva reemplaza la del 2026-10-09;

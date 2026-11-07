@@ -43,6 +43,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-20 | **Módulos por organización** (F19): `organizations.modules` (enum `app_module`) decide qué paquetes tiene cada organización: Personal y pagos, Credenciales, Cuentas aéreas y Agenda; Base siempre está. La API responde `403 MODULE_DISABLED` y la web oculta el menú. Una organización nueva nace solo con Base. Decisiones 1 y 12 actualizadas; los permisos por usuario siguen fuera del alcance (§11). | AndERP pasa a servir a varias empresas cliente y el super admin necesita dar a cada una solo lo que contrató. Se agrupan en paquetes para que no existan combinaciones rotas por dependencias (Pagos necesita Personal; Credenciales, Responsables). |
 | 2026-10-22 | **Selector de organización** (F20): `sessions.organization_id` (organización activa de la sesión, FK compuesta `sessions_membership_fk` a `organization_members`) y `organization_members.last_selected_at`. El guard compara el `org` del token con la de la sesión (`409 ORGANIZATION_CHANGED`) y `POST /auth/organization` la cambia. El perfil lista las organizaciones disponibles. §6.2 y §8 actualizadas; el selector sale de §11. | Con F19 un usuario puede pertenecer a varias empresas cliente y hasta ahora el login siempre entraba en la más antigua. La organización activa en la sesión (y no en el token) permite rechazar en el servidor las pestañas que quedaron con la anterior. |
 | 2026-10-22 | **No se renombran** en el código ni en la base de datos `service_providers` / `fee_payments` (Personal / Pagos en la interfaz); el glosario (§3) hace de traducción. | El refactor tocaba ~59 archivos, 4 tablas, sus vistas, restricciones, triggers, códigos de error y auditoría, con una ventana sin servicio al desplegar, a cambio de nada visible para el usuario. |
+| 2026-11-07 | **Sesión y acceso** (F21): `organization_members.last_access_at`; contador de bloqueo atómico; revocación de sesiones solo de la organización afectada; limpieza de sesiones y resets vencidos al iniciar sesión; logs sin parámetros de consultas. **Reemplaza la decisión del 2026-10-09:** invitar a un usuario sin contraseña ya no borra sus invitaciones pendientes en otras organizaciones. §5.3 y §6.2 actualizadas. | Revisión de huecos del 2026-11-06. La regla del 2026-10-09 existía porque el login entraba siempre en la organización más antigua; F20 lo resolvió con el selector, y con varios clientes una organización podía anular la invitación de otra. |
 | 2026-11-01 | Los campos de contraseña (login, activar invitación, restablecer y cambiar contraseña, y el formulario de credenciales) tienen un botón para mostrarla u ocultarla (§8). | Pedido del usuario: comprobar lo escrito antes de enviar, sobre todo al definir la contraseña de una invitación. |
 
 ---
@@ -253,6 +254,7 @@ packages/
 | role | member_role NOT NULL | |
 | is_active | boolean NOT NULL | default `true`. Desactivación por organización |
 | last_selected_at | timestamptz NULL | Última vez que el usuario eligió esta organización en el selector (F20); el login entra en la de fecha más reciente |
+| last_access_at | timestamptz NULL | Último ingreso del usuario a esta organización: login que entra en ella o cambio a ella (F21). Es el "último ingreso" que ve el admin; `users.last_login_at` no se muestra |
 | audit | | |
 
 PK `(user_id, organization_id)`.
@@ -646,8 +648,11 @@ Las notificaciones **no se guardan**: son los vencimientos pendientes en estado 
 - **Refresh token:** en una cookie `httpOnly`, `Secure`, `SameSite=Strict`, con duración de 7 días y rotación en cada uso.
 - **Reutilización:** si se reutiliza un refresh token ya rotado, se revocan todos los tokens de esa `family_id`.
 - **Organización activa (F20):** vive en la sesión (`sessions.organization_id`), no en el token ni en el usuario. El login entra en la última organización elegida (`last_selected_at`) o, si nunca eligió, la más antigua; `POST /auth/organization` la cambia para toda la familia. El guard compara el `org` del token con la de la sesión y responde `409 ORGANIZATION_CHANGED` si difieren, así una pestaña con la organización anterior no puede leer ni escribir.
-- **Límites:** `@nestjs/throttler` en los endpoints de auth; tras 5 intentos fallidos, la cuenta se bloquea 15 minutos (`locked_until`).
-- **Recuperación de contraseña:** la respuesta es la misma exista o no el email (no revela qué cuentas existen).
+- **Límites:** `@nestjs/throttler` en los endpoints de auth, también en el cambio de contraseña (F21). Tras 5 intentos fallidos, la cuenta se bloquea 15 minutos (`locked_until`). El contador se incrementa en SQL, así que intentos simultáneos no lo saltan (F21). **Riesgo aceptado (2026-11-06):** el aviso "cuenta bloqueada" revela que el email existe y permite bloquear a otro a propósito; con pocos usuarios, todos internos, ayuda más de lo que expone.
+- **Revocación por organización (F21):** desactivar un miembro o suspender una organización revoca solo las sesiones cuya organización activa es esa; las del usuario en otras organizaciones siguen. Se hace después de confirmar el cambio y, si falla, solo se registra en el log.
+- **Limpieza (F21):** cada login exitoso borra las sesiones vencidas del usuario y sus `password_resets` vencidos o usados. Las sesiones revocadas se guardan hasta vencer: detectan la reutilización.
+- **Recuperación de contraseña:** la respuesta es la misma exista o no el email (no revela qué cuentas existen) y sale antes de cualquier escritura, así el tiempo tampoco lo revela (F21).
+- **Invitaciones por organización (F21):** cada organización tiene su propia membresía pendiente; invitar no borra las de otras. El usuario tiene un solo enlace vigente (el último); al activar, todas sus membresías quedan usables y el primer login entra en la más reciente.
 
 ### 6.3 Credenciales de entidades
 

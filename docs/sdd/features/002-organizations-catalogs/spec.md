@@ -29,7 +29,7 @@ Dejar AndERP configurado para operar:
   - envía una invitación.
 
   Un NIT repetido responde `409 TAX_ID_TAKEN`.
-- **CA-2.** `PATCH /platform/organizations/:id` permite cambiar `name` y `status`. Suspender una organización revoca todas las sesiones de sus miembros que no son super admin.
+- **CA-2.** `PATCH /platform/organizations/:id` permite cambiar `name` y `status`. Suspender una organización revoca todas las sesiones de sus miembros que no son super admin. (2026-11-07: reemplazado por F21 CA-5, que revoca solo las sesiones de esta organización.)
 - **CA-3.** Un admin que llama a cualquier ruta `/platform/*` recibe `403 FORBIDDEN`.
 
 **Catálogos globales**
@@ -47,7 +47,7 @@ Dejar AndERP configurado para operar:
 - **CA-11.** `POST /members` con `{ email, firstName, lastName }` crea el usuario (o reutiliza el existente por email) y la membresía con rol `admin`. Si el usuario **no tiene contraseña**, envía una invitación: un `password_resets` con `purpose = 'invite'` que vence en 72 horas y un correo con el enlace a `WEB_URL/activar?token=…`. Si **ya tiene contraseña** (pertenece a otra organización), solo recibe un aviso con el enlace al login. Si el email ya es miembro, responde `409 ALREADY_MEMBER`.
 - **CA-12.** `POST /auth/password/reset` acepta tokens `invite` igual que los `reset`. Al usarlo, el usuario queda con contraseña y puede iniciar sesión.
 - **CA-13.** `POST /members/:userId/resend-invite` invalida las invitaciones anteriores y envía una nueva. Si el usuario ya activó su cuenta, responde `422 INVITE_NOT_PENDING`.
-- **CA-14.** `PATCH /members/:userId` con `{ isActive: boolean }` desactiva o reactiva la **membresía** en la organización (no al usuario globalmente) y, al desactivar, revoca sus sesiones. Un admin **no puede** desactivarse a sí mismo (`422 CANNOT_DEACTIVATE_SELF`), ni dejar la organización sin ningún admin activo (`422 LAST_ADMIN`), ni modificar la membresía de un super admin (`403 FORBIDDEN`).
+- **CA-14.** `PATCH /members/:userId` con `{ isActive: boolean }` desactiva o reactiva la **membresía** en la organización (no al usuario globalmente) y, al desactivar, revoca sus sesiones (2026-11-07: reemplazado por F21 CA-5, que revoca solo las sesiones de esta organización.). Un admin **no puede** desactivarse a sí mismo (`422 CANNOT_DEACTIVATE_SELF`), ni dejar la organización sin ningún admin activo (`422 LAST_ADMIN`), ni modificar la membresía de un super admin (`403 FORBIDDEN`).
 - **CA-15.** `GET /members` lista los miembros con su estado y si tienen una invitación pendiente.
 
 **Aislamiento y navegación**
@@ -55,7 +55,7 @@ Dejar AndERP configurado para operar:
 - **CA-17.** Toda escritura llena `created_by` y `updated_by`, y todo borrado llena `deleted_at` y `deleted_by`.
 - **CA-18.** La web tiene un layout con menú lateral: Egresos, Honorarios, Prestadores, Credenciales, Responsables y Configuración (Categorías y Usuarios). La sección "Plataforma" (Organizaciones y Catálogos) solo aparece para el super admin. Los módulos que aún no existen muestran "Próximamente".
 - **CA-19.** Hay pantallas para organizaciones, catálogos globales, categorías (con reordenamiento) y usuarios (invitar, reenviar invitación, activar y desactivar), además de la ruta pública `/activar` para definir la contraseña desde la invitación.
-- **CA-20.** Un usuario sin contraseña tiene como máximo **una invitación pendiente**: la última gana. Si se le invita a otra organización, se borran sus membresías pendientes en las demás (con `member.invitation_replaced` en la auditoría de cada una) y sus enlaces anteriores dejan de servir. Al aceptar, queda solo en la organización que lo invitó por última vez.
+- **CA-20.** Un usuario sin contraseña tiene como máximo **una invitación pendiente**: la última gana. Si se le invita a otra organización, se borran sus membresías pendientes en las demás (con `member.invitation_replaced` en la auditoría de cada una) y sus enlaces anteriores dejan de servir. Al aceptar, queda solo en la organización que lo invitó por última vez. (2026-11-07: reemplazado por F21 CA-7; las invitaciones de otras organizaciones ya no se borran.)
 
 ## Fuera de alcance
 
