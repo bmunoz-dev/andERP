@@ -1,7 +1,9 @@
 import { and, eq, isNull } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { parseEnv } from 'node:util';
 import postgres from 'postgres';
+import { isLocalDatabase, sslFor } from './connection';
 import { z } from 'zod';
 import type { PasswordHasher } from '../modules/auth/application/ports';
 import {
@@ -144,13 +146,33 @@ async function seedExpenseCategories(tx: Tx, organizationId: string): Promise<vo
     .values(DEFAULT_EXPENSE_CATEGORIES.map((category) => ({ ...category, organizationId })));
 }
 
+/**
+ * F22 CA-6: copiar `.env.example` a producción no puede dejar al super admin con la contraseña de
+ * ejemplo. Se compara contra el valor del archivo, no contra una copia en el código.
+ */
+export function assertSafeSeedPassword(
+  url: string,
+  password: string,
+  examplePassword: string | undefined,
+): void {
+  if (!isLocalDatabase(url) && password === examplePassword) {
+    throw new Error(
+      'SEED_SUPERADMIN_PASSWORD es la de ejemplo: define una propia para este entorno',
+    );
+  }
+}
+
 async function main(): Promise<void> {
   if (existsSync('.env')) process.loadEnvFile('.env');
   const input = seedInputSchema.parse(process.env);
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL is required');
+  const example = existsSync('.env.example')
+    ? parseEnv(readFileSync('.env.example', 'utf8')).SEED_SUPERADMIN_PASSWORD
+    : undefined;
+  assertSafeSeedPassword(url, input.SEED_SUPERADMIN_PASSWORD, example);
 
-  const sql = postgres(url, { max: 1, onnotice: () => undefined });
+  const sql = postgres(url, { max: 1, ssl: sslFor(url), onnotice: () => undefined });
   try {
     const result = await seed(
       drizzle(sql, { schema, casing: 'snake_case' }),

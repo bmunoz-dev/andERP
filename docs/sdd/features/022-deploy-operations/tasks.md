@@ -22,7 +22,7 @@
 - [x] F22-T005 [TDD] Primero la prueba de la lista exacta en `foundation.test.ts`. Después, la migración `runtime_delete_grants`.
       Archivos: `apps/api/drizzle/NNNN_runtime_delete_grants.sql`, `apps/api/test/foundation.test.ts`
       Depende de: F22-T004 · Verificación: CA-5
-- [ ] F22-T006 [TDD] El seed rechaza la contraseña de ejemplo fuera de local.
+- [x] F22-T006 [TDD] El seed rechaza la contraseña de ejemplo fuera de local.
       Archivos: `apps/api/src/db/seed.ts`, su prueba
       Depende de: F22-T002 · Verificación: CA-6
 
