@@ -121,3 +121,4 @@
 ## Notas de implementación
 
 - **T001:** la documentación de Render (https://render.com/docs/deploy-hooks) confirma que un deploy hook acepta `ref=<commit SHA>` en servicios construidos desde Git, como esta API (Docker desde el repo). Responde `400` si el servicio despliega desde una imagen ya hecha. `deploy.yml` lo pasa.
+- **T004:** `anderp_owner` es `NOSUPERUSER CREATEROLE CREATEDB`, como `postgres` en Supabase. `CREATEDB` lo necesita la prueba del migrador, que crea una base nueva. Las 508 pruebas de la API pasan sin superusuario, y ninguna migración lo necesitaba.

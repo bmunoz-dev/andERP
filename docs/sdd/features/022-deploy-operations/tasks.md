@@ -16,7 +16,7 @@
 - [x] F22-T003 [TDD] `migrate.ts` con su prueba y la carpeta `test/fixtures/broken-migration/`. `db:migrate` apunta al script nuevo, y `global-setup.ts` usa `migrateDatabase`.
       Archivos: `apps/api/src/db/migrate.ts`, `apps/api/package.json`, `apps/api/test/{migrate.test.ts,fixtures/broken-migration/**,setup/global-setup.ts}`
       Depende de: F22-T002 · Verificación: CA-2
-- [ ] F22-T004 Las migraciones de las pruebas corren como `anderp_owner`, sin superusuario. Toda la suite en verde; los ajustes van en las notas.
+- [x] F22-T004 Las migraciones de las pruebas corren como `anderp_owner`, sin superusuario. Toda la suite en verde; los ajustes van en las notas.
       Archivos: `apps/api/test/setup/global-setup.ts`
       Depende de: F22-T003 · Verificación: CA-3
 - [ ] F22-T005 [TDD] Primero la prueba de la lista exacta en `foundation.test.ts`. Después, la migración `runtime_delete_grants`.

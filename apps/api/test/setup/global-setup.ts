@@ -53,7 +53,27 @@ export default async function setup(project: TestProject): Promise<() => Promise
     throw new Error(`db/bootstrap.sql failed:\n${bootstrap.output}`);
   }
 
-  const ownerUrl = container.getConnectionUri();
+  // F22 CA-3: en Supabase `postgres` no es superusuario. Las migraciones corren con un dueño sin
+  // superusuario, así una que lo necesite falla aquí y no en producción.
+  const owner = await container.exec([
+    'psql',
+    '-v',
+    'ON_ERROR_STOP=1',
+    '-U',
+    'postgres',
+    '-d',
+    'anderp',
+    '-c',
+    "CREATE ROLE anderp_owner LOGIN PASSWORD 'anderp_owner' NOSUPERUSER CREATEROLE CREATEDB",
+    '-c',
+    'ALTER DATABASE anderp OWNER TO anderp_owner',
+  ]);
+  if (owner.exitCode !== 0) throw new Error(`anderp_owner setup failed:\n${owner.output}`);
+
+  const ownerUrlParts = new URL(container.getConnectionUri());
+  ownerUrlParts.username = 'anderp_owner';
+  ownerUrlParts.password = 'anderp_owner';
+  const ownerUrl = ownerUrlParts.toString();
   // F22: el mismo migrador que `pnpm db:migrate` en producción.
   const output: string[] = [];
   const migrated = await migrateDatabase({
