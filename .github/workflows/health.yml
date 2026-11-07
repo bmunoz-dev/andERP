@@ -1,0 +1,20 @@
+name: Health
+
+# F22 CA-13: cada 2 días (8:00 en Bogotá) comprueba que la API y la base respondan. Si falla,
+# GitHub avisa por correo al dueño del repo. Render Free tarda en despertar: hasta 3 intentos.
+on:
+  schedule:
+    - cron: '0 13 */2 * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  health:
+    name: API en línea
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: curl -fsS --max-time 90 --retry 2 --retry-all-errors "$API_HEALTH_URL"
+        env:
+          API_HEALTH_URL: ${{ vars.API_HEALTH_URL }}

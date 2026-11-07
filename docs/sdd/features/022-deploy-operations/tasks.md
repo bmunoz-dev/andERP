@@ -38,7 +38,7 @@
 - [x] F22-T008 Job `e2e` en `ci.yml`; el smoke test en verde en el CI del PR.
       Archivos: `.github/workflows/ci.yml`, y `e2e/` si el smoke necesita ajustes
       Depende de: F22-T007 · Verificación: CA-12
-- [ ] F22-T009 `deploy.yml`:
+- [x] F22-T009 `deploy.yml`:
       - `--max-time` en la espera;
       - el hook de Render con el commit, según lo anotado en T001.
       Workflow `health.yml`.

@@ -39,13 +39,15 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # Si una migración falla, el job se detiene aquí y la API no se despliega (CA-14).
+      # F22: el migrador dice si la base no responde (¿Supabase pausado?) o qué migración falló.
       - name: Migraciones
         run: pnpm db:migrate
         env:
           DATABASE_URL_MIGRATIONS: ${{ secrets.DATABASE_URL_MIGRATIONS }}
 
       - name: Deploy de la API en Render
-        run: curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL" > /dev/null
+        # F22 CA-10: el commit de este job, no "el último de main" (dos merges seguidos).
+        run: curl -fsS --max-time 30 -X POST "$RENDER_DEPLOY_HOOK_URL&ref=$GITHUB_SHA" > /dev/null
         env:
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
 
@@ -54,7 +56,7 @@ jobs:
       - name: Esperar la nueva versión
         run: |
           for attempt in $(seq 1 60); do
-            version=$(curl -fsS "$API_HEALTH_URL" | jq -r '.version // empty' || true)
+            version=$(curl -fsS --max-time 20 "$API_HEALTH_URL" | jq -r '.version // empty' || true)
             if [ "$version" = "$GITHUB_SHA" ]; then
               echo "API en línea con $GITHUB_SHA"
               exit 0
