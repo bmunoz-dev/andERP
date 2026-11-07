@@ -134,4 +134,32 @@ describe('fee_payments en la base de datos', () => {
       expect(total?.total_amount).toBe('750.50');
     });
   });
+
+  it('F23 CA-6 un pago con días que suman cero no se confirma; editarlo con montos sí', async () => {
+    await withRuntimeSql(async (sql) => {
+      const c = await contract(sql);
+      await expect(
+        sql.begin(async (tx) => {
+          const p = await payment(tx as unknown as postgres.Sql, c, 2026, 8, 4);
+          await day(tx as unknown as postgres.Sql, p.id, '2026-08-24', '0.00');
+        }),
+      ).rejects.toThrow('FEE_PAYMENT_EMPTY');
+
+      const p = await payment(sql, c, 2026, 9, 1);
+      await day(sql, p.id, '2026-09-01', '100.00');
+      await sql.begin(async (tx) => {
+        await tx`delete from fee_payment_days where fee_payment_id = ${p.id}`;
+        await day(tx as unknown as postgres.Sql, p.id, '2026-09-01', '0.00');
+        await day(tx as unknown as postgres.Sql, p.id, '2026-09-02', '80.00');
+      });
+    });
+  });
+
+  it('F23 CA-7 no se registra un pago contra un contrato borrado', async () => {
+    await withRuntimeSql(async (sql) => {
+      const c = await contract(sql);
+      await sql`update provider_contracts set deleted_at = now() where id = ${c}`;
+      await expect(payment(sql, c, 2026, 8, 4)).rejects.toThrow('NOT_FOUND');
+    });
+  });
 });

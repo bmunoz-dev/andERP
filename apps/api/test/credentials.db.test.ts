@@ -84,4 +84,17 @@ describe('F06 en la base de datos', () => {
       await remove();
     });
   });
+
+  it('F23 CA-8 una credencial no apunta a un responsable borrado; sin responsable sí', async () => {
+    await withRuntimeSql(async (sql) => {
+      const gone = await person(sql, orgA, 'gone@empresa.co', null);
+      await sql`update responsible_persons set deleted_at = now() where id = ${gone}`;
+      await expect(credential(sql, orgA, 'Notaría', gone)).rejects.toThrow('UNPROCESSABLE');
+
+      const id = await credential(sql, orgA, 'Cámara', null);
+      await expect(
+        sql`update entity_credentials set responsible_person_id = ${gone} where id = ${id}`,
+      ).rejects.toThrow('UNPROCESSABLE');
+    });
+  });
 });

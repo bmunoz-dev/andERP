@@ -43,6 +43,7 @@ AndERP es un sistema de gestión de egresos y honorarios.
 | 2026-10-20 | **Módulos por organización** (F19): `organizations.modules` (enum `app_module`) decide qué paquetes tiene cada organización: Personal y pagos, Credenciales, Cuentas aéreas y Agenda; Base siempre está. La API responde `403 MODULE_DISABLED` y la web oculta el menú. Una organización nueva nace solo con Base. Decisiones 1 y 12 actualizadas; los permisos por usuario siguen fuera del alcance (§11). | AndERP pasa a servir a varias empresas cliente y el super admin necesita dar a cada una solo lo que contrató. Se agrupan en paquetes para que no existan combinaciones rotas por dependencias (Pagos necesita Personal; Credenciales, Responsables). |
 | 2026-10-22 | **Selector de organización** (F20): `sessions.organization_id` (organización activa de la sesión, FK compuesta `sessions_membership_fk` a `organization_members`) y `organization_members.last_selected_at`. El guard compara el `org` del token con la de la sesión (`409 ORGANIZATION_CHANGED`) y `POST /auth/organization` la cambia. El perfil lista las organizaciones disponibles. §6.2 y §8 actualizadas; el selector sale de §11. | Con F19 un usuario puede pertenecer a varias empresas cliente y hasta ahora el login siempre entraba en la más antigua. La organización activa en la sesión (y no en el token) permite rechazar en el servidor las pestañas que quedaron con la anterior. |
 | 2026-10-22 | **No se renombran** en el código ni en la base de datos `service_providers` / `fee_payments` (Personal / Pagos en la interfaz); el glosario (§3) hace de traducción. | El refactor tocaba ~59 archivos, 4 tablas, sus vistas, restricciones, triggers, códigos de error y auditoría, con una ventana sin servicio al desplegar, a cambio de nada visible para el usuario. |
+| 2026-11-07 | **Reglas de datos en la base** (F23): borrado de prestadores con contratos, reapertura de contratos de prestadores inactivos, pagos contra contratos borrados, semana de honorarios sin montos (`FEE_PAYMENT_EMPTY`) y credenciales hacia responsables borrados, todo en triggers; auditoría de la cuenta bancaria de un prestador; rotación de llaves por fila; límite de subidas antes de leer el archivo. §5.5, §5.8, §5.9, §6.3, §6.5 y §11 actualizadas. | Revisión de huecos del 2026-11-06: esas reglas solo las aplicaba el código, en dos pasos y sin bloqueo (constitución III). |
 | 2026-11-07 | **Sesión y acceso** (F21): `organization_members.last_access_at`; contador de bloqueo atómico; revocación de sesiones solo de la organización afectada; limpieza de sesiones y resets vencidos al iniciar sesión; logs sin parámetros de consultas. **Reemplaza la decisión del 2026-10-09:** invitar a un usuario sin contraseña ya no borra sus invitaciones pendientes en otras organizaciones. §5.3 y §6.2 actualizadas. | Revisión de huecos del 2026-11-06. La regla del 2026-10-09 existía porque el login entraba siempre en la organización más antigua; F20 lo resolvió con el selector, y con varios clientes una organización podía anular la invitación de otra. |
 | 2026-11-01 | Los campos de contraseña (login, activar invitación, restablecer y cambiar contraseña, y el formulario de credenciales) tienen un botón para mostrarla u ocultarla (§8). | Pedido del usuario: comprobar lo escrito antes de enviar, sobre todo al definir la contraseña de una invitación. |
 
@@ -399,10 +400,11 @@ PK `(user_id, organization_id)`.
 | notes | text NULL | |
 | audit | | |
 
+- **Reglas en la base (F23):** un prestador con contratos no se borra (`PROVIDER_HAS_CONTRACTS`); un contrato de un prestador inactivo o borrado no se crea ni vuelve a quedar vigente o futuro al editarlo (`PROVIDER_INACTIVE`): para reabrirlo, primero se reactiva al prestador. Los triggers de contratos bloquean la fila del prestador, así una desactivación y un alta simultáneas no pasan las dos. Un pago no se registra contra un contrato borrado.
 - **Triggers:** el contrato debe ser `fixed` (y `fee_payments` exige `daily`); el mes trabajado debe cruzarse con las fechas del contrato; `contract_id`, `period_year` y `period_month` no cambian. Las reglas de contratos sobre pagos (no borrar con pagos, no excluir pagos al cambiar fechas) cubren también esta tabla.
 
 **Reglas de dominio (backend):**
-- Un pago de honorarios tiene al menos un día.
+- Un pago de honorarios tiene al menos un día, y al menos un día con monto mayor que cero (F23). Un día en cero equivale a no llenarlo; la base lo exige al confirmar (`FEE_PAYMENT_EMPTY`).
 - Al editar un pago, sus días se reemplazan dentro de una transacción.
 - Lo pagado por mes trabajado se compara con `monthly_amount` solo como referencia: la web avisa si se supera, pero no se bloquea (F10).
 - Los festivos de Colombia se calculan en `packages/shared`; no hay tabla de festivos.
@@ -486,6 +488,7 @@ Todas son vistas normales (no materializadas).
 | audit | | |
 
 - `UNIQUE (organization_id, entity_name, username) WHERE deleted_at IS NULL`.
+- Una credencial solo apunta a un responsable vigente: un trigger rechaza uno borrado (F23).
 
 ### 5.9 Auditoría
 
@@ -505,7 +508,7 @@ Todas son vistas normales (no materializadas).
 
 - `INDEX (organization_id, created_at)`, `INDEX (entity_type, entity_id)`.
 
-**Se registra:** crear, editar y borrar en `expenses`, `fee_payments` (incluidos sus días), `provider_contracts`, `air_accounts` (crear y editar; no se borran), `air_account_movements`, `entity_credentials` (nunca con la contraseña ni sus datos cifrados), `payment_obligations` y `obligation_due_dates` (incluidos completar y crear, cambiar o quitar el pendiente); revelar una credencial; y los eventos de auth (login, login fallido, bloqueo, cambio y recuperación de contraseña).
+**Se registra:** crear, editar y borrar en `expenses`, `fee_payments` (incluidos sus días), `provider_contracts`, `air_accounts` (crear y editar; no se borran), `air_account_movements`, `entity_credentials` (nunca con la contraseña ni sus datos cifrados), `payment_obligations` y `obligation_due_dates` (incluidos completar y crear, cambiar o quitar el pendiente); revelar una credencial; cambiar la cuenta bancaria de un prestador (`provider.bank_account_update`, con banco, tipo y número antes y después; F23); y los eventos de auth (login, login fallido, bloqueo, cambio y recuperación de contraseña).
 
 **Atomicidad (F12):** el cambio y su registro se escriben en la misma transacción (`audit.log(entry, tx)`): si falla la auditoría, el cambio no queda. Los eventos de auth y `credential.reveal` se auditan fuera de cualquier transacción de negocio.
 
@@ -658,7 +661,7 @@ Las notificaciones **no se guardan**: son los vencimientos pendientes en estado 
 
 - **Cifrado:** AES-256-GCM en el backend, con un IV aleatorio de 12 bytes por cada cifrado. Como datos autenticados adicionales (AAD) se usa `organization_id:id` del registro, de modo que un texto cifrado copiado a otro registro no se puede descifrar.
 - **Llave maestra:** se lee de variables de entorno o de un gestor de secretos, por versión (`CREDENTIALS_KEY_V1`, …). Nunca se guarda en la DB.
-- **Rotación:** `key_version` permite rotar la llave; un script vuelve a cifrar los registros con la nueva versión.
+- **Rotación:** `key_version` permite rotar la llave; un script vuelve a cifrar los registros con la nueva versión. Un registro que no se puede descifrar no detiene la rotación: el script informa su `id`, sigue con los demás y termina con error (F23).
 - **Exposición:** los listados y el detalle nunca devuelven la contraseña. Solo `POST /api/v1/credentials/:id/reveal` la devuelve, y cada llamada genera un registro `credential.reveal` en `audit_logs`.
 
 ### 6.4 Aislamiento por organización y permisos
@@ -687,7 +690,7 @@ Las filas de egresos, honorarios, prestadores, responsables y credenciales aplic
 - El `Content-Disposition` se fija al firmar la URL (PDF `inline`, Word `attachment`): Supabase Storage descarta el que se envía al subir y respeta el de la URL firmada (comprobado en F17-T003).
 - Hay que activar la conexión S3 en *Settings → Storage* del proyecto de Supabase.
 - Las llaves S3 de Supabase son de máximo privilegio (todos los buckets, sin RLS): viven solo en Render y se rotan desde *Settings → Storage → S3 Access Keys*.
-- Cada usuario sube hasta 20 archivos por hora (`429`): el bucket solo crece y pasar el 1 GB gratuito restringe todo el proyecto.
+- Cada usuario sube hasta 20 archivos por hora (`429`): el bucket solo crece y pasar el 1 GB gratuito restringe todo el proyecto. El límite y el contrato se comprueban antes de leer el archivo (F23). Los objetos huérfanos se listan con la consulta del runbook 07.
 - El Worker reenvía el cuerpo como stream, sin cargar el archivo en memoria.
 - La ruta empieza por la organización y no incluye el nombre original.
 
@@ -785,7 +788,7 @@ La interfaz está en español y el formato de moneda es COP (`es-CO`).
 - Alertas por `payment_frequency`.
 - Adjuntar facturas a los egresos (el documento del contrato llegó con F17).
 - Exportar a Excel o PDF.
-- Visor de `audit_logs` en la interfaz (los datos se capturan desde la v1).
+- Visor de `audit_logs` en la interfaz (los datos se capturan desde la v1). Decisión del 2026-11-06: tampoco hay pantalla de quién reveló cada contraseña ni tope de revelaciones; cada revelación queda en `credential.reveal` y se consulta con SQL.
 - Presupuestos y multimoneda.
 - Proveedores en egresos (`supplier_id`) y unicidad de `(supplier_id, invoice_number)`.
 - Vincular responsables con usuarios de la app (`user_id` opcional).

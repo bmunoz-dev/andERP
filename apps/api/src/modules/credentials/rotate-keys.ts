@@ -1,4 +1,4 @@
-import { asc, eq, ne } from 'drizzle-orm';
+import { and, asc, eq, ne, notInArray } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { existsSync } from 'node:fs';
 import postgres from 'postgres';
@@ -16,8 +16,9 @@ export async function rotateCredentialKeys(
   db: Database,
   cipher: CredentialCipher,
   batchSize = 100,
-): Promise<number> {
-  let total = 0;
+): Promise<{ rotated: number; failed: string[] }> {
+  let rotated = 0;
+  const failed: string[] = [];
   for (;;) {
     const count = await db.transaction(async (tx) => {
       const rows = await tx
@@ -30,13 +31,26 @@ export async function rotateCredentialKeys(
           keyVersion: entityCredentials.keyVersion,
         })
         .from(entityCredentials)
-        .where(ne(entityCredentials.keyVersion, cipher.activeVersion))
+        .where(
+          and(
+            ne(entityCredentials.keyVersion, cipher.activeVersion),
+            // F23 CA-9: lo que ya falló no se vuelve a tomar; sin esto el bucle no avanza.
+            failed.length > 0 ? notInArray(entityCredentials.id, failed) : undefined,
+          ),
+        )
         .orderBy(asc(entityCredentials.id))
         .limit(batchSize)
         .for('update');
+      let done = 0;
       for (const row of rows) {
         const aad = credentialAad(row.organizationId, row.id);
-        const secret = cipher.encrypt(cipher.decrypt(row, aad), aad);
+        let secret: ReturnType<CredentialCipher['encrypt']>;
+        try {
+          secret = cipher.encrypt(cipher.decrypt(row, aad), aad);
+        } catch {
+          failed.push(row.id);
+          continue;
+        }
         await tx
           .update(entityCredentials)
           .set({
@@ -46,11 +60,12 @@ export async function rotateCredentialKeys(
             keyVersion: secret.keyVersion,
           })
           .where(eq(entityCredentials.id, row.id));
+        done += 1;
       }
-      return rows.length;
+      return { taken: rows.length, done };
     });
-    total += count;
-    if (count < batchSize) return total;
+    rotated += count.done;
+    if (count.taken < batchSize) return { rotated, failed };
   }
 }
 
@@ -61,10 +76,15 @@ async function main(): Promise<void> {
   try {
     const db = drizzle(sql, { schema, casing: 'snake_case' });
     const cipher = new CredentialCipher(env.CREDENTIALS_KEYS, env.CREDENTIALS_ACTIVE_KEY_VERSION);
-    const count = await rotateCredentialKeys(db, cipher);
+    const { rotated, failed } = await rotateCredentialKeys(db, cipher);
     console.log(
-      `Credentials rotated to key version ${String(cipher.activeVersion)}: ${String(count)}`,
+      `Credentials rotated to key version ${String(cipher.activeVersion)}: ${String(rotated)}`,
     );
+    if (failed.length > 0) {
+      // F23 CA-9: los ids no son secretos; con ellos se revisan las filas (runbook 04).
+      console.error(`Credentials that could not be decrypted: ${failed.join(', ')}`);
+      process.exitCode = 1;
+    }
   } finally {
     await sql.end();
   }

@@ -13,6 +13,11 @@ export interface Period {
  */
 export function assertValidDays(period: Period, days: readonly FeePaymentDay[]): void {
   if (days.length === 0) throw new DomainError(ErrorCode.FEE_PAYMENT_WITHOUT_DAYS, 422);
+  // F23 CA-6: un día en cero equivale a no llenarlo; la semana necesita al menos uno con monto.
+  // Se mira el texto del dinero (algún dígito distinto de cero), sin aritmética con number.
+  if (!days.some((d) => /[1-9]/.test(d.amount))) {
+    throw new DomainError(ErrorCode.FEE_PAYMENT_EMPTY, 422);
+  }
 
   const dates = days.map((d) => d.workDate);
   if (new Set(dates).size !== dates.length) {

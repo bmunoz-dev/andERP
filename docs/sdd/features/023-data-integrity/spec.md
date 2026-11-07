@@ -44,10 +44,7 @@ F23 lleva esas reglas a la base de datos, audita los cambios de cuenta bancaria 
 
 **Pagos**
 
-- **CA-6.** Crear o editar un pago de honorarios con todos los días en cero o vacíos se rechaza:
-  - el schema de `packages/shared` lo valida, y la API responde `422 VALIDATION_ERROR` con el error en `days`, que el formulario muestra junto a los días;
-  - la base de datos también lo impide, con `422 FEE_PAYMENT_EMPTY` (código nuevo, con su mensaje en español).
-  (Ajustado el 2026-11-06 al planificar: la primera versión aprobada daba `FEE_PAYMENT_EMPTY` también desde el schema, pero el pipe de validación responde `VALIDATION_ERROR`.)
+- **CA-6.** Crear o editar un pago de honorarios con todos los días en cero responde `422 FEE_PAYMENT_EMPTY`, un código nuevo con su mensaje en español. Lo aplica el servicio, igual que `FEE_PAYMENT_WITHOUT_DAYS` para un pago sin días, y la base de datos también lo impide. (2026-11-07, al implementar: se volvió a la redacción original. La regla vive junto a `FEE_PAYMENT_WITHOUT_DAYS` en `fee-payment-rules.ts`, no en un `refine` de shared, así la API responde con el código propio.)
 - **CA-7.** Los triggers de pagos de honorarios y de pagos fijos que leen el contrato exigen `deleted_at IS NULL`. Un pago no puede quedar asociado a un contrato borrado en paralelo.
 
 **Credenciales**
