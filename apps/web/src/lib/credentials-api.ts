@@ -44,3 +44,13 @@ export const deleteCredential = (id: string) =>
 /** Sin caché de TanStack Query: la contraseña solo vive en el componente que la pidió (CA-14). */
 export const revealCredential = (id: string) =>
   apiFetch<RevealedPassword>(`/credentials/${id}/reveal`, { method: 'POST' });
+
+/** La contraseña es de solo escritura: al editar, vacía significa "no cambiar" (F06 CA-7). */
+export function credentialBody<T extends { password: string }>(
+  values: T,
+  editing: boolean,
+): T | Omit<T, 'password'> {
+  if (!editing || values.password !== '') return values;
+  const { password: _password, ...rest } = values;
+  return rest;
+}

@@ -61,6 +61,7 @@ function AirAccountsPage() {
       <AccountsTable
         data={accounts.data}
         isLoading={accounts.isPending}
+        error={accounts.error}
         onEdit={setEditing}
         onToggle={(a) => {
           toggle.mutate(a);

@@ -20,12 +20,15 @@ function SignedMovement({ movement }: { movement: AirMovement }) {
 export function MovementsTable({
   data,
   isLoading,
+  error,
   onCollect,
   onEdit,
   onDelete,
 }: {
   data: AirMovement[] | undefined;
   isLoading: boolean;
+  /** Error de la consulta (F24 CA-3). */
+  error?: unknown;
   onCollect: (m: AirMovement) => void;
   onEdit: (m: AirMovement) => void;
   onDelete: (m: AirMovement) => void;
@@ -105,6 +108,7 @@ export function MovementsTable({
       columns={columns}
       data={data}
       isLoading={isLoading}
+      error={error}
       emptyMessage="No hay movimientos con estos filtros."
       getRowId={(m) => m.id}
     />

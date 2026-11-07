@@ -1,4 +1,4 @@
-# F07 CA-11: cabeceras de seguridad de Cloudflare Pages para toda la web.
+# F07 CA-11: cabeceras de seguridad para toda la web (Worker con archivos estáticos, que respeta _headers).
 /*
   Content-Security-Policy: default-src 'self'; connect-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
   Strict-Transport-Security: max-age=31536000; includeSubDomains

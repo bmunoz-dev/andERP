@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDate, formatMoneyPlain } from './format';
+import { formatDate, formatMoneyPlain, isWebUrl } from './format';
 
 describe('formatDate', () => {
   it('muestra una fecha ISO como dd/mm/aaaa sin desplazarla por la zona horaria', () => {
@@ -19,5 +19,17 @@ describe('formatMoneyPlain (para campos de entrada)', () => {
     ['0.00', '0'],
   ])('%s → %s', (money, expected) => {
     expect(formatMoneyPlain(money)).toBe(expected);
+  });
+});
+
+describe('isWebUrl (F24 CA-6)', () => {
+  it.each([
+    ['https://muisca.dian.gov.co', true],
+    ['HTTP://banco.co', true],
+    ['javascript:alert(1)', false],
+    ['data:text/html,x', false],
+    ['muisca.dian.gov.co', false],
+  ])('%s → %s', (url, expected) => {
+    expect(isWebUrl(url)).toBe(expected);
   });
 });

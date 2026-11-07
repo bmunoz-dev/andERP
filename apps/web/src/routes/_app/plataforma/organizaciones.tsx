@@ -16,6 +16,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTable } from '@/components/data-table';
+import { refreshSession } from '@/lib/api-client';
 import { FormDialog } from '@/components/form-dialog';
 import { FormField } from '@/components/form-field';
 import { PageHeader } from '@/components/page-header';
@@ -29,11 +30,19 @@ import {
 } from '@/lib/admin-api';
 import { errorMessage } from '@/lib/error-messages.es';
 
+/**
+ * F24 CA-8: el perfil trae los módulos y las organizaciones del menú y del selector. Si falla, el
+ * guardado igual cuenta; el menú se actualiza en la siguiente recarga.
+ */
+async function refreshProfile(): Promise<void> {
+  await refreshSession().catch(() => undefined);
+}
+
 export const Route = createFileRoute('/_app/plataforma/organizaciones')({
   component: OrganizationsPage,
 });
 
-const date = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium' });
+const date = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeZone: 'America/Bogota' });
 const list = new Intl.ListFormat('es', { type: 'conjunction' });
 
 /** Paquetes que el super admin enciende por organización (F19, spec §Paquetes). */
@@ -161,6 +170,7 @@ function OrganizationsPage() {
         columns={columns}
         data={organizations.data}
         isLoading={organizations.isPending}
+        error={organizations.error}
         emptyMessage="Aún no hay organizaciones."
         getRowId={(o) => o.id}
       />
@@ -223,6 +233,7 @@ function CreateOrganizationDialog({
     onSuccess: async (o) => {
       toast.success(`${o.name} creada. Enviamos la invitación a su administrador.`);
       await onSaved();
+      await refreshProfile();
       onClose();
     },
     onError: (e) => {
@@ -304,6 +315,7 @@ function ModulesDialog({
     onSuccess: async (o) => {
       toast.success(`Módulos de ${o.name} actualizados`);
       await onSaved();
+      await refreshProfile();
       onClose();
     },
     onError: (e) => {

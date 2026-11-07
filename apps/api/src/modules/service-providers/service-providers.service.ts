@@ -3,6 +3,7 @@ import {
   type CatalogKind,
   type CreateServiceProvider,
   ErrorCode,
+  isBankAccountComplete,
   type ServiceProvider,
   todayIn,
   type UpdateServiceProvider,
@@ -277,11 +278,11 @@ export class ServiceProvidersService {
           ? changes.accountNumber
           : (current.accountNumber ?? null),
     };
-    const filled = [merged.bankId, merged.accountTypeId, merged.accountNumber].filter(
-      (v) => v !== null && v !== '',
-    ).length;
-    if (filled !== 0 && filled !== 3) throw new DomainError(ErrorCode.INCOMPLETE_BANK_ACCOUNT, 422);
-    return filled === 0 ? { bankId: null, accountTypeId: null, accountNumber: null } : merged;
+    // La regla vive en shared; la web usa la misma (F24 CA-4).
+    if (!isBankAccountComplete(merged)) {
+      throw new DomainError(ErrorCode.INCOMPLETE_BANK_ACCOUNT, 422);
+    }
+    return merged.bankId ? merged : { bankId: null, accountTypeId: null, accountNumber: null };
   }
 
   private async assertCatalogsActive(values: {

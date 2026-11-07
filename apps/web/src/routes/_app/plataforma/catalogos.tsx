@@ -136,6 +136,7 @@ function CatalogTab({ kind, singular }: { kind: CatalogKind; singular: string })
         columns={columns}
         data={items.data}
         isLoading={items.isPending}
+        error={items.error}
         emptyMessage="Sin valores."
         getRowId={(item) => item.id}
       />

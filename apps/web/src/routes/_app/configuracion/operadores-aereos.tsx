@@ -108,6 +108,7 @@ function AirOperatorsPage() {
         columns={columns}
         data={operators.data}
         isLoading={operators.isPending}
+        error={operators.error}
         emptyMessage="Aún no hay operadores aéreos."
         getRowId={(o) => o.id}
       />

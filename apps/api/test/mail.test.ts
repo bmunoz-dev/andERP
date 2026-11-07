@@ -52,4 +52,20 @@ describe('SmtpMailer (Mailpit real)', () => {
     expect(html.HTML).toContain('Ana &lt;script&gt;');
     expect(html.HTML).toContain('http://localhost:5173/restablecer?token=abc');
   });
+
+  it('F24 CA-1 un SMTP que no responde no retiene la petición más de 10 s por paso', () => {
+    const mailer = new SmtpMailer({
+      SMTP_HOST: 'localhost',
+      SMTP_PORT: 1025,
+      SMTP_SECURE: false,
+      MAIL_FROM: 'AndERP <no-reply@anderp.test>',
+    } as Env);
+    const options = (mailer as unknown as { transport: { options: Record<string, unknown> } })
+      .transport.options;
+    expect(options).toMatchObject({
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 10_000,
+    });
+  });
 });

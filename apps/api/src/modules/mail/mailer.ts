@@ -27,6 +27,10 @@ export class SmtpMailer implements Mailer {
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
       secure: env.SMTP_SECURE,
+      // F24 CA-1: la invitación se envía dentro de su transacción; un SMTP lento no la retiene minutos.
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 10_000,
       ...(env.SMTP_USER ? { auth: { user: env.SMTP_USER, pass: env.SMTP_PASS ?? '' } } : {}),
     });
   }

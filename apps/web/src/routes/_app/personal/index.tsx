@@ -133,6 +133,7 @@ function ProvidersPage() {
         columns={columns}
         data={providers.data}
         isLoading={providers.isPending}
+        error={providers.error}
         emptyMessage={
           search ? 'Ninguna persona coincide con la búsqueda.' : 'Aún no hay personal registrado.'
         }

@@ -66,7 +66,13 @@ function ProviderDetailPage() {
   const [viewingContractId, setViewingContractId] = useState<string | null>(null);
   const viewingContract = contracts.data?.find((c) => c.id === viewingContractId) ?? null;
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: providerKeys.all });
+  // F24 CA-5: el formulario de pago usa los contratos que se cruzan con una semana.
+  const refresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: providerKeys.all }),
+      queryClient.invalidateQueries({ queryKey: ['contracts', 'overlaps'] }),
+    ]);
+  };
   const onError = (error: unknown) => toast.error(errorMessage(error));
 
   const removeProvider = useMutation({
@@ -290,6 +296,7 @@ function ProviderDetailPage() {
         columns={columns}
         data={contracts.data}
         isLoading={contracts.isPending}
+        error={contracts.error}
         emptyMessage="Esta persona aún no tiene contratos."
         getRowId={(c) => c.id}
       />
