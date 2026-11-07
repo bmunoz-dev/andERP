@@ -70,7 +70,7 @@
 
 ## Bloque F — Cierre
 
-- [ ] F21-T013 Cierre:
+- [x] F21-T013 Cierre:
       - verificación completa (`pnpm format:check && pnpm lint && pnpm typecheck && pnpm test`);
       - notas de implementación en `plan.md`;
       - F21 marcada "Hecho" en el roadmap;
