@@ -17,7 +17,7 @@
 - [x] F24-T003 [TDD] `ParseUUIDPipe` en `categoryId`, con el caso vacío (punto de revisión 2).
       Archivos: `apps/api/src/modules/expenses/expenses.module.ts`, `apps/api/test/expenses.test.ts`
       Verificación: CA-2
-- [ ] F24-T004 [TDD] `ACCOUNT_NUMBER_PATTERN`, `isBankAccountComplete` e `isContractEndValid` en shared. El servicio de prestadores usa `isBankAccountComplete`.
+- [x] F24-T004 [TDD] `ACCOUNT_NUMBER_PATTERN`, `isBankAccountComplete` e `isContractEndValid` en shared. El servicio de prestadores usa `isBankAccountComplete`.
       Archivos: `packages/shared/src/schemas/service-providers{,.test}.ts`, `apps/api/src/modules/service-providers/service-providers.service.ts`
       Verificación: CA-4
 

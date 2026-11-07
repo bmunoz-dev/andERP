@@ -17,6 +17,26 @@ const optionalText = (max: number) =>
     .optional()
     .transform((v) => (v === '' ? null : v));
 
+/** Número de cuenta bancaria: de 4 a 30 números o guiones (F03). */
+export const ACCOUNT_NUMBER_PATTERN = /^[0-9-]{4,30}$/;
+
+/** La cuenta bancaria va completa o vacía (F03 CA-1); `''`, `null` y `undefined` cuentan como vacío. */
+export function isBankAccountComplete(values: {
+  bankId?: string | null;
+  accountTypeId?: string | null;
+  accountNumber?: string | null;
+}): boolean {
+  const filled = [values.bankId, values.accountTypeId, values.accountNumber].filter(
+    (v) => v !== undefined && v !== null && v !== '',
+  ).length;
+  return filled === 0 || filled === 3;
+}
+
+/** Un contrato sin fin, o que termina el mismo día o después de empezar (F03). */
+export function isContractEndValid(startDate: string, endDate: string | null | undefined): boolean {
+  return !endDate || endDate >= startDate;
+}
+
 /**
  * La cuenta bancaria va completa o no va (F03 CA-1). La API responde
  * `INCOMPLETE_BANK_ACCOUNT` si llega a medias; aquí solo se valida cada campo.
@@ -31,7 +51,7 @@ export const createServiceProviderSchema = z.object({
   accountNumber: z
     .string()
     .trim()
-    .regex(/^[0-9-]{4,30}$/, 'Usa de 4 a 30 números o guiones')
+    .regex(ACCOUNT_NUMBER_PATTERN, 'Usa de 4 a 30 números o guiones')
     .nullable()
     .optional()
     .or(z.literal('').transform(() => null)),
