@@ -5,7 +5,7 @@
 
 ## Bloque A — Diseño
 
-- [ ] F22-T001 Actualizar `design.md` §10 (SSL, migrador, health check y riesgo aceptado de la publicación de la web) y su historial. Consultar en la documentación de Render si el deploy hook admite indicar el commit, y anotar la respuesta en "Notas de implementación".
+- [x] F22-T001 Actualizar `design.md` §10 (SSL, migrador, health check y riesgo aceptado de la publicación de la web) y su historial. Consultar en la documentación de Render si el deploy hook admite indicar el commit, y anotar la respuesta en "Notas de implementación".
       Archivos: `docs/sdd/design.md`, `docs/sdd/features/022-deploy-operations/plan.md`
 
 ## Bloque B — Base de datos

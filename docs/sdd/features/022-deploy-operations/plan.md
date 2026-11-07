@@ -120,4 +120,4 @@
 
 ## Notas de implementación
 
-(Se completan al implementar.)
+- **T001:** la documentación de Render (https://render.com/docs/deploy-hooks) confirma que un deploy hook acepta `ref=<commit SHA>` en servicios construidos desde Git, como esta API (Docker desde el repo). Responde `400` si el servicio despliega desde una imagen ya hecha. `deploy.yml` lo pasa.
