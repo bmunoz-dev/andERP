@@ -6,7 +6,7 @@ import type {
   Organization,
 } from '@anderp/shared';
 import type { Response } from 'supertest';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNotNull } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DB, type Database } from '../src/db/database.module';
@@ -17,6 +17,7 @@ import { createTestApp, type TestApp } from './setup/create-test-app';
 import {
   as,
   createMember,
+  createOrganization,
   login,
   seedTwoOrgs,
   TEST_PASSWORD,
@@ -471,6 +472,38 @@ describe('Usuarios de la organización', () => {
 
     await as(t, s.orgA.admin.token).patch(`/members/${other.id}`, { isActive: true }).expect(200);
     await login(t, other.email);
+  });
+
+  it('F21 CA-6 dos desactivaciones cruzadas no dejan la organización sin nadie que pueda entrar', async () => {
+    // Organización nueva con dos admins con contraseña y un invitado que nunca activó su cuenta.
+    const org = await createOrganization(db, `Cruzada ${randomUUID().slice(0, 6)}`);
+    const x = await createMember(t, db, org.id);
+    const y = await createMember(t, db, org.id);
+    const [invited] = await db
+      .insert(users)
+      .values({ email: `inv-${randomUUID()}@empresa.co`, firstName: 'Inv', lastName: 'Itado' })
+      .returning({ id: users.id });
+    await db
+      .insert(organizationMembers)
+      .values({ userId: invited!.id, organizationId: org.id, role: 'admin' });
+
+    const [byX, byY] = await Promise.all([
+      as(t, x.token).patch(`/members/${y.id}`, { isActive: false }),
+      as(t, y.token).patch(`/members/${x.id}`, { isActive: false }),
+    ]);
+    const active = await db
+      .select({ userId: organizationMembers.userId })
+      .from(organizationMembers)
+      .innerJoin(users, eq(users.id, organizationMembers.userId))
+      .where(
+        and(
+          eq(organizationMembers.organizationId, org.id),
+          eq(organizationMembers.isActive, true),
+          isNotNull(users.passwordHash),
+        ),
+      );
+    expect(active).toHaveLength(1);
+    expect([byX.status, byY.status].filter((st) => st === 200)).toHaveLength(1);
   });
 
   it('CA-14 nadie se desactiva a sí mismo', async () => {

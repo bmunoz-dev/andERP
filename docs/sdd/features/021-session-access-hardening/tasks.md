@@ -40,7 +40,7 @@
       - `setActive` y la suspensión la usan después del commit, con `try/catch` y log.
       Archivos: `ports.ts`, `drizzle-auth.repositories.ts`, `in-memory-auth.ts`, `members.service.ts`, `organizations.service.ts`, `apps/api/test/organizations.test.ts`
       Depende de: F21-T001 · Verificación: CA-5
-- [ ] F21-T007 [TDD] `LAST_ADMIN` dentro de la transacción, con `FOR UPDATE` sobre la organización y solo miembros con contraseña. Pruebas de CA-6 y del punto de revisión 4.
+- [x] F21-T007 [TDD] `LAST_ADMIN` dentro de la transacción, con `FOR UPDATE` sobre la organización y solo miembros con contraseña. Pruebas de CA-6 y del punto de revisión 4.
       Archivos: `members.service.ts`, `apps/api/test/organizations.test.ts`
       Depende de: F21-T006 · Verificación: CA-6
 - [ ] F21-T008 [TDD] Invitaciones por organización. Primero la prueba que reemplaza a F02 CA-20 y la del punto de revisión 1. Después:
