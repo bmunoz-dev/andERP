@@ -53,6 +53,7 @@ const MESSAGES = {
   CONTRACT_OVERLAP: 'Las fechas se cruzan con otro contrato de esta persona.',
   // F04 — pagos de honorarios
   FEE_PAYMENT_WITHOUT_DAYS: 'Ingresa el valor de al menos un día.',
+  FEE_PAYMENT_EMPTY: 'Registra al menos un día con monto mayor que cero.',
   DUPLICATE_WORK_DATE: 'Hay una fecha repetida en el pago.',
   WORK_DATE_OUTSIDE_WEEK: 'Hay días fuera de la semana elegida.',
   WORK_DATE_OUTSIDE_CONTRACT: 'Hay días fuera de las fechas del contrato.',

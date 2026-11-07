@@ -78,3 +78,100 @@ CREATE TRIGGER "provider_contracts_require_active_provider"
   BEFORE INSERT OR UPDATE OF "service_provider_id", "start_date", "end_date", "deleted_at"
   ON "anderp"."provider_contracts"
   FOR EACH ROW EXECUTE FUNCTION "anderp"."provider_contracts_require_active_provider"();
+--> statement-breakpoint
+
+-- CA-7: un pago no queda asociado a un contrato borrado en paralelo. Sin contrato vigente, NOT_FOUND
+-- (antes un NULL hacía pasar la comparación del modo sin error).
+CREATE OR REPLACE FUNCTION "anderp"."fixed_payments_validate"() RETURNS trigger
+LANGUAGE plpgsql SET search_path = '' AS $$
+DECLARE
+  v_mode "anderp"."payment_mode";
+  v_start date;
+  v_end date;
+  v_first date := make_date(NEW.period_year, NEW.period_month, 1);
+BEGIN
+  IF TG_OP = 'UPDATE' THEN
+    IF NEW.contract_id IS DISTINCT FROM OLD.contract_id
+       OR NEW.period_year IS DISTINCT FROM OLD.period_year
+       OR NEW.period_month IS DISTINCT FROM OLD.period_month THEN
+      RAISE EXCEPTION 'FIXED_PAYMENT_PERIOD_IMMUTABLE';
+    END IF;
+    RETURN NEW;
+  END IF;
+
+  SELECT pc.payment_mode, pc.start_date, pc.end_date
+    INTO v_mode, v_start, v_end
+    FROM "anderp"."provider_contracts" pc
+   WHERE pc.organization_id = NEW.organization_id AND pc.id = NEW.contract_id
+     AND pc.deleted_at IS NULL
+     FOR SHARE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'NOT_FOUND';
+  END IF;
+  IF v_mode <> 'fixed' THEN
+    RAISE EXCEPTION 'CONTRACT_PAYMENT_MODE_MISMATCH';
+  END IF;
+  IF (v_end IS NOT NULL AND v_first > v_end)
+     OR (v_first + interval '1 month' - interval '1 day')::date < v_start THEN
+    RAISE EXCEPTION 'FIXED_PAYMENT_OUTSIDE_CONTRACT';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+--> statement-breakpoint
+CREATE OR REPLACE FUNCTION "anderp"."fee_payments_check_mode"() RETURNS trigger
+LANGUAGE plpgsql SET search_path = '' AS $$
+DECLARE
+  v_mode "anderp"."payment_mode";
+BEGIN
+  SELECT pc.payment_mode INTO v_mode
+    FROM "anderp"."provider_contracts" pc
+   WHERE pc.organization_id = NEW.organization_id AND pc.id = NEW.contract_id
+     AND pc.deleted_at IS NULL
+     FOR SHARE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'NOT_FOUND';
+  END IF;
+  IF v_mode <> 'daily' THEN
+    RAISE EXCEPTION 'CONTRACT_PAYMENT_MODE_MISMATCH';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+--> statement-breakpoint
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM "anderp"."fee_payment_days" d
+     GROUP BY d.fee_payment_id HAVING max(d.amount) = 0
+  ) THEN
+    RAISE EXCEPTION 'F23: hay pagos de honorarios cuyos días suman cero; corrígelos antes de migrar';
+  END IF;
+END $$;
+--> statement-breakpoint
+
+-- CA-6: un pago que tiene días suma más de cero. Se revisa al confirmar (diferido): editar borra y
+-- vuelve a insertar los días en la misma transacción. Un pago sin ningún día lo rechaza el backend
+-- (FEE_PAYMENT_WITHOUT_DAYS), no esta regla.
+CREATE FUNCTION "anderp"."fee_payment_days_require_amount"() RETURNS trigger
+LANGUAGE plpgsql SET search_path = '' AS $$
+DECLARE
+  v_payment uuid := COALESCE(NEW.fee_payment_id, OLD.fee_payment_id);
+BEGIN
+  IF EXISTS (SELECT 1 FROM "anderp"."fee_payment_days" d WHERE d.fee_payment_id = v_payment)
+     AND NOT EXISTS (
+       SELECT 1 FROM "anderp"."fee_payment_days" d
+        WHERE d.fee_payment_id = v_payment AND d.amount > 0
+     ) THEN
+    RAISE EXCEPTION 'FEE_PAYMENT_EMPTY';
+  END IF;
+  RETURN NULL;
+END;
+$$;
+--> statement-breakpoint
+CREATE CONSTRAINT TRIGGER "fee_payment_days_require_amount"
+  AFTER INSERT OR UPDATE OR DELETE ON "anderp"."fee_payment_days"
+  DEFERRABLE INITIALLY DEFERRED
+  FOR EACH ROW EXECUTE FUNCTION "anderp"."fee_payment_days_require_amount"();

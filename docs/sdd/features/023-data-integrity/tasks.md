@@ -16,7 +16,7 @@
       - el trigger de contratos reemplazado.
       Archivos: `apps/api/drizzle/NNNN_data_integrity_guards.sql`, `apps/api/test/{service-providers,provider-deactivation}.db.test.ts`
       Depende de: F23-T001 · Verificación: CA-1–CA-3
-- [ ] F23-T003 [TDD] Pagos con contrato borrado y semana sin montos:
+- [x] F23-T003 [TDD] Pagos con contrato borrado y semana sin montos:
       - `FEE_PAYMENT_EMPTY` en shared, con su mensaje y el `refine`;
       - los triggers de pagos con `NOT FOUND` y la restricción diferida.
       Pruebas de CA-6, CA-7 y del punto de revisión 3.
