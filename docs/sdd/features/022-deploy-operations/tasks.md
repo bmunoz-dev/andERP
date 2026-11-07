@@ -10,7 +10,7 @@
 
 ## Bloque B — Base de datos
 
-- [ ] F22-T002 [TDD] `connection.ts` (`isLocalDatabase` y `sslFor`) y su uso en `database.module.ts`.
+- [x] F22-T002 [TDD] `connection.ts` (`isLocalDatabase` y `sslFor`) y su uso en `database.module.ts`.
       Archivos: `apps/api/src/db/{connection,connection.test,database.module}.ts`
       Depende de: F22-T001 · Verificación: CA-1
 - [ ] F22-T003 [TDD] `migrate.ts` con su prueba y la carpeta `test/fixtures/broken-migration/`. `db:migrate` apunta al script nuevo, y `global-setup.ts` usa `migrateDatabase`.
