@@ -42,7 +42,7 @@
 
 ## Bloque D — Cierre
 
-- [ ] F24-T009 Cierre:
+- [x] F24-T009 Cierre:
       - verificación completa;
       - notas de implementación;
       - F24 marcada "Hecho" en el roadmap;
