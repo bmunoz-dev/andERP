@@ -1,5 +1,7 @@
 # Revisión de huecos por módulo (2026-11-06)
 
+> **Estado (2026-11-07):** los hallazgos se cubren en F21 (sesión y acceso), F22 (despliegue y operación), F23 (reglas de datos en la base) y F24 (robustez y documentación); ver `docs/sdd/roadmap.md`. Riesgos aceptados por el usuario: la web se publica sin esperar a la API, el aviso "cuenta bloqueada", los pagos fijos duplicados y revelar contraseñas sin visor ni tope. Los backups siguen aplazados.
+
 Revisión de un desarrollador senior sobre el estado del código en `main` (commit `581e893`). Compara el código con la constitución, el diseño y la spec de cada feature, y busca lo que falta o puede fallar: seguridad, integridad de datos, criterios de aceptación sin cumplir, pruebas que faltan y operación.
 
 ## Cómo se hizo

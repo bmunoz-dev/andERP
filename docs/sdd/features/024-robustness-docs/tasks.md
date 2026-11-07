@@ -5,7 +5,7 @@
 
 ## Bloque A — Diseño y specs
 
-- [ ] F24-T001 `design.md` §5.5 (riesgo aceptado de pagos fijos duplicados) e historial. Notas fechadas en las specs de F04, F16 y F02, y la nota al principio del informe de revisión.
+- [x] F24-T001 `design.md` §5.5 (riesgo aceptado de pagos fijos duplicados) e historial. Notas fechadas en las specs de F04, F16 y F02, y la nota al principio del informe de revisión.
       Archivos: `docs/sdd/design.md`, `docs/sdd/features/{002,004,016}-*/spec.md`, `docs/reviews/2026-11-06-revision-modulos.md`
       Verificación: CA-11, CA-12
 

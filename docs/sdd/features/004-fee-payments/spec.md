@@ -19,7 +19,7 @@ Registrar el pago semanal de honorarios de un contrato, con un valor por cada fe
 ## Criterios de aceptación
 
 **Registro**
-- **CA-1.** `POST /fee-payments` recibe `{ contractId, periodYear, periodMonth, weekOfMonth, paymentDate, notes?, days: [{ workDate, amount, isHoliday }] }` y crea la cabecera y los días en una sola transacción. La respuesta incluye `periodStart`, `periodEnd`, `total` (calculado en SQL) y `warnings[]`.
+- **CA-1.** `POST /fee-payments` recibe `{ contractId, periodYear, periodMonth, weekOfMonth, paymentDate, notes?, days: [{ workDate, amount, isHoliday }] }` y crea la cabecera y los días en una sola transacción. La respuesta incluye `periodStart`, `periodEnd`, `total` (calculado en SQL) y ~~`warnings[]`~~ (2026-11-07, F24: no se implementó; F10 quitó el tope que lo motivaba).
 - **CA-2.** La base de datos calcula `period_start` y `period_end` (columnas generadas) según el formato B. Ejemplos: agosto de 2026, semana 4 → del 22 al 31; febrero de 2026, semana 4 → del 22 al 28; septiembre de 2026, semana 2 → del 8 al 14.
 - **CA-3.** Un pago sin días responde `422 FEE_PAYMENT_WITHOUT_DAYS`, y una fecha repetida en `days` responde `422 DUPLICATE_WORK_DATE`.
 - **CA-4.** Un `workDate` fuera de `periodStart..periodEnd` responde `422 WORK_DATE_OUTSIDE_WEEK`, y uno fuera de las fechas del contrato responde `422 WORK_DATE_OUTSIDE_CONTRACT`. Las dos reglas las aplican el dominio **y** un trigger en la base de datos.
