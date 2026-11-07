@@ -1,4 +1,5 @@
 import type { AppModule } from '@anderp/shared';
+import type { AuthState } from './auth-store';
 import {
   Building,
   Building2,
@@ -82,4 +83,19 @@ export function navigationFor(user: { isSuperAdmin: boolean; modules: AppModule[
 export function moduleForPath(pathname: string): AppModule | undefined {
   return [operation, settings].flatMap((g) => g.items).find((i) => pathname.startsWith(i.to))
     ?.module;
+}
+
+export type AppRedirect = { to: '/login'; search: { redirect: string } } | { to: '/egresos' };
+
+/**
+ * Guard de las rutas privadas (F01 CA-20, F02 CA-18): sin sesión, al login con la ruta pedida; una
+ * ruta de un paquete que la organización no tiene, a Egresos (F19 CA-17). `null` si puede entrar.
+ */
+export function appRedirect(
+  auth: AuthState,
+  location: { href: string; pathname: string },
+): AppRedirect | null {
+  if (auth.status !== 'authenticated') return { to: '/login', search: { redirect: location.href } };
+  const module = moduleForPath(location.pathname);
+  return module && !auth.user.modules.includes(module) ? { to: '/egresos' } : null;
 }

@@ -64,7 +64,7 @@
 - [x] F21-T011 [TDD] Los `401` de sesión perdida fuera de `/auth/` avisan a `sessionExpiredListeners`.
       Archivos: `apps/web/src/lib/{api-client,api-client.test}.ts`
       Depende de: F21-T010 · Verificación: CA-11
-- [ ] F21-T012 [TDD] `appRedirect` en `navigation.ts`, usado por `_app.tsx`.
+- [x] F21-T012 [TDD] `appRedirect` en `navigation.ts`, usado por `_app.tsx`.
       Archivos: `apps/web/src/lib/{navigation,navigation.test}.ts`, `apps/web/src/routes/_app.tsx`
       Verificación: CA-12
 

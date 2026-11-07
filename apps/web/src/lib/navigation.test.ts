@@ -1,6 +1,6 @@
-import { APP_MODULES } from '@anderp/shared';
+import { APP_MODULES, type AuthProfile } from '@anderp/shared';
 import { describe, expect, it } from 'vitest';
-import { moduleForPath, navigationFor } from './navigation';
+import { appRedirect, moduleForPath, navigationFor } from './navigation';
 
 const all = [...APP_MODULES];
 
@@ -64,5 +64,28 @@ describe('moduleForPath (F19 CA-17)', () => {
     expect(moduleForPath('/egresos')).toBeUndefined();
     expect(moduleForPath('/configuracion/usuarios')).toBeUndefined();
     expect(moduleForPath('/perfil')).toBeUndefined();
+  });
+});
+
+describe('appRedirect (F21 CA-12)', () => {
+  const user = { modules: ['credentials'] } as unknown as AuthProfile;
+  const signedIn = { status: 'authenticated', accessToken: 't', user } as const;
+  const at = (href: string) => ({ href, pathname: href.split('?')[0]! });
+
+  it('sin sesión lleva al login con la ruta pedida', () => {
+    const anonymous = { status: 'anonymous', accessToken: null, user: null } as const;
+    expect(appRedirect(anonymous, at('/agenda?x=1'))).toEqual({
+      to: '/login',
+      search: { redirect: '/agenda?x=1' },
+    });
+  });
+
+  it('con el paquete de la ruta apagado lleva a Egresos', () => {
+    expect(appRedirect(signedIn, at('/agenda'))).toEqual({ to: '/egresos' });
+  });
+
+  it('con acceso no redirige', () => {
+    expect(appRedirect(signedIn, at('/credenciales'))).toBeNull();
+    expect(appRedirect(signedIn, at('/egresos'))).toBeNull();
   });
 });
