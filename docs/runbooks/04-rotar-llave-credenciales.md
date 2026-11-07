@@ -35,5 +35,5 @@ Las contraseñas de las credenciales se cifran con AES-256-GCM. Cada registro gu
 ## Si algo falla
 
 - **La API no arranca** tras el paso 2: la llave activa no está en el JSON o no mide 32 bytes. Corrige la variable; los datos no se tocaron.
-- **`rotate-keys` se detiene con `CREDENTIAL_DECRYPT_FAILED`:** hay un registro dañado (su texto cifrado no corresponde a su `id`). El mensaje no dice cuál; búscalo descifrando por lotes o restaura ese registro desde un backup, y vuelve a ejecutar.
+- **`rotate-keys` termina con error y `Credentials that could not be decrypted: <ids>`:** esos registros están dañados (su texto cifrado no corresponde a su `id`) o usan una llave que no está configurada. El resto sí se rotó (F23). Revisa cada `id`: si su llave falta, vuelve a configurarla y ejecuta otra vez; si está dañado, pide al responsable la contraseña y vuelve a guardarla desde la app (o restáuralo desde un backup). No quites la llave anterior mientras quede algún registro con ella.
 - **`CREDENTIAL_KEY_UNAVAILABLE`:** quitaste una versión que todavía usan registros. Vuelve a agregarla, rota y recién después quítala.

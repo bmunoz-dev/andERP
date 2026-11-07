@@ -254,8 +254,7 @@ describe('Credenciales', () => {
     expect(res.status).toBe(500);
     expect(res.body.code).toBe('CREDENTIAL_DECRYPT_FAILED');
     expect(t.logs.some((l) => l.includes('Credential integrity check failed'))).toBe(true);
-    // El registro dañado bloquearía la rotación de llaves de las pruebas siguientes.
-    await db.delete(entityCredentials).where(eq(entityCredentials.id, b.id));
+    // F23 CA-9: el registro dañado se queda; la rotación de las pruebas siguientes lo salta.
   });
 
   it('CA-9 busca por entidad, usuario o responsable', async () => {
@@ -303,12 +302,53 @@ describe('Llaves', () => {
         ]),
         2,
       );
-      expect(await rotateCredentialKeys(db, both, 1)).toBeGreaterThanOrEqual(1);
-      expect(await rotateCredentialKeys(db, both, 1)).toBe(0);
+      expect((await rotateCredentialKeys(db, both, 1)).rotated).toBeGreaterThanOrEqual(1);
+      expect((await rotateCredentialKeys(db, both, 1)).rotated).toBe(0);
       expect((await reveal(created.id, onlyKey2)).password).toBe(SECRET);
     } finally {
       await onlyKey2.close();
     }
+  });
+});
+
+describe('F23 CA-9 rotación por fila', () => {
+  it('un registro dañado no detiene la rotación y se informa su id', async () => {
+    const good = await newCredential({ entityName: 'Rot A', username: 'a' });
+    const damaged = await newCredential({ entityName: 'Rot B', username: 'b', password: 'otra' });
+    const [source] = await db
+      .select()
+      .from(entityCredentials)
+      .where(eq(entityCredentials.id, good.id));
+    await db
+      .update(entityCredentials)
+      .set({
+        passwordCiphertext: source!.passwordCiphertext,
+        passwordIv: source!.passwordIv,
+        passwordAuthTag: source!.passwordAuthTag,
+      })
+      .where(eq(entityCredentials.id, damaged.id));
+
+    const key3 = Buffer.alloc(32, 7);
+    const cipher = new CredentialCipher(
+      new Map([
+        [1, Buffer.from(JSON.parse(TEST_ENV.CREDENTIALS_KEYS)['1'] as string, 'base64')],
+        [2, Buffer.alloc(32, 9)], // la llave 2 de CA-11
+        [3, key3],
+      ]),
+      3,
+    );
+    const first = await rotateCredentialKeys(db, cipher, 1);
+    expect(first.failed).toContain(damaged.id);
+    expect(first.rotated).toBeGreaterThanOrEqual(1);
+    const [rotated] = await db
+      .select({ keyVersion: entityCredentials.keyVersion })
+      .from(entityCredentials)
+      .where(eq(entityCredentials.id, good.id));
+    expect(rotated?.keyVersion).toBe(3);
+
+    const second = await rotateCredentialKeys(db, cipher, 1);
+    expect(second.rotated).toBe(0);
+    expect(second.failed).toContain(damaged.id);
   });
 });
 

@@ -37,7 +37,7 @@
       - `update` en una transacción, con `provider.bank_account_update` (CA-5).
       Archivos: `service-providers.service.ts`, `apps/api/test/service-providers.test.ts`
       Depende de: F23-T002 · Verificación: CA-1, CA-4, CA-5
-- [ ] F23-T007 [TDD] Rotación por fila (`{ rotated, failed }`) y el runbook 04. Prueba con el lote de tamaño 1 (punto de revisión 5).
+- [x] F23-T007 [TDD] Rotación por fila (`{ rotated, failed }`) y el runbook 04. Prueba con el lote de tamaño 1 (punto de revisión 5).
       Archivos: `rotate-keys.ts`, `apps/api/test/credentials.test.ts`, `docs/runbooks/04-rotar-llave-credenciales.md`
       Depende de: F23-T001 · Verificación: CA-9
 - [ ] F23-T008 [TDD] `ContractDocumentUploadGuard` y `assertUploadAllowed`, y el runbook 07 de archivos huérfanos.
