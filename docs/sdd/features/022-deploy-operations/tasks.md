@@ -47,7 +47,7 @@
 
 ## Bloque D — Documentación y cierre
 
-- [ ] F22-T010 Runbooks 01, 02 y 03, y F07 en `roadmap.md`, según el plan.
+- [x] F22-T010 Runbooks 01, 02 y 03, y F07 en `roadmap.md`, según el plan.
       Archivos: `docs/runbooks/0{1,2,3}-*.md`, `docs/sdd/roadmap.md`
       Depende de: F22-T009 · Verificación: CA-14
 - [ ] F22-T011 Cierre:
