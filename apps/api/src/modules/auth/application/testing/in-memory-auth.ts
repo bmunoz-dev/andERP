@@ -162,7 +162,12 @@ export class InMemoryUsers implements UserRepository {
     });
     return Promise.resolve(result);
   }
-  recordSuccessfulLogin(userId: string, at: Date, rehashed: string | null): Promise<void> {
+  recordSuccessfulLogin(
+    userId: string,
+    _organizationId: string,
+    at: Date,
+    rehashed: string | null,
+  ): Promise<void> {
     const user = this.users.get(userId)!;
     this.users.set(userId, {
       ...user,
@@ -222,6 +227,10 @@ export class InMemorySessions implements SessionRepository {
     this.selections.push({ userId, organizationId, at });
     return Promise.resolve();
   }
+  deleteExpiredForUser(userId: string, at: Date): Promise<void> {
+    this.rows = this.rows.filter((r) => r.userId !== userId || r.expiresAt >= at);
+    return Promise.resolve();
+  }
   revokeAllForUser(userId: string, at: Date, exceptFamilyId?: string): Promise<void> {
     for (const row of this.rows) {
       if (row.userId === userId && row.familyId !== exceptFamilyId && !row.revokedAt)
@@ -260,6 +269,10 @@ export class InMemoryResets implements PasswordResetRepository {
     const row = this.rows.find((r) => r.id === id && r.usedAt === null);
     if (row) row.usedAt = at;
     return Promise.resolve(Boolean(row));
+  }
+  deleteSpentForUser(userId: string, at: Date): Promise<void> {
+    this.rows = this.rows.filter((r) => r.userId !== userId || (!r.usedAt && r.expiresAt >= at));
+    return Promise.resolve();
   }
   invalidateOpen(userId: string, purpose: PasswordResetPurpose, at: Date): Promise<void> {
     for (const row of this.rows) {

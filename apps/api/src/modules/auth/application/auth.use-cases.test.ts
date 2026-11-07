@@ -51,7 +51,7 @@ function setup() {
     audit,
     mailer,
     accessTokens,
-    login: new LoginUseCase(users, hasher, clock, audit, issuer),
+    login: new LoginUseCase(users, hasher, clock, audit, issuer, sessions, resets),
     refresh: new RefreshSessionUseCase(users, sessions, tokens, clock, audit, issuer),
     logout: new LogoutUseCase(sessions, tokens, clock, audit),
     switchOrganization: new SwitchOrganizationUseCase(users, sessions, clock, audit),

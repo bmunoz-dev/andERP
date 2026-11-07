@@ -59,7 +59,13 @@ export interface UserRepository {
   findMemberships(userId: string): Promise<MembershipRecord[]>;
   /** Suma un fallo de forma atómica (F21 CA-1): intentos simultáneos no saltan el bloqueo. */
   registerFailedLogin(userId: string, now: Date): Promise<FailedLoginResult>;
-  recordSuccessfulLogin(userId: string, at: Date, rehashedPassword: string | null): Promise<void>;
+  /** También fija el último ingreso a la organización de entrada (F21 CA-8). */
+  recordSuccessfulLogin(
+    userId: string,
+    organizationId: string,
+    at: Date,
+    rehashedPassword: string | null,
+  ): Promise<void>;
   /** Cambia la contraseña y reinicia el contador de intentos y el bloqueo. */
   updatePassword(userId: string, passwordHash: string): Promise<void>;
 }
@@ -98,6 +104,8 @@ export interface SessionRepository {
     organizationId: string,
     at: Date,
   ): Promise<void>;
+  /** Borra las sesiones vencidas del usuario; las revocadas sin vencer detectan el reuso (F21 CA-4). */
+  deleteExpiredForUser(userId: string, at: Date): Promise<void>;
 }
 
 export interface PasswordResetRepository {
@@ -111,6 +119,8 @@ export interface PasswordResetRepository {
   /** Marca como usado solo si no lo estaba. Devuelve `false` si ya se había usado. */
   markUsedIfUnused(id: string, at: Date): Promise<boolean>;
   invalidateOpen(userId: string, purpose: PasswordResetPurpose, at: Date): Promise<void>;
+  /** Borra los tokens usados o vencidos del usuario (F21 CA-4). */
+  deleteSpentForUser(userId: string, at: Date): Promise<void>;
 }
 
 export interface PasswordHasher {

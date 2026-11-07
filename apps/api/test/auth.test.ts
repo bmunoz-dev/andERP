@@ -11,6 +11,7 @@ import {
   organizationMembers,
   organizations,
   passwordResets,
+  sessions,
   users,
 } from '../src/db/schema';
 import { seed } from '../src/db/seed';
@@ -169,6 +170,43 @@ describe('Login', () => {
     await login(u.email).expect(423);
     const [row] = await db.select().from(users).where(eq(users.id, u.userId));
     expect(row?.failedLoginAttempts).toBe(0);
+  });
+
+  it('F21 CA-4 el login borra las sesiones vencidas y los resets gastados del usuario', async () => {
+    const u = await createUser();
+    const past = new Date(Date.now() - 60_000);
+    const future = new Date(Date.now() + 3_600_000);
+    const session = (expiresAt: Date, revokedAt: Date | null) => ({
+      userId: u.userId,
+      organizationId: u.organizationId,
+      familyId: randomUUID(),
+      tokenHash: randomUUID(),
+      expiresAt,
+      revokedAt,
+    });
+    await db.insert(sessions).values([session(past, null), session(future, past)]);
+    const reset = (expiresAt: Date, usedAt: Date | null) => ({
+      userId: u.userId,
+      purpose: 'reset',
+      tokenHash: randomUUID(),
+      expiresAt,
+      usedAt,
+    });
+    await db
+      .insert(passwordResets)
+      .values([reset(past, null), reset(future, past), reset(future, null)]);
+
+    await login(u.email).expect(200);
+
+    const left = await db.select().from(sessions).where(eq(sessions.userId, u.userId));
+    expect(left.filter((s) => s.expiresAt < new Date())).toHaveLength(0);
+    expect(left.filter((s) => s.revokedAt !== null)).toHaveLength(1);
+    const resets = await db
+      .select()
+      .from(passwordResets)
+      .where(eq(passwordResets.userId, u.userId));
+    expect(resets).toHaveLength(1);
+    expect(resets[0]!.usedAt).toBeNull();
   });
 
   it.each([

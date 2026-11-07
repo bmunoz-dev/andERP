@@ -1,5 +1,5 @@
 import type { LoginRequest } from '@anderp/shared';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { AUDIT_LOGGER, type AuditLogger } from '../../audit/audit.service';
 import { authErrors } from '../domain/auth-errors';
 import { isLocked } from '../domain/login-attempts';
@@ -9,8 +9,12 @@ import {
   type Clock,
   type IssuedSession,
   PASSWORD_HASHER,
+  PASSWORD_RESET_REPOSITORY,
   type PasswordHasher,
+  type PasswordResetRepository,
   type RequestMeta,
+  SESSION_REPOSITORY,
+  type SessionRepository,
   USER_REPOSITORY,
   type UserRepository,
 } from './ports';
@@ -18,12 +22,16 @@ import { SessionIssuer } from './session-issuer';
 
 @Injectable()
 export class LoginUseCase {
+  private readonly logger = new Logger(LoginUseCase.name);
+
   constructor(
     @Inject(USER_REPOSITORY) private readonly users: UserRepository,
     @Inject(PASSWORD_HASHER) private readonly hasher: PasswordHasher,
     @Inject(CLOCK) private readonly clock: Clock,
     @Inject(AUDIT_LOGGER) private readonly audit: AuditLogger,
     private readonly sessions: SessionIssuer,
+    @Inject(SESSION_REPOSITORY) private readonly sessionRows: SessionRepository,
+    @Inject(PASSWORD_RESET_REPOSITORY) private readonly resets: PasswordResetRepository,
   ) {}
 
   async execute({ email, password }: LoginRequest, meta: RequestMeta): Promise<IssuedSession> {
@@ -67,7 +75,12 @@ export class LoginUseCase {
     const rehashed = this.hasher.needsRehash(user.passwordHash)
       ? await this.hasher.hash(password)
       : null;
-    await this.users.recordSuccessfulLogin(user.id, now, rehashed);
+    await this.users.recordSuccessfulLogin(
+      user.id,
+      access.membership.organizationId,
+      now,
+      rehashed,
+    );
 
     const session = await this.sessions.issue(access, meta);
     await this.audit.log({
@@ -75,7 +88,18 @@ export class LoginUseCase {
       userId: user.id,
       organizationId: access.membership.organizationId,
     });
+    await this.cleanUp(user.id, now);
     return session;
+  }
+
+  /** F21 CA-4: sin tareas programadas, cada login limpia lo vencido del propio usuario. */
+  private async cleanUp(userId: string, now: Date): Promise<void> {
+    try {
+      await this.sessionRows.deleteExpiredForUser(userId, now);
+      await this.resets.deleteSpentForUser(userId, now);
+    } catch (error) {
+      this.logger.error({ err: error, userId }, 'Login cleanup failed');
+    }
   }
 
   private failed(userId: string | null, reason: string, email: string): Promise<void> {

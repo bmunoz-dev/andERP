@@ -43,7 +43,8 @@ export class MembersService {
         isActive: organizationMembers.isActive,
         isSuperAdmin: users.isSuperAdmin,
         passwordHash: users.passwordHash,
-        lastLoginAt: users.lastLoginAt,
+        // F21 CA-8: el último ingreso a esta organización, no el global del usuario.
+        lastLoginAt: organizationMembers.lastAccessAt,
       })
       .from(organizationMembers)
       .innerJoin(users, eq(users.id, organizationMembers.userId))

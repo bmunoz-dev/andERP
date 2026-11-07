@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, eq, gt, isNull, ne, sql } from 'drizzle-orm';
+import { and, asc, eq, gt, isNotNull, isNull, lt, ne, or, sql } from 'drizzle-orm';
 import { DB, type Database } from '../../../db/database.module';
 import {
   organizationMembers,
@@ -107,7 +107,12 @@ export class DrizzleUserRepository implements UserRepository {
     return { ...row, locked: row.failedLoginAttempts === 0 };
   }
 
-  async recordSuccessfulLogin(userId: string, at: Date, rehashed: string | null): Promise<void> {
+  async recordSuccessfulLogin(
+    userId: string,
+    organizationId: string,
+    at: Date,
+    rehashed: string | null,
+  ): Promise<void> {
     await this.db
       .update(users)
       .set({
@@ -117,6 +122,15 @@ export class DrizzleUserRepository implements UserRepository {
         ...(rehashed ? { passwordHash: rehashed } : {}),
       })
       .where(eq(users.id, userId));
+    await this.db
+      .update(organizationMembers)
+      .set({ lastAccessAt: at })
+      .where(
+        and(
+          eq(organizationMembers.userId, userId),
+          eq(organizationMembers.organizationId, organizationId),
+        ),
+      );
   }
 
   async updatePassword(userId: string, passwordHash: string): Promise<void> {
@@ -201,7 +215,7 @@ export class DrizzleSessionRepository implements SessionRepository {
         .where(and(eq(sessions.familyId, familyId), isNull(sessions.revokedAt)));
       await tx
         .update(organizationMembers)
-        .set({ lastSelectedAt: at })
+        .set({ lastSelectedAt: at, lastAccessAt: at })
         .where(
           and(
             eq(organizationMembers.userId, userId),
@@ -209,6 +223,12 @@ export class DrizzleSessionRepository implements SessionRepository {
           ),
         );
     });
+  }
+
+  async deleteExpiredForUser(userId: string, at: Date): Promise<void> {
+    await this.db
+      .delete(sessions)
+      .where(and(eq(sessions.userId, userId), lt(sessions.expiresAt, at)));
   }
 
   async revokeAllForUser(userId: string, at: Date, exceptFamilyId?: string): Promise<void> {
@@ -260,6 +280,17 @@ export class DrizzlePasswordResetRepository implements PasswordResetRepository {
       .where(and(eq(passwordResets.id, id), isNull(passwordResets.usedAt)))
       .returning({ id: passwordResets.id });
     return rows.length > 0;
+  }
+
+  async deleteSpentForUser(userId: string, at: Date): Promise<void> {
+    await this.db
+      .delete(passwordResets)
+      .where(
+        and(
+          eq(passwordResets.userId, userId),
+          or(isNotNull(passwordResets.usedAt), lt(passwordResets.expiresAt, at)),
+        ),
+      );
   }
 
   async invalidateOpen(userId: string, purpose: PasswordResetPurpose, at: Date): Promise<void> {
