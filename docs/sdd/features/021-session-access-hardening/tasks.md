@@ -22,7 +22,7 @@
       - `LoginUseCase` lo usa en lugar de `recordFailedLogin`.
       Archivos: `apps/api/src/modules/auth/application/{ports,login.use-case}.ts`, `.../infrastructure/drizzle-auth.repositories.ts`, `.../testing/in-memory-auth.ts`, `apps/api/test/auth.test.ts`
       Depende de: F21-T001 · Verificación: CA-1
-- [ ] F21-T004 [TDD] Throttle en `password/change` y `RequestPasswordResetUseCase` en segundo plano.
+- [x] F21-T004 [TDD] Throttle en `password/change` y `RequestPasswordResetUseCase` en segundo plano.
       Archivos: `apps/api/src/modules/auth/http/auth.controller.ts`, `.../application/password.use-cases.ts`, `auth.use-cases.test.ts`, `apps/api/test/auth.test.ts`
       Depende de: F21-T001 · Verificación: CA-2, CA-3
 - [ ] F21-T005 [TDD] Limpieza al iniciar sesión y último ingreso por organización:

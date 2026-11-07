@@ -436,13 +436,26 @@ describe('Contraseñas', () => {
 
   describe('CA-14 / CA-15 recuperar contraseña', () => {
     async function requestToken(): Promise<string> {
-      await t.requestReset.execute('ana@empresa.co');
+      await t.requestReset.issue('ana@empresa.co');
       const link = new URL(/http\S+/.exec(t.mailer.sent.at(-1)!.text)![0]);
       return link.searchParams.get('token')!;
     }
 
+    it('F21 CA-3 responde sin esperar ninguna escritura', async () => {
+      t.resets.invalidateOpen = () => new Promise<void>(() => undefined);
+      const outcome = await Promise.race([
+        t.requestReset.execute('ana@empresa.co').then(() => 'returned'),
+        new Promise((resolve) =>
+          setTimeout(() => {
+            resolve('waiting');
+          }, 50),
+        ),
+      ]);
+      expect(outcome).toBe('returned');
+    });
+
     it('con un email desconocido no hace nada', async () => {
-      await t.requestReset.execute('nadie@empresa.co');
+      await t.requestReset.issue('nadie@empresa.co');
       expect(t.resets.rows).toHaveLength(0);
       expect(t.mailer.sent).toHaveLength(0);
     });

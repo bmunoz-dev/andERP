@@ -4,7 +4,7 @@ import { hash } from '@node-rs/argon2';
 import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import type { Response } from 'supertest';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { DB, type Database } from '../src/db/database.module';
 import {
   auditLogs,
@@ -201,7 +201,23 @@ describe('CA-5 límite de peticiones', () => {
   it('más de N intentos por minuto → 429 TOO_MANY_REQUESTS', async () => {
     const limited = await createTestApp({ env: { AUTH_THROTTLE_LIMIT: '3' } });
     try {
-      for (let i = 0; i < 3; i++) {
+      // F21 CA-2: el cambio de contraseña también tiene throttle.
+      const u = await createUser();
+      const session = await limited.http
+        .post('/api/v1/auth/login')
+        .send({ email: u.email, password: PASSWORD })
+        .expect(200);
+      const token = (session.body as AuthSessionResponse).accessToken;
+      const change = () =>
+        limited.http
+          .post('/api/v1/auth/password/change')
+          .set('Authorization', `Bearer ${token}`)
+          .send({ currentPassword: 'wrong password', newPassword: 'otra clave muy larga' });
+      for (let i = 0; i < 3; i++) expect((await change()).status).not.toBe(429);
+      await change().expect(429);
+
+      // Ya se usó un login arriba: quedan dos.
+      for (let i = 0; i < 2; i++) {
         await limited.http
           .post('/api/v1/auth/login')
           .send({ email: 'x@y.co', password: 'nope' })
@@ -345,7 +361,9 @@ describe('Contraseñas', () => {
     expect(t.mailer.sent).toHaveLength(0);
 
     await t.http.post('/api/v1/auth/password/forgot').send({ email: u.email }).expect(202);
-    expect(t.mailer.sent).toHaveLength(1);
+    await vi.waitFor(() => {
+      expect(t.mailer.sent).toHaveLength(1);
+    });
     expect(t.mailer.sent[0]!.to).toBe(u.email);
     expect(t.mailer.sent[0]!.text).toMatch(/http:\/\/localhost:5173\/restablecer\?token=[\w-]+/);
     expect(await auditActions(u.userId)).toContain('auth.password_reset_requested');
@@ -356,6 +374,9 @@ describe('Contraseñas', () => {
     const session = refreshCookieOf(await login(u.email).expect(200));
     t.mailer.sent = [];
     await t.http.post('/api/v1/auth/password/forgot').send({ email: u.email }).expect(202);
+    await vi.waitFor(() => {
+      expect(t.mailer.sent).toHaveLength(1);
+    });
     const token = new URL(/http\S+/.exec(t.mailer.sent[0]!.text)![0]).searchParams.get('token')!;
 
     await t.http
@@ -377,6 +398,9 @@ describe('Contraseñas', () => {
     const u = await createUser();
     t.mailer.sent = [];
     await t.http.post('/api/v1/auth/password/forgot').send({ email: u.email }).expect(202);
+    await vi.waitFor(() => {
+      expect(t.mailer.sent).toHaveLength(1);
+    });
     const token = new URL(/http\S+/.exec(t.mailer.sent[0]!.text)![0]).searchParams.get('token')!;
     await db
       .update(passwordResets)
