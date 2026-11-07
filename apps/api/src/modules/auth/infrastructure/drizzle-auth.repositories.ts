@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, eq, gt, isNull, ne, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, isNotNull, isNull, lt, ne, or, sql } from 'drizzle-orm';
 import { DB, type Database } from '../../../db/database.module';
 import {
   organizationMembers,
@@ -8,6 +8,11 @@ import {
   sessions,
   users,
 } from '../../../db/schema';
+import {
+  type FailedLoginResult,
+  LOCK_DURATION_MS,
+  MAX_FAILED_ATTEMPTS,
+} from '../domain/login-attempts';
 import type {
   MembershipRecord,
   NewSession,
@@ -79,18 +84,35 @@ export class DrizzleUserRepository implements UserRepository {
       );
   }
 
-  async recordFailedLogin(
-    userId: string,
-    attempts: number,
-    lockedUntil: Date | null,
-  ): Promise<void> {
-    await this.db
+  /**
+   * Misma regla que `registerFailedLogin` del dominio, pero en una sola sentencia: el quinto
+   * fallo bloquea y reinicia el contador. Un contador en 0 al volver significa que este fallo bloqueó.
+   */
+  async registerFailedLogin(userId: string, now: Date): Promise<FailedLoginResult> {
+    const locks = sql`failed_login_attempts + 1 >= ${MAX_FAILED_ATTEMPTS}`;
+    const lockedUntil = new Date(now.getTime() + LOCK_DURATION_MS);
+    const [row] = await this.db
       .update(users)
-      .set({ failedLoginAttempts: attempts, lockedUntil, updatedAt: sql`now()` })
-      .where(eq(users.id, userId));
+      .set({
+        failedLoginAttempts: sql`case when ${locks} then 0 else failed_login_attempts + 1 end`,
+        lockedUntil: sql`case when ${locks} then ${lockedUntil.toISOString()}::timestamptz else locked_until end`,
+        updatedAt: sql`now()`,
+      })
+      .where(eq(users.id, userId))
+      .returning({
+        failedLoginAttempts: users.failedLoginAttempts,
+        lockedUntil: users.lockedUntil,
+      });
+    if (!row) throw new Error('User not found');
+    return { ...row, locked: row.failedLoginAttempts === 0 };
   }
 
-  async recordSuccessfulLogin(userId: string, at: Date, rehashed: string | null): Promise<void> {
+  async recordSuccessfulLogin(
+    userId: string,
+    organizationId: string,
+    at: Date,
+    rehashed: string | null,
+  ): Promise<void> {
     await this.db
       .update(users)
       .set({
@@ -100,6 +122,40 @@ export class DrizzleUserRepository implements UserRepository {
         ...(rehashed ? { passwordHash: rehashed } : {}),
       })
       .where(eq(users.id, userId));
+    await this.db
+      .update(organizationMembers)
+      .set({ lastAccessAt: at })
+      .where(
+        and(
+          eq(organizationMembers.userId, userId),
+          eq(organizationMembers.organizationId, organizationId),
+        ),
+      );
+  }
+
+  async selectNewestMembership(userId: string, at: Date): Promise<void> {
+    const [newest] = await this.db
+      .select({ organizationId: organizationMembers.organizationId })
+      .from(organizationMembers)
+      .where(
+        and(
+          eq(organizationMembers.userId, userId),
+          eq(organizationMembers.isActive, true),
+          isNull(organizationMembers.deletedAt),
+        ),
+      )
+      .orderBy(desc(organizationMembers.createdAt))
+      .limit(1);
+    if (!newest) return;
+    await this.db
+      .update(organizationMembers)
+      .set({ lastSelectedAt: at })
+      .where(
+        and(
+          eq(organizationMembers.userId, userId),
+          eq(organizationMembers.organizationId, newest.organizationId),
+        ),
+      );
   }
 
   async updatePassword(userId: string, passwordHash: string): Promise<void> {
@@ -184,7 +240,7 @@ export class DrizzleSessionRepository implements SessionRepository {
         .where(and(eq(sessions.familyId, familyId), isNull(sessions.revokedAt)));
       await tx
         .update(organizationMembers)
-        .set({ lastSelectedAt: at })
+        .set({ lastSelectedAt: at, lastAccessAt: at })
         .where(
           and(
             eq(organizationMembers.userId, userId),
@@ -192,6 +248,25 @@ export class DrizzleSessionRepository implements SessionRepository {
           ),
         );
     });
+  }
+
+  async revokeForOrganization(userId: string, organizationId: string, at: Date): Promise<void> {
+    await this.db
+      .update(sessions)
+      .set({ revokedAt: at })
+      .where(
+        and(
+          eq(sessions.userId, userId),
+          eq(sessions.organizationId, organizationId),
+          isNull(sessions.revokedAt),
+        ),
+      );
+  }
+
+  async deleteExpiredForUser(userId: string, at: Date): Promise<void> {
+    await this.db
+      .delete(sessions)
+      .where(and(eq(sessions.userId, userId), lt(sessions.expiresAt, at)));
   }
 
   async revokeAllForUser(userId: string, at: Date, exceptFamilyId?: string): Promise<void> {
@@ -243,6 +318,17 @@ export class DrizzlePasswordResetRepository implements PasswordResetRepository {
       .where(and(eq(passwordResets.id, id), isNull(passwordResets.usedAt)))
       .returning({ id: passwordResets.id });
     return rows.length > 0;
+  }
+
+  async deleteSpentForUser(userId: string, at: Date): Promise<void> {
+    await this.db
+      .delete(passwordResets)
+      .where(
+        and(
+          eq(passwordResets.userId, userId),
+          or(isNotNull(passwordResets.usedAt), lt(passwordResets.expiresAt, at)),
+        ),
+      );
   }
 
   async invalidateOpen(userId: string, purpose: PasswordResetPurpose, at: Date): Promise<void> {

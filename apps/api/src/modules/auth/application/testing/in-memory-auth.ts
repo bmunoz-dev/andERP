@@ -2,6 +2,7 @@ import { APP_MODULES } from '@anderp/shared';
 import { createHash, randomUUID } from 'node:crypto';
 import type { AuditEntry, AuditLogger } from '../../../audit/audit.service';
 import type { MailMessage, Mailer } from '../../../mail/mailer';
+import { type FailedLoginResult, registerFailedLogin } from '../../domain/login-attempts';
 import type {
   AccessTokenClaims,
   AccessTokenIssuer,
@@ -151,12 +152,22 @@ export class InMemoryUsers implements UserRepository {
   findMemberships(userId: string): Promise<MembershipRecord[]> {
     return Promise.resolve(this.memberships.get(userId) ?? []);
   }
-  recordFailedLogin(userId: string, attempts: number, lockedUntil: Date | null): Promise<void> {
+  registerFailedLogin(userId: string, now: Date): Promise<FailedLoginResult> {
     const user = this.users.get(userId)!;
-    this.users.set(userId, { ...user, failedLoginAttempts: attempts, lockedUntil });
-    return Promise.resolve();
+    const result = registerFailedLogin(user.failedLoginAttempts, now);
+    this.users.set(userId, {
+      ...user,
+      failedLoginAttempts: result.failedLoginAttempts,
+      lockedUntil: result.lockedUntil ?? user.lockedUntil,
+    });
+    return Promise.resolve(result);
   }
-  recordSuccessfulLogin(userId: string, at: Date, rehashed: string | null): Promise<void> {
+  recordSuccessfulLogin(
+    userId: string,
+    _organizationId: string,
+    at: Date,
+    rehashed: string | null,
+  ): Promise<void> {
     const user = this.users.get(userId)!;
     this.users.set(userId, {
       ...user,
@@ -167,6 +178,12 @@ export class InMemoryUsers implements UserRepository {
     this.lastLoginAt.set(userId, at);
     return Promise.resolve();
   }
+  selectNewestMembership(userId: string, at: Date): Promise<void> {
+    this.selectedNewest.push({ userId, at });
+    return Promise.resolve();
+  }
+  /** Llamadas a `selectNewestMembership` (F21 CA-7). */
+  selectedNewest: { userId: string; at: Date }[] = [];
   updatePassword(userId: string, passwordHash: string): Promise<void> {
     const user = this.users.get(userId)!;
     this.users.set(userId, { ...user, passwordHash, failedLoginAttempts: 0, lockedUntil: null });
@@ -216,6 +233,17 @@ export class InMemorySessions implements SessionRepository {
     this.selections.push({ userId, organizationId, at });
     return Promise.resolve();
   }
+  revokeForOrganization(userId: string, organizationId: string, at: Date): Promise<void> {
+    for (const row of this.rows) {
+      if (row.userId === userId && row.organizationId === organizationId && !row.revokedAt)
+        row.revokedAt = at;
+    }
+    return Promise.resolve();
+  }
+  deleteExpiredForUser(userId: string, at: Date): Promise<void> {
+    this.rows = this.rows.filter((r) => r.userId !== userId || r.expiresAt >= at);
+    return Promise.resolve();
+  }
   revokeAllForUser(userId: string, at: Date, exceptFamilyId?: string): Promise<void> {
     for (const row of this.rows) {
       if (row.userId === userId && row.familyId !== exceptFamilyId && !row.revokedAt)
@@ -254,6 +282,10 @@ export class InMemoryResets implements PasswordResetRepository {
     const row = this.rows.find((r) => r.id === id && r.usedAt === null);
     if (row) row.usedAt = at;
     return Promise.resolve(Boolean(row));
+  }
+  deleteSpentForUser(userId: string, at: Date): Promise<void> {
+    this.rows = this.rows.filter((r) => r.userId !== userId || (!r.usedAt && r.expiresAt >= at));
+    return Promise.resolve();
   }
   invalidateOpen(userId: string, purpose: PasswordResetPurpose, at: Date): Promise<void> {
     for (const row of this.rows) {

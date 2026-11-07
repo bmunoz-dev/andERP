@@ -416,6 +416,34 @@ describe('F20 selector: API', () => {
       });
     });
 
+    it('F21 CA-8 el último ingreso es por organización y el listado de miembros lo muestra', async () => {
+      const lastAccess = async (organizationId: string) => {
+        const [row] = await db
+          .select({ at: organizationMembers.lastAccessAt })
+          .from(organizationMembers)
+          .where(
+            and(
+              eq(organizationMembers.userId, user.id),
+              eq(organizationMembers.organizationId, organizationId),
+            ),
+          );
+        return row?.at ?? null;
+      };
+      expect(await lastAccess(orgA.id)).not.toBeNull();
+      expect(await lastAccess(orgB.id)).toBeNull();
+
+      await switchTo(token, orgB.id).expect(204);
+      const inB = await lastAccess(orgB.id);
+      expect(inB).not.toBeNull();
+
+      const renewed = (await refresh(cookie).expect(200)).body as AuthSessionResponse;
+      const members = (await as(t, renewed.accessToken).get('/members').expect(200)).body as {
+        userId: string;
+        lastLoginAt: string | null;
+      }[];
+      expect(members.find((m) => m.userId === user.id)?.lastLoginAt).toBe(inB!.toISOString());
+    });
+
     it('CA-8 el token viejo queda obsoleto y el refresh entrega el de la nueva organización', async () => {
       await switchTo(token, orgB.id).expect(204);
 

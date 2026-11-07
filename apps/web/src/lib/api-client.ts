@@ -93,6 +93,12 @@ export async function apiFetch<T>(path: string, init: ApiRequestInit = {}): Prom
       goHome();
       throw error;
     }
+    if (error instanceof ApiError && isLostSession(error) && !path.startsWith('/auth/')) {
+      // F21 CA-11: la sesión ya no sirve (revocada, cuenta desactivada…): igual que si venciera.
+      authStore.clear();
+      for (const listener of sessionExpiredListeners) listener();
+      throw error;
+    }
     if (!(error instanceof ApiError && error.code === ErrorCode.TOKEN_EXPIRED)) throw error;
     // El access token venció: se renueva una sola vez y se repite la petición.
     const organizationId = authStore.get().user?.organization.id;
@@ -107,6 +113,16 @@ export async function apiFetch<T>(path: string, init: ApiRequestInit = {}): Prom
     for (const listener of sessionExpiredListeners) listener();
     throw error;
   }
+}
+
+const LOST_SESSION_CODES = new Set<string>([
+  ErrorCode.SESSION_REVOKED,
+  ErrorCode.UNAUTHORIZED,
+  ErrorCode.ACCOUNT_DISABLED,
+]);
+
+function isLostSession(error: ApiError): boolean {
+  return error.status === 401 && LOST_SESSION_CODES.has(error.code);
 }
 
 async function send<T>(path: string, init: ApiRequestInit): Promise<T> {

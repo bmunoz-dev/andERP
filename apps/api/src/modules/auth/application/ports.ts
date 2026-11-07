@@ -1,4 +1,5 @@
 import type { AppModule, AuthProfile, MemberRole } from '@anderp/shared';
+import type { FailedLoginResult } from '../domain/login-attempts';
 
 // ── Datos que la capa de aplicación necesita de la persistencia ───────────────────────────
 
@@ -56,10 +57,19 @@ export interface UserRepository {
    * suspendidas: qué se ofrece depende del usuario y lo decide `requireAccess`.
    */
   findMemberships(userId: string): Promise<MembershipRecord[]>;
-  recordFailedLogin(userId: string, attempts: number, lockedUntil: Date | null): Promise<void>;
-  recordSuccessfulLogin(userId: string, at: Date, rehashedPassword: string | null): Promise<void>;
+  /** Suma un fallo de forma atómica (F21 CA-1): intentos simultáneos no saltan el bloqueo. */
+  registerFailedLogin(userId: string, now: Date): Promise<FailedLoginResult>;
+  /** También fija el último ingreso a la organización de entrada (F21 CA-8). */
+  recordSuccessfulLogin(
+    userId: string,
+    organizationId: string,
+    at: Date,
+    rehashedPassword: string | null,
+  ): Promise<void>;
   /** Cambia la contraseña y reinicia el contador de intentos y el bloqueo. */
   updatePassword(userId: string, passwordHash: string): Promise<void>;
+  /** Marca como elegida la membresía activa más reciente: el primer login entra ahí (F21 CA-7). */
+  selectNewestMembership(userId: string, at: Date): Promise<void>;
 }
 
 export interface NewSession {
@@ -79,6 +89,8 @@ export interface SessionRepository {
   revokeIfActive(sessionId: string, at: Date): Promise<boolean>;
   revokeFamily(familyId: string, at: Date): Promise<void>;
   revokeAllForUser(userId: string, at: Date, exceptFamilyId?: string): Promise<void>;
+  /** Revoca las sesiones del usuario cuya organización activa es esa; las demás siguen (F21 CA-5). */
+  revokeForOrganization(userId: string, organizationId: string, at: Date): Promise<void>;
   /**
    * Organización activa de la familia si tiene una sesión sin revocar ni vencer; si no, `null`.
    * El guard lo consulta en cada petición: así un logout o un cambio de contraseña invalidan
@@ -96,6 +108,8 @@ export interface SessionRepository {
     organizationId: string,
     at: Date,
   ): Promise<void>;
+  /** Borra las sesiones vencidas del usuario; las revocadas sin vencer detectan el reuso (F21 CA-4). */
+  deleteExpiredForUser(userId: string, at: Date): Promise<void>;
 }
 
 export interface PasswordResetRepository {
@@ -109,6 +123,8 @@ export interface PasswordResetRepository {
   /** Marca como usado solo si no lo estaba. Devuelve `false` si ya se había usado. */
   markUsedIfUnused(id: string, at: Date): Promise<boolean>;
   invalidateOpen(userId: string, purpose: PasswordResetPurpose, at: Date): Promise<void>;
+  /** Borra los tokens usados o vencidos del usuario (F21 CA-4). */
+  deleteSpentForUser(userId: string, at: Date): Promise<void>;
 }
 
 export interface PasswordHasher {

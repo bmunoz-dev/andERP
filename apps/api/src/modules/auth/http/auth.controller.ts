@@ -102,6 +102,7 @@ export class AuthController {
     return this.switchOrganizationUseCase.execute(requireActor(this.cls), body);
   }
 
+  @UseGuards(ThrottlerGuard)
   @Post('password/change')
   @HttpCode(204)
   changePassword(@Body() body: ChangePasswordDto): Promise<void> {

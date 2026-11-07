@@ -4,7 +4,7 @@ import {
   type Organization,
   type UpdateOrganization,
 } from '@anderp/shared';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import { DB, type Database, type DbExecutor } from '../../db/database.module';
 import { expenseCategories, organizationMembers, organizations, users } from '../../db/schema';
@@ -45,6 +45,8 @@ const toDto = (row: OrganizationRow): Organization => ({
 /** Gestión de organizaciones de la plataforma (F02 CA-1 a CA-3). Solo el super admin. */
 @Injectable()
 export class OrganizationsService {
+  private readonly logger = new Logger(OrganizationsService.name);
+
   constructor(
     @Inject(DB) private readonly db: Database,
     @Inject(SESSION_REPOSITORY) private readonly sessions: SessionRepository,
@@ -153,7 +155,7 @@ export class OrganizationsService {
       return { before, after };
     });
 
-    // Después de confirmar: el puerto de sesiones no recibe la transacción (F12 CA-4).
+    // Después de confirmar (F12 CA-4), y solo las sesiones en esta organización (F21 CA-5).
     if (changes.status === 'suspended' && before.status !== 'suspended') {
       const members = await this.db
         .select({ userId: organizationMembers.userId })
@@ -161,7 +163,13 @@ export class OrganizationsService {
         .innerJoin(users, eq(users.id, organizationMembers.userId))
         .where(and(eq(organizationMembers.organizationId, id), eq(users.isSuperAdmin, false)));
       const now = this.clock.now();
-      for (const member of members) await this.sessions.revokeAllForUser(member.userId, now);
+      for (const member of members) {
+        await this.sessions
+          .revokeForOrganization(member.userId, id, now)
+          .catch((error: unknown) => {
+            this.logger.error({ err: error, userId: member.userId }, 'Session revocation failed');
+          });
+      }
     }
 
     return after;

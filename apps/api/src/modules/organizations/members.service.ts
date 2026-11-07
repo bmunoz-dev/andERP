@@ -1,6 +1,6 @@
 import { ErrorCode, type InviteMember, type Member } from '@anderp/shared';
-import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, count, eq, isNull, ne } from 'drizzle-orm';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { and, asc, count, eq, isNotNull, isNull, ne } from 'drizzle-orm';
 import { ClsService } from 'nestjs-cls';
 import { DB, type Database } from '../../db/database.module';
 import { organizationMembers, organizations, users } from '../../db/schema';
@@ -22,6 +22,8 @@ const notFound = () => new DomainError(ErrorCode.NOT_FOUND, 404);
 /** Usuarios de la organización del actor (F02 CA-11 a CA-15). */
 @Injectable()
 export class MembersService {
+  private readonly logger = new Logger(MembersService.name);
+
   constructor(
     @Inject(DB) private readonly db: Database,
     @Inject(SESSION_REPOSITORY) private readonly sessions: SessionRepository,
@@ -43,7 +45,8 @@ export class MembersService {
         isActive: organizationMembers.isActive,
         isSuperAdmin: users.isSuperAdmin,
         passwordHash: users.passwordHash,
-        lastLoginAt: users.lastLoginAt,
+        // F21 CA-8: el último ingreso a esta organización, no el global del usuario.
+        lastLoginAt: organizationMembers.lastAccessAt,
       })
       .from(organizationMembers)
       .innerJoin(users, eq(users.id, organizationMembers.userId))
@@ -110,23 +113,34 @@ export class MembersService {
     const member = await this.get(userId);
     if (member.isActive === isActive) return member;
 
-    if (!isActive) {
-      if (userId === actor.userId) throw new DomainError(ErrorCode.CANNOT_DEACTIVATE_SELF, 422);
-      const [others] = await this.db
-        .select({ total: count() })
-        .from(organizationMembers)
-        .where(
-          and(
-            this.scope.where(organizationMembers),
-            eq(organizationMembers.isActive, true),
-            ne(organizationMembers.userId, userId),
-          ),
-        );
-      if (!others || others.total === 0) throw new DomainError(ErrorCode.LAST_ADMIN, 422);
+    if (!isActive && userId === actor.userId) {
+      throw new DomainError(ErrorCode.CANNOT_DEACTIVATE_SELF, 422);
     }
     if (member.isSuperAdmin && !actor.isSuperAdmin) throw new DomainError(ErrorCode.FORBIDDEN, 403);
 
     await this.db.transaction(async (tx) => {
+      if (!isActive) {
+        // F21 CA-6: el bloqueo de la organización serializa las desactivaciones simultáneas, y
+        // solo cuenta quien puede entrar (un invitado sin contraseña no administra nada).
+        await tx
+          .select({ id: organizations.id })
+          .from(organizations)
+          .where(eq(organizations.id, this.scope.organizationId))
+          .for('update');
+        const [others] = await tx
+          .select({ total: count() })
+          .from(organizationMembers)
+          .innerJoin(users, eq(users.id, organizationMembers.userId))
+          .where(
+            and(
+              this.scope.where(organizationMembers),
+              eq(organizationMembers.isActive, true),
+              ne(organizationMembers.userId, userId),
+              isNotNull(users.passwordHash),
+            ),
+          );
+        if (!others || others.total === 0) throw new DomainError(ErrorCode.LAST_ADMIN, 422);
+      }
       await tx
         .update(organizationMembers)
         .set(this.scope.forUpdate({ isActive }))
@@ -140,8 +154,15 @@ export class MembersService {
         tx,
       );
     });
-    // Después de confirmar: el puerto de sesiones no recibe la transacción (F12 CA-4).
-    if (!isActive) await this.sessions.revokeAllForUser(userId, this.clock.now());
+    // Después de confirmar (F12 CA-4), y solo las sesiones en esta organización (F21 CA-5).
+    if (!isActive) {
+      const organizationId = this.scope.organizationId;
+      await this.sessions
+        .revokeForOrganization(userId, organizationId, this.clock.now())
+        .catch((error: unknown) => {
+          this.logger.error({ err: error, userId, organizationId }, 'Session revocation failed');
+        });
+    }
     return this.get(userId);
   }
 

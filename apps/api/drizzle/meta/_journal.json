@@ -260,6 +260,13 @@
       "when": 1792690507363,
       "tag": "0036_function_search_path",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794045385354,
+      "tag": "0037_session_access",
+      "breakpoints": true
     }
   ]
 }

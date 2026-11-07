@@ -1,7 +1,14 @@
-import type { CatalogItem, ExpenseCategory, Member, Organization } from '@anderp/shared';
-import { and, eq } from 'drizzle-orm';
+import type {
+  AuthSessionResponse,
+  CatalogItem,
+  ExpenseCategory,
+  Member,
+  Organization,
+} from '@anderp/shared';
+import type { Response } from 'supertest';
+import { and, eq, isNotNull } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DB, type Database } from '../src/db/database.module';
 import { auditLogs, expenseCategories, organizationMembers, users } from '../src/db/schema';
 import { seed } from '../src/db/seed';
@@ -10,6 +17,7 @@ import { createTestApp, type TestApp } from './setup/create-test-app';
 import {
   as,
   createMember,
+  createOrganization,
   login,
   seedTwoOrgs,
   TEST_PASSWORD,
@@ -41,6 +49,35 @@ const newOrg = () => ({
   taxId: randomUUID().slice(0, 18),
   admin: { email: `admin-${randomUUID()}@nueva.co`, firstName: 'Laura', lastName: 'Ríos' },
 });
+
+/** F21 CA-5: miembro de A y de B, con una sesión activa en cada una (cookies de refresh). */
+async function memberOfBoth() {
+  const user = await createMember(t, db, s.orgA.id);
+  await db.insert(organizationMembers).values({
+    userId: user.id,
+    organizationId: s.orgB.id,
+    role: 'admin',
+    createdAt: new Date(Date.now() + 1000),
+  });
+  const cookieOf = (res: Response) =>
+    ([] as string[])
+      .concat(res.headers['set-cookie'] ?? [])
+      .find((c) => c.startsWith('anderp_rt='))!
+      .split(';')[0]!;
+  const enter = () =>
+    t.http
+      .post('/api/v1/auth/login')
+      .send({ email: user.email, password: TEST_PASSWORD })
+      .expect(200);
+  const inA = cookieOf(await enter());
+  const second = await enter();
+  await as(t, (second.body as AuthSessionResponse).accessToken)
+    .post('/auth/organization', { organizationId: s.orgB.id })
+    .expect(204);
+  return { user, inA, inB: cookieOf(second) };
+}
+
+const refreshWith = (cookie: string) => t.http.post('/api/v1/auth/refresh').set('Cookie', cookie);
 
 describe('Organizaciones (plataforma)', () => {
   it('CA-1 crea la organización con categorías, primer admin e invitación', async () => {
@@ -99,23 +136,25 @@ describe('Organizaciones (plataforma)', () => {
     expect(await db.select().from(users).where(eq(users.email, input.admin.email))).toHaveLength(0);
   });
 
-  it('CA-2 suspender revoca las sesiones de sus miembros; el super admin sigue entrando', async () => {
+  it('F21 CA-5 suspender revoca solo las sesiones en esa organización; el super admin sigue entrando', async () => {
+    const both = await memberOfBoth();
     const res = await as(t, s.superAdmin.token)
       .patch(`/platform/organizations/${s.orgA.id}`, { status: 'suspended' })
       .expect(200);
     expect((res.body as Organization).status).toBe('suspended');
 
     await as(t, s.orgA.admin.token).get('/auth/me').expect(401);
-    const denied = await t.http
-      .post('/api/v1/auth/login')
-      .send({ email: s.orgA.admin.email, password: TEST_PASSWORD })
-      .expect(403);
-    expect(denied.body).toMatchObject({ code: 'ACCOUNT_DISABLED' });
+    expect((await refreshWith(both.inA).expect(401)).body).toMatchObject({
+      code: 'SESSION_REVOKED',
+    });
+    const inB = (await refreshWith(both.inB).expect(200)).body as AuthSessionResponse;
+    expect(inB.user.organization.id).toBe(s.orgB.id);
     await as(t, s.superAdmin.token).get('/auth/me').expect(200);
 
     await as(t, s.superAdmin.token)
       .patch(`/platform/organizations/${s.orgA.id}`, { status: 'active' })
       .expect(200);
+    await refreshWith(both.inA).expect(401);
     await login(t, s.orgA.admin.email);
   });
 
@@ -365,7 +404,7 @@ describe('Usuarios de la organización', () => {
     expect(res.body).toMatchObject({ code: 'INVITE_NOT_PENDING' });
   });
 
-  it('CA-20 invitar a otra organización reemplaza la invitación pendiente', async () => {
+  it('F21 CA-7 cada organización conserva su invitación; activar entra en la más reciente', async () => {
     const email = `nuevo-${randomUUID()}@empresa.co`;
     const person = { email, firstName: 'Pedro', lastName: 'Luna' };
     const invited = (await as(t, s.orgA.admin.token).post('/members', person).expect(201))
@@ -374,20 +413,15 @@ describe('Usuarios de la organización', () => {
     await as(t, s.orgB.admin.token).post('/members', person).expect(201);
     const fromB = t.mailer.lastLinkTo(email).searchParams.get('token')!;
 
-    expect((await members(s.orgA.admin.token)).some((m) => m.userId === invited.userId)).toBe(
-      false,
-    );
-    const [audit] = await db
+    const inA = (await members(s.orgA.admin.token)).find((m) => m.userId === invited.userId);
+    expect(inA?.invitationPending).toBe(true);
+    const replaced = await db
       .select()
       .from(auditLogs)
-      .where(
-        and(
-          eq(auditLogs.action, 'member.invitation_replaced'),
-          eq(auditLogs.organizationId, s.orgA.id),
-        ),
-      );
-    expect(audit?.entityId).toBe(invited.userId);
+      .where(eq(auditLogs.action, 'member.invitation_replaced'));
+    expect(replaced).toHaveLength(0);
 
+    // Un solo enlace vigente por usuario: el de B invalidó el de A.
     await t.http
       .post('/api/v1/auth/password/reset')
       .send({ token: fromA, newPassword: 'mi clave de invitado' })
@@ -396,19 +430,72 @@ describe('Usuarios de la organización', () => {
       .post('/api/v1/auth/password/reset')
       .send({ token: fromB, newPassword: 'mi clave de invitado' })
       .expect(204);
-    const me = await as(t, await login(t, email, 'mi clave de invitado'))
-      .get('/auth/me')
-      .expect(200);
-    expect(me.body).toMatchObject({ organization: { id: s.orgB.id } });
+    const me = (
+      await as(t, await login(t, email, 'mi clave de invitado'))
+        .get('/auth/me')
+        .expect(200)
+    ).body as AuthSessionResponse['user'];
+    expect(me.organization.id).toBe(s.orgB.id);
+    expect(me.organizations.map((o) => o.id).sort()).toEqual([s.orgA.id, s.orgB.id].sort());
   });
 
-  it('CA-14 desactivar revoca sus sesiones y le impide entrar; reactivar lo devuelve', async () => {
-    const other = await createMember(t, db, s.orgA.id);
+  it('F21 un restablecimiento de contraseña normal no cambia la organización de entrada', async () => {
+    const both = await memberOfBoth();
+    await db
+      .update(organizationMembers)
+      .set({ lastSelectedAt: null })
+      .where(eq(organizationMembers.userId, both.user.id));
+    await t.http.post('/api/v1/auth/password/forgot').send({ email: both.user.email }).expect(202);
+    await vi.waitFor(() => {
+      expect(() => t.mailer.lastLinkTo(both.user.email)).not.toThrow();
+    });
+    const token = t.mailer.lastLinkTo(both.user.email).searchParams.get('token')!;
+    await t.http
+      .post('/api/v1/auth/password/reset')
+      .send({ token, newPassword: 'otra clave bien larga' })
+      .expect(204);
+    const me = (
+      await as(t, await login(t, both.user.email, 'otra clave bien larga'))
+        .get('/auth/me')
+        .expect(200)
+    ).body as AuthSessionResponse['user'];
+    expect(me.organization.id).toBe(s.orgA.id);
+  });
+
+  it('F21 invitar a alguien con contraseña en otra organización lo agrega activo y no toca la otra', async () => {
+    const existing = s.orgA.admin;
+    const added = (
+      await as(t, s.orgB.admin.token)
+        .post('/members', { email: existing.email, firstName: 'X', lastName: 'Y' })
+        .expect(201)
+    ).body as Member;
+    expect(added).toMatchObject({ invitationPending: false, isActive: true });
+    expect(t.mailer.sent.at(-1)?.to).toBe(existing.email);
+    expect((await members(s.orgA.admin.token)).some((m) => m.userId === existing.id)).toBe(true);
+  });
+
+  it('F21 CA-5 desactivar revoca solo sus sesiones en esa organización; reactivar no las revive', async () => {
+    const both = await memberOfBoth();
     const res = await as(t, s.orgA.admin.token)
-      .patch(`/members/${other.id}`, { isActive: false })
+      .patch(`/members/${both.user.id}`, { isActive: false })
       .expect(200);
     expect((res.body as Member).isActive).toBe(false);
 
+    expect((await refreshWith(both.inA).expect(401)).body).toMatchObject({
+      code: 'SESSION_REVOKED',
+    });
+    const inB = (await refreshWith(both.inB).expect(200)).body as AuthSessionResponse;
+    expect(inB.user.organization.id).toBe(s.orgB.id);
+
+    await as(t, s.orgA.admin.token)
+      .patch(`/members/${both.user.id}`, { isActive: true })
+      .expect(200);
+    await refreshWith(both.inA).expect(401);
+  });
+
+  it('CA-14 desactivado no puede entrar si no tiene otra organización; reactivar lo devuelve', async () => {
+    const other = await createMember(t, db, s.orgA.id);
+    await as(t, s.orgA.admin.token).patch(`/members/${other.id}`, { isActive: false }).expect(200);
     await as(t, other.token).get('/auth/me').expect(401);
     const denied = await t.http
       .post('/api/v1/auth/login')
@@ -418,6 +505,38 @@ describe('Usuarios de la organización', () => {
 
     await as(t, s.orgA.admin.token).patch(`/members/${other.id}`, { isActive: true }).expect(200);
     await login(t, other.email);
+  });
+
+  it('F21 CA-6 dos desactivaciones cruzadas no dejan la organización sin nadie que pueda entrar', async () => {
+    // Organización nueva con dos admins con contraseña y un invitado que nunca activó su cuenta.
+    const org = await createOrganization(db, `Cruzada ${randomUUID().slice(0, 6)}`);
+    const x = await createMember(t, db, org.id);
+    const y = await createMember(t, db, org.id);
+    const [invited] = await db
+      .insert(users)
+      .values({ email: `inv-${randomUUID()}@empresa.co`, firstName: 'Inv', lastName: 'Itado' })
+      .returning({ id: users.id });
+    await db
+      .insert(organizationMembers)
+      .values({ userId: invited!.id, organizationId: org.id, role: 'admin' });
+
+    const [byX, byY] = await Promise.all([
+      as(t, x.token).patch(`/members/${y.id}`, { isActive: false }),
+      as(t, y.token).patch(`/members/${x.id}`, { isActive: false }),
+    ]);
+    const active = await db
+      .select({ userId: organizationMembers.userId })
+      .from(organizationMembers)
+      .innerJoin(users, eq(users.id, organizationMembers.userId))
+      .where(
+        and(
+          eq(organizationMembers.organizationId, org.id),
+          eq(organizationMembers.isActive, true),
+          isNotNull(users.passwordHash),
+        ),
+      );
+    expect(active).toHaveLength(1);
+    expect([byX.status, byY.status].filter((st) => st === 200)).toHaveLength(1);
   });
 
   it('CA-14 nadie se desactiva a sí mismo', async () => {

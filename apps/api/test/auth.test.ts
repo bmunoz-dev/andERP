@@ -4,13 +4,14 @@ import { hash } from '@node-rs/argon2';
 import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import type { Response } from 'supertest';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { DB, type Database } from '../src/db/database.module';
 import {
   auditLogs,
   organizationMembers,
   organizations,
   passwordResets,
+  sessions,
   users,
 } from '../src/db/schema';
 import { seed } from '../src/db/seed';
@@ -153,6 +154,61 @@ describe('Login', () => {
     await login(u.email).expect(200);
   });
 
+  it('F21 CA-1 fallos simultáneos no saltan el bloqueo', async () => {
+    const u = await createUser();
+    const results = await Promise.all(
+      Array.from({ length: 7 }, () => login(u.email, 'wrong password')),
+    );
+    for (const res of results) expect([401, 423]).toContain(res.status);
+    await login(u.email).expect(423);
+  });
+
+  it('F21 la clave correcta durante el bloqueo responde 423 y no toca el contador', async () => {
+    const u = await createUser();
+    for (let i = 0; i < 5; i++) await login(u.email, 'wrong password').expect(401);
+    await login(u.email, 'wrong password').expect(423);
+    await login(u.email).expect(423);
+    const [row] = await db.select().from(users).where(eq(users.id, u.userId));
+    expect(row?.failedLoginAttempts).toBe(0);
+  });
+
+  it('F21 CA-4 el login borra las sesiones vencidas y los resets gastados del usuario', async () => {
+    const u = await createUser();
+    const past = new Date(Date.now() - 60_000);
+    const future = new Date(Date.now() + 3_600_000);
+    const session = (expiresAt: Date, revokedAt: Date | null) => ({
+      userId: u.userId,
+      organizationId: u.organizationId,
+      familyId: randomUUID(),
+      tokenHash: randomUUID(),
+      expiresAt,
+      revokedAt,
+    });
+    await db.insert(sessions).values([session(past, null), session(future, past)]);
+    const reset = (expiresAt: Date, usedAt: Date | null) => ({
+      userId: u.userId,
+      purpose: 'reset',
+      tokenHash: randomUUID(),
+      expiresAt,
+      usedAt,
+    });
+    await db
+      .insert(passwordResets)
+      .values([reset(past, null), reset(future, past), reset(future, null)]);
+
+    await login(u.email).expect(200);
+
+    const left = await db.select().from(sessions).where(eq(sessions.userId, u.userId));
+    expect(left.filter((s) => s.expiresAt < new Date())).toHaveLength(0);
+    expect(left.filter((s) => s.revokedAt !== null)).toHaveLength(1);
+    const resets = await db
+      .select()
+      .from(passwordResets)
+      .where(eq(passwordResets.userId, u.userId));
+    expect(resets).toHaveLength(1);
+    expect(resets[0]!.usedAt).toBeNull();
+  });
+
   it.each([
     ['usuario inactivo', { status: 'inactive' as const }],
     ['organización suspendida', { organizationStatus: 'suspended' as const }],
@@ -183,7 +239,23 @@ describe('CA-5 límite de peticiones', () => {
   it('más de N intentos por minuto → 429 TOO_MANY_REQUESTS', async () => {
     const limited = await createTestApp({ env: { AUTH_THROTTLE_LIMIT: '3' } });
     try {
-      for (let i = 0; i < 3; i++) {
+      // F21 CA-2: el cambio de contraseña también tiene throttle.
+      const u = await createUser();
+      const session = await limited.http
+        .post('/api/v1/auth/login')
+        .send({ email: u.email, password: PASSWORD })
+        .expect(200);
+      const token = (session.body as AuthSessionResponse).accessToken;
+      const change = () =>
+        limited.http
+          .post('/api/v1/auth/password/change')
+          .set('Authorization', `Bearer ${token}`)
+          .send({ currentPassword: 'wrong password', newPassword: 'otra clave muy larga' });
+      for (let i = 0; i < 3; i++) expect((await change()).status).not.toBe(429);
+      await change().expect(429);
+
+      // Ya se usó un login arriba: quedan dos.
+      for (let i = 0; i < 2; i++) {
         await limited.http
           .post('/api/v1/auth/login')
           .send({ email: 'x@y.co', password: 'nope' })
@@ -327,7 +399,9 @@ describe('Contraseñas', () => {
     expect(t.mailer.sent).toHaveLength(0);
 
     await t.http.post('/api/v1/auth/password/forgot').send({ email: u.email }).expect(202);
-    expect(t.mailer.sent).toHaveLength(1);
+    await vi.waitFor(() => {
+      expect(t.mailer.sent).toHaveLength(1);
+    });
     expect(t.mailer.sent[0]!.to).toBe(u.email);
     expect(t.mailer.sent[0]!.text).toMatch(/http:\/\/localhost:5173\/restablecer\?token=[\w-]+/);
     expect(await auditActions(u.userId)).toContain('auth.password_reset_requested');
@@ -338,6 +412,9 @@ describe('Contraseñas', () => {
     const session = refreshCookieOf(await login(u.email).expect(200));
     t.mailer.sent = [];
     await t.http.post('/api/v1/auth/password/forgot').send({ email: u.email }).expect(202);
+    await vi.waitFor(() => {
+      expect(t.mailer.sent).toHaveLength(1);
+    });
     const token = new URL(/http\S+/.exec(t.mailer.sent[0]!.text)![0]).searchParams.get('token')!;
 
     await t.http
@@ -359,6 +436,9 @@ describe('Contraseñas', () => {
     const u = await createUser();
     t.mailer.sent = [];
     await t.http.post('/api/v1/auth/password/forgot').send({ email: u.email }).expect(202);
+    await vi.waitFor(() => {
+      expect(t.mailer.sent).toHaveLength(1);
+    });
     const token = new URL(/http\S+/.exec(t.mailer.sent[0]!.text)![0]).searchParams.get('token')!;
     await db
       .update(passwordResets)

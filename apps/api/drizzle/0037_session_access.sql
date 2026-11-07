@@ -1,0 +1,1 @@
+ALTER TABLE "anderp"."organization_members" ADD COLUMN "last_access_at" timestamp with time zone;

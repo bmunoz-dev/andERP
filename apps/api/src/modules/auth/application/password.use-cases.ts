@@ -59,7 +59,7 @@ export class ChangePasswordUseCase {
   }
 }
 
-/** F01 CA-14: responde igual exista o no el email; el correo sale en segundo plano. */
+/** F01 CA-14: responde igual exista o no el email. F21 CA-3: todo el trabajo va en segundo plano. */
 @Injectable()
 export class RequestPasswordResetUseCase {
   private readonly logger = new Logger(RequestPasswordResetUseCase.name);
@@ -74,7 +74,15 @@ export class RequestPasswordResetUseCase {
     @Inject(ENV) private readonly env: Env,
   ) {}
 
-  async execute(email: string): Promise<void> {
+  /** Responde sin esperar ninguna escritura: el tiempo no revela si el email existe. */
+  execute(email: string): Promise<void> {
+    this.issue(email).catch((error: unknown) => {
+      this.logger.error({ err: error }, 'Password reset request failed');
+    });
+    return Promise.resolve();
+  }
+
+  async issue(email: string): Promise<void> {
     const user = await this.users.findByEmail(email);
     if (user?.status !== 'active') return;
 
@@ -136,6 +144,8 @@ export class ResetPasswordUseCase {
     if (!(await this.resets.markUsedIfUnused(reset.id, now))) throw authErrors.invalidResetToken();
 
     await this.users.updatePassword(user.id, await this.hasher.hash(newPassword));
+    // F21 CA-7: al activar una cuenta con varias invitaciones, se entra en la más reciente.
+    if (reset.purpose === 'invite') await this.users.selectNewestMembership(user.id, now);
     await this.sessions.revokeAllForUser(user.id, now);
     await this.audit.log({
       action: 'auth.password_reset',
