@@ -218,7 +218,7 @@ describe('CA-8 migración base', () => {
     });
   });
 
-  it('app_runtime recibe permisos DML sobre las tablas nuevas de `anderp`', async () => {
+  it('app_runtime recibe SELECT, INSERT y UPDATE sobre las tablas nuevas de `anderp`, sin DELETE (F22)', async () => {
     await withOwnerSql((sql) => sql`create table anderp.privileges_probe (x int)`);
     try {
       await withRuntimeSql(async (sql) => {
@@ -226,11 +226,25 @@ describe('CA-8 migración base', () => {
         await sql`update privileges_probe set x = 2`;
         const rows = await sql`select x from privileges_probe`;
         expect(rows).toEqual([{ x: 2 }]);
-        await sql`delete from privileges_probe`;
+        await expect(sql`delete from privileges_probe`).rejects.toThrow(/permission denied/);
       });
     } finally {
       await withOwnerSql((sql) => sql`drop table anderp.privileges_probe`);
     }
+  });
+
+  it('F22 CA-5 app_runtime solo borra físicamente en las tablas que la API borra', async () => {
+    const rows = await withOwnerSql(
+      (sql) => sql<{ table_name: string }[]>`
+        select table_name from information_schema.role_table_grants
+         where grantee = 'app_runtime' and table_schema = 'anderp' and privilege_type = 'DELETE'
+         order by table_name`,
+    );
+    expect(rows.map((r) => r.table_name)).toEqual([
+      'fee_payment_days',
+      'password_resets',
+      'sessions',
+    ]);
   });
 
   it('toda función de `anderp` fija su search_path (aviso function_search_path_mutable)', async () => {

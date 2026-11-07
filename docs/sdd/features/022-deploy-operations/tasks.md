@@ -19,7 +19,7 @@
 - [x] F22-T004 Las migraciones de las pruebas corren como `anderp_owner`, sin superusuario. Toda la suite en verde; los ajustes van en las notas.
       Archivos: `apps/api/test/setup/global-setup.ts`
       Depende de: F22-T003 · Verificación: CA-3
-- [ ] F22-T005 [TDD] Primero la prueba de la lista exacta en `foundation.test.ts`. Después, la migración `runtime_delete_grants`.
+- [x] F22-T005 [TDD] Primero la prueba de la lista exacta en `foundation.test.ts`. Después, la migración `runtime_delete_grants`.
       Archivos: `apps/api/drizzle/NNNN_runtime_delete_grants.sql`, `apps/api/test/foundation.test.ts`
       Depende de: F22-T004 · Verificación: CA-5
 - [ ] F22-T006 [TDD] El seed rechaza la contraseña de ejemplo fuera de local.
