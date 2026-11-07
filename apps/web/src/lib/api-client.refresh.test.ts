@@ -98,6 +98,32 @@ describe('apiFetch con sesión', () => {
     unsubscribe();
   });
 
+  it.each(['SESSION_REVOKED', 'UNAUTHORIZED', 'ACCOUNT_DISABLED'])(
+    'F21 CA-11 un 401 %s fuera de /auth/ cierra la sesión y avisa',
+    async (code) => {
+      const expiredHandler = vi.fn();
+      const unsubscribe = onSessionExpired(expiredHandler);
+      stubServer(() => json(401, { status: 401, code }, true));
+
+      await expect(apiFetch('/things')).rejects.toMatchObject({ code });
+      expect(authStore.get().status).toBe('anonymous');
+      expect(expiredHandler).toHaveBeenCalledOnce();
+      unsubscribe();
+    },
+  );
+
+  it('F21 CA-11 un 401 de una ruta /auth/ no cierra la sesión ni avisa', async () => {
+    const expiredHandler = vi.fn();
+    const unsubscribe = onSessionExpired(expiredHandler);
+    stubServer(() => json(401, { status: 401, code: 'ACCOUNT_DISABLED' }, true));
+
+    await expect(apiFetch('/auth/login', { method: 'POST' })).rejects.toMatchObject({
+      code: 'ACCOUNT_DISABLED',
+    });
+    expect(expiredHandler).not.toHaveBeenCalled();
+    unsubscribe();
+  });
+
   it('no intenta refrescar ante otros 401 (p. ej. credenciales inválidas)', async () => {
     const fetchMock = stubServer(() =>
       json(401, { status: 401, code: 'INVALID_CREDENTIALS' }, true),

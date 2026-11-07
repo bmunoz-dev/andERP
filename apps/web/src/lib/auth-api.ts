@@ -6,6 +6,7 @@ import type {
 } from '@anderp/shared';
 import { apiFetch } from './api-client';
 import { authStore } from './auth-store';
+import { queryClient } from './query-client';
 
 export async function login(credentials: LoginRequest): Promise<void> {
   authStore.setSession(
@@ -13,12 +14,16 @@ export async function login(credentials: LoginRequest): Promise<void> {
   );
 }
 
-/** Cierra la sesión en la API; aunque falle la red, la sesión local se borra igual. */
+/**
+ * Cierra la sesión en la API; aunque falle la red, la sesión local y la caché de datos se borran
+ * igual: en un equipo compartido, nada de la organización queda a la vista (F21 CA-10).
+ */
 export async function logout(): Promise<void> {
   try {
     await apiFetch<undefined>('/auth/logout', { method: 'POST' });
   } finally {
     authStore.clear();
+    queryClient.clear();
   }
 }
 

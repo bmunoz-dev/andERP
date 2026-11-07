@@ -58,10 +58,10 @@
 
 ## Bloque E — Web
 
-- [ ] F21-T010 [TDD] `lib/query-client.ts`, y `logout()` vacía la caché.
+- [x] F21-T010 [TDD] `lib/query-client.ts`, y `logout()` vacía la caché.
       Archivos: `apps/web/src/lib/{query-client,auth-api,auth-api.test}.ts`, `apps/web/src/main.tsx`
       Verificación: CA-10
-- [ ] F21-T011 [TDD] Los `401` de sesión perdida fuera de `/auth/` avisan a `sessionExpiredListeners`.
+- [x] F21-T011 [TDD] Los `401` de sesión perdida fuera de `/auth/` avisan a `sessionExpiredListeners`.
       Archivos: `apps/web/src/lib/{api-client,api-client.test}.ts`
       Depende de: F21-T010 · Verificación: CA-11
 - [ ] F21-T012 [TDD] `appRedirect` en `navigation.ts`, usado por `_app.tsx`.
