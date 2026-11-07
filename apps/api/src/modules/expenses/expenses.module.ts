@@ -82,7 +82,9 @@ export class ReportsController {
   ledger(
     @Query('year') year?: string,
     @Query('month') month?: string,
-    @Query('categoryId') categoryId?: string,
+    // F24 CA-2: un id mal formado llegaba a Postgres y daba 500.
+    @Query('categoryId', new ParseUUIDPipe({ optional: true, errorHttpStatusCode: 422 }))
+    categoryId?: string,
     @Query('week') week?: string,
   ): Promise<LedgerEntry[]> {
     const p = period(year, month);

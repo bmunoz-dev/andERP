@@ -73,4 +73,4 @@ En `schemas/credentials.ts`, el `url` de la respuesta pasa de `z.string()` a la 
 
 ## Notas de implementación
 
-(Se completan al implementar.)
+- **T003:** `categoryId` usa `ParseUUIDPipe` opcional con 422, como el resto de la API. Un `categoryId=` vacío también responde 422 (punto de revisión 2): la web nunca lo envía (`expenses-api.ts` solo pone el parámetro si tiene valor), y tratarlo como ausente pedía una validación propia.

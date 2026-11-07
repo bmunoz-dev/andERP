@@ -14,7 +14,7 @@
 - [x] F24-T002 [TDD] Timeouts SMTP.
       Archivos: `apps/api/src/modules/mail/mailer.ts`, `apps/api/test/mail.test.ts`
       Verificación: CA-1
-- [ ] F24-T003 [TDD] `ParseUUIDPipe` en `categoryId`, con el caso vacío (punto de revisión 2).
+- [x] F24-T003 [TDD] `ParseUUIDPipe` en `categoryId`, con el caso vacío (punto de revisión 2).
       Archivos: `apps/api/src/modules/expenses/expenses.module.ts`, `apps/api/test/expenses.test.ts`
       Verificación: CA-2
 - [ ] F24-T004 [TDD] `ACCOUNT_NUMBER_PATTERN`, `isBankAccountComplete` e `isContractEndValid` en shared. El servicio de prestadores usa `isBankAccountComplete`.
