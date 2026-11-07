@@ -46,7 +46,7 @@
 
 ## Bloque D — Cierre
 
-- [ ] F23-T009 Cierre:
+- [x] F23-T009 Cierre:
       - verificación completa;
       - notas de implementación;
       - F23 marcada "Hecho" en el roadmap;
