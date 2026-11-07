@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v7
 
       # Toma la versión de pnpm del campo `packageManager` del package.json raíz.
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1 (de terceros: fijada por SHA, F22 CA-8)
 
       - uses: actions/setup-node@v7
         with:
@@ -38,3 +38,21 @@ jobs:
 
       # Las pruebas de integración levantan Postgres con Testcontainers (Docker del runner).
       - run: pnpm test
+
+      # F22 CA-4: el esquema de Drizzle y las migraciones no se separan. `generate` no se conecta.
+      - name: Esquema sincronizado con las migraciones
+        run: |
+          pnpm db:generate
+          test -z "$(git status --porcelain apps/api/drizzle)" || {
+            git status --porcelain apps/api/drizzle
+            echo "El esquema de Drizzle tiene cambios sin migración: corre pnpm db:generate" >&2
+            exit 1
+          }
+        env:
+          DATABASE_URL_MIGRATIONS: postgres://unused@localhost/unused
+
+      # F22 CA-7: lo que se despliega compila, y la imagen de la API se construye.
+      - run: pnpm build
+
+      - name: Imagen Docker de la API
+        run: docker build -f apps/api/Dockerfile -t anderp-api:ci .

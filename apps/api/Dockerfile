@@ -2,7 +2,7 @@
 #   docker build -f apps/api/Dockerfile -t anderp-api .
 
 # ── Build: dependencias completas, compila shared y la API, y aísla las de producción ──────
-FROM node:24-slim AS build
+FROM node:24.22.2-slim AS build
 ENV CI=true
 RUN corepack enable
 WORKDIR /repo
@@ -17,7 +17,7 @@ RUN pnpm --filter @anderp/shared build \
  && pnpm --filter @anderp/api deploy --prod --legacy /out
 
 # ── Runtime: solo dist y dependencias de producción, como usuario no root ────────────────
-FROM node:24-slim
+FROM node:24.22.2-slim
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build --chown=node:node /out/package.json ./

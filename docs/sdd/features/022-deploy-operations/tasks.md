@@ -28,7 +28,7 @@
 
 ## Bloque C — CI y despliegue
 
-- [ ] F22-T007 `ci.yml`:
+- [x] F22-T007 `ci.yml`:
       - en `verify`, `pnpm build`, `docker build` y el paso de esquema sincronizado;
       - `pnpm/action-setup` fijada por SHA en `ci.yml` y `deploy.yml`;
       - `Dockerfile` con la versión exacta de Node;
