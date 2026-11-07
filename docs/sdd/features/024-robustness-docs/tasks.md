@@ -26,7 +26,7 @@
 - [x] F24-T005 [TDD] `DataTable` con `error` (y el punto de revisión 1), y su uso en las nueve pantallas.
       Archivos: `apps/web/src/components/data-table{,.test}.tsx` y las pantallas listadas en el plan
       Verificación: CA-3
-- [ ] F24-T006 [TDD] Formularios de prestador y contrato con los helpers de shared, y prueba del de prestador.
+- [x] F24-T006 [TDD] Formularios de prestador y contrato con los helpers de shared, y prueba del de prestador.
       Archivos: `apps/web/src/components/providers/{provider-form-dialog,provider-form-dialog.test,contract-form-dialog}.tsx`
       Depende de: F24-T004 · Verificación: CA-4
 - [ ] F24-T007 [TDD] Enlace de credencial (`isWebUrl`) y `url` estricto en el schema de respuesta. Prueba del formulario de credencial sin contraseña.

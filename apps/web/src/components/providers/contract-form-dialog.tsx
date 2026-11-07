@@ -1,5 +1,6 @@
 import {
   type Contract,
+  isContractEndValid,
   isoDateSchema,
   PAYMENT_FREQUENCY_LABELS,
   PAYMENT_MODE_LABELS,
@@ -34,7 +35,7 @@ const contractForm = z
       .refine((v) => v !== null, 'Ingresa un valor válido'),
     workAgreement: z.string().trim().min(1, 'Describe el acuerdo de trabajo').max(5000),
   })
-  .refine((v) => v.endDate === '' || v.endDate >= v.startDate, {
+  .refine((v) => isContractEndValid(v.startDate, v.endDate), {
     path: ['endDate'],
     message: 'La fecha de fin no puede ser anterior a la de inicio',
   });

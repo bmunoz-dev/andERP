@@ -1,10 +1,9 @@
-import { type CatalogItem, documentNumberSchema, type ServiceProvider } from '@anderp/shared';
+import { type CatalogItem, type ServiceProvider } from '@anderp/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { z } from 'zod';
 import { FormDialog } from '@/components/form-dialog';
 import { FormField } from '@/components/form-field';
 import { SelectField, type SelectOption } from '@/components/select-field';
@@ -14,35 +13,7 @@ import { listCatalog, queryKeys } from '@/lib/admin-api';
 import { errorMessage } from '@/lib/error-messages.es';
 import { createProvider, updateProvider } from '@/lib/providers-api';
 
-const BANK_FIELDS = ['bankId', 'accountTypeId', 'accountNumber'] as const;
-
-const providerForm = z
-  .object({
-    name: z.string().trim().min(1, 'Ingresa el nombre').max(100),
-    documentTypeId: z.string().min(1, 'Elige el tipo de documento'),
-    documentNumber: documentNumberSchema,
-    description: z.string().trim().max(2000),
-    bankId: z.string(),
-    accountTypeId: z.string(),
-    accountNumber: z
-      .string()
-      .trim()
-      .refine((v) => v === '' || /^[0-9-]{4,30}$/.test(v), 'Usa de 4 a 30 números o guiones'),
-  })
-  .superRefine((values, ctx) => {
-    // La cuenta va completa o no va (F03 CA-1): se marca el campo que falta.
-    const filled = BANK_FIELDS.filter((field) => values[field] !== '');
-    if (filled.length > 0 && filled.length < BANK_FIELDS.length) {
-      for (const field of BANK_FIELDS.filter((f) => values[f] === '')) {
-        ctx.addIssue({
-          code: 'custom',
-          path: [field],
-          message: 'Completa la cuenta bancaria o deja los tres campos vacíos',
-        });
-      }
-    }
-  });
-type ProviderForm = z.infer<typeof providerForm>;
+import { providerForm, type ProviderForm } from './provider-form';
 
 /** Opciones activas más el valor actual aunque ya esté inactivo (se conserva, F03 CA-3). */
 function options(

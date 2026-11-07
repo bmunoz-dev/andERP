@@ -74,3 +74,4 @@ En `schemas/credentials.ts`, el `url` de la respuesta pasa de `z.string()` a la 
 ## Notas de implementación
 
 - **T003:** `categoryId` usa `ParseUUIDPipe` opcional con 422, como el resto de la API. Un `categoryId=` vacío también responde 422 (punto de revisión 2): la web nunca lo envía (`expenses-api.ts` solo pone el parámetro si tiene valor), y tratarlo como ausente pedía una validación propia.
+- **T006:** el schema del formulario de prestador pasó a `components/providers/provider-form.ts`, para probar su validación sin renderizar el diálogo (que necesita las consultas de catálogos) y sin el aviso de Fast Refresh por exportar algo que no es un componente desde el `.tsx`.
