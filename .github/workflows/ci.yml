@@ -56,3 +56,65 @@ jobs:
 
       - name: Imagen Docker de la API
         run: docker build -f apps/api/Dockerfile -t anderp-api:ci .
+
+  # F22 CA-12: el smoke de Playwright contra la API y la web levantadas en el job (cubre F07-T013).
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Postgres (con db/bootstrap.sql), s3mock y Mailpit, como en local.
+      - run: cp apps/api/.env.example apps/api/.env
+
+      - run: docker compose up -d --wait
+
+      - run: pnpm db:migrate
+
+      - run: pnpm db:seed
+
+      - run: pnpm build
+
+      - name: Levantar la API y la web
+        run: |
+          (cd apps/api && nohup node dist/main.js > api.log 2>&1 &)
+          nohup pnpm --filter @anderp/web preview --port 5173 --strictPort > web.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl -fsS --max-time 5 http://localhost:3000/api/v1/health > /dev/null \
+              && curl -fsS --max-time 5 http://localhost:5173 > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "La API o la web no arrancaron" >&2
+          cat apps/api/api.log web.log
+          exit 1
+
+      - run: pnpm --filter @anderp/e2e exec playwright install --with-deps chromium
+
+      # El admin del smoke es el super admin del seed de .env.example (datos de ejemplo, no secretos).
+      - name: Smoke
+        run: |
+          export E2E_EMAIL="$(grep '^SEED_SUPERADMIN_EMAIL=' apps/api/.env | cut -d= -f2-)"
+          export E2E_PASSWORD="$(grep '^SEED_SUPERADMIN_PASSWORD=' apps/api/.env | cut -d= -f2-)"
+          pnpm test:e2e
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results
+          path: |
+            e2e/test-results
+            apps/api/api.log
+            web.log
+          retention-days: 7
