@@ -153,6 +153,24 @@ describe('Login', () => {
     await login(u.email).expect(200);
   });
 
+  it('F21 CA-1 fallos simultáneos no saltan el bloqueo', async () => {
+    const u = await createUser();
+    const results = await Promise.all(
+      Array.from({ length: 7 }, () => login(u.email, 'wrong password')),
+    );
+    for (const res of results) expect([401, 423]).toContain(res.status);
+    await login(u.email).expect(423);
+  });
+
+  it('F21 la clave correcta durante el bloqueo responde 423 y no toca el contador', async () => {
+    const u = await createUser();
+    for (let i = 0; i < 5; i++) await login(u.email, 'wrong password').expect(401);
+    await login(u.email, 'wrong password').expect(423);
+    await login(u.email).expect(423);
+    const [row] = await db.select().from(users).where(eq(users.id, u.userId));
+    expect(row?.failedLoginAttempts).toBe(0);
+  });
+
   it.each([
     ['usuario inactivo', { status: 'inactive' as const }],
     ['organización suspendida', { organizationStatus: 'suspended' as const }],

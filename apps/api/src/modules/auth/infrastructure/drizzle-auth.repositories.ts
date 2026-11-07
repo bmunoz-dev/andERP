@@ -8,6 +8,11 @@ import {
   sessions,
   users,
 } from '../../../db/schema';
+import {
+  type FailedLoginResult,
+  LOCK_DURATION_MS,
+  MAX_FAILED_ATTEMPTS,
+} from '../domain/login-attempts';
 import type {
   MembershipRecord,
   NewSession,
@@ -79,15 +84,27 @@ export class DrizzleUserRepository implements UserRepository {
       );
   }
 
-  async recordFailedLogin(
-    userId: string,
-    attempts: number,
-    lockedUntil: Date | null,
-  ): Promise<void> {
-    await this.db
+  /**
+   * Misma regla que `registerFailedLogin` del dominio, pero en una sola sentencia: el quinto
+   * fallo bloquea y reinicia el contador. Un contador en 0 al volver significa que este fallo bloqueó.
+   */
+  async registerFailedLogin(userId: string, now: Date): Promise<FailedLoginResult> {
+    const locks = sql`failed_login_attempts + 1 >= ${MAX_FAILED_ATTEMPTS}`;
+    const lockedUntil = new Date(now.getTime() + LOCK_DURATION_MS);
+    const [row] = await this.db
       .update(users)
-      .set({ failedLoginAttempts: attempts, lockedUntil, updatedAt: sql`now()` })
-      .where(eq(users.id, userId));
+      .set({
+        failedLoginAttempts: sql`case when ${locks} then 0 else failed_login_attempts + 1 end`,
+        lockedUntil: sql`case when ${locks} then ${lockedUntil.toISOString()}::timestamptz else locked_until end`,
+        updatedAt: sql`now()`,
+      })
+      .where(eq(users.id, userId))
+      .returning({
+        failedLoginAttempts: users.failedLoginAttempts,
+        lockedUntil: users.lockedUntil,
+      });
+    if (!row) throw new Error('User not found');
+    return { ...row, locked: row.failedLoginAttempts === 0 };
   }
 
   async recordSuccessfulLogin(userId: string, at: Date, rehashed: string | null): Promise<void> {

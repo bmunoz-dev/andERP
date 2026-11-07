@@ -2,7 +2,7 @@ import type { LoginRequest } from '@anderp/shared';
 import { Inject, Injectable } from '@nestjs/common';
 import { AUDIT_LOGGER, type AuditLogger } from '../../audit/audit.service';
 import { authErrors } from '../domain/auth-errors';
-import { isLocked, registerFailedLogin } from '../domain/login-attempts';
+import { isLocked } from '../domain/login-attempts';
 import { type Access, requireAccess } from './access';
 import {
   CLOCK,
@@ -44,8 +44,7 @@ export class LoginUseCase {
     }
 
     if (!(await this.hasher.verify(user.passwordHash, password))) {
-      const result = registerFailedLogin(user.failedLoginAttempts, now);
-      await this.users.recordFailedLogin(user.id, result.failedLoginAttempts, result.lockedUntil);
+      const result = await this.users.registerFailedLogin(user.id, now);
       await this.failed(user.id, 'wrong_password', email);
       if (result.locked) {
         await this.audit.log({

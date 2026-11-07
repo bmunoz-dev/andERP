@@ -17,7 +17,7 @@
 
 ## Bloque B — Auth
 
-- [ ] F21-T003 [TDD] Primero la prueba de 7 logins fallidos en paralelo y la de cuenta bloqueada con la contraseña correcta (punto de revisión 5). Después:
+- [x] F21-T003 [TDD] Primero la prueba de 7 logins fallidos en paralelo y la de cuenta bloqueada con la contraseña correcta (punto de revisión 5). Después:
       - `registerFailedLogin` en `ports.ts`, Drizzle (un `UPDATE ... RETURNING`) e `in-memory-auth.ts`;
       - `LoginUseCase` lo usa en lugar de `recordFailedLogin`.
       Archivos: `apps/api/src/modules/auth/application/{ports,login.use-case}.ts`, `.../infrastructure/drizzle-auth.repositories.ts`, `.../testing/in-memory-auth.ts`, `apps/api/test/auth.test.ts`

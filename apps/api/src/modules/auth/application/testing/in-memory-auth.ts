@@ -2,6 +2,7 @@ import { APP_MODULES } from '@anderp/shared';
 import { createHash, randomUUID } from 'node:crypto';
 import type { AuditEntry, AuditLogger } from '../../../audit/audit.service';
 import type { MailMessage, Mailer } from '../../../mail/mailer';
+import { type FailedLoginResult, registerFailedLogin } from '../../domain/login-attempts';
 import type {
   AccessTokenClaims,
   AccessTokenIssuer,
@@ -151,10 +152,15 @@ export class InMemoryUsers implements UserRepository {
   findMemberships(userId: string): Promise<MembershipRecord[]> {
     return Promise.resolve(this.memberships.get(userId) ?? []);
   }
-  recordFailedLogin(userId: string, attempts: number, lockedUntil: Date | null): Promise<void> {
+  registerFailedLogin(userId: string, now: Date): Promise<FailedLoginResult> {
     const user = this.users.get(userId)!;
-    this.users.set(userId, { ...user, failedLoginAttempts: attempts, lockedUntil });
-    return Promise.resolve();
+    const result = registerFailedLogin(user.failedLoginAttempts, now);
+    this.users.set(userId, {
+      ...user,
+      failedLoginAttempts: result.failedLoginAttempts,
+      lockedUntil: result.lockedUntil ?? user.lockedUntil,
+    });
+    return Promise.resolve(result);
   }
   recordSuccessfulLogin(userId: string, at: Date, rehashed: string | null): Promise<void> {
     const user = this.users.get(userId)!;

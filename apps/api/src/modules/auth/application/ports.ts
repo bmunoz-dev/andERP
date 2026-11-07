@@ -1,4 +1,5 @@
 import type { AppModule, AuthProfile, MemberRole } from '@anderp/shared';
+import type { FailedLoginResult } from '../domain/login-attempts';
 
 // ── Datos que la capa de aplicación necesita de la persistencia ───────────────────────────
 
@@ -56,7 +57,8 @@ export interface UserRepository {
    * suspendidas: qué se ofrece depende del usuario y lo decide `requireAccess`.
    */
   findMemberships(userId: string): Promise<MembershipRecord[]>;
-  recordFailedLogin(userId: string, attempts: number, lockedUntil: Date | null): Promise<void>;
+  /** Suma un fallo de forma atómica (F21 CA-1): intentos simultáneos no saltan el bloqueo. */
+  registerFailedLogin(userId: string, now: Date): Promise<FailedLoginResult>;
   recordSuccessfulLogin(userId: string, at: Date, rehashedPassword: string | null): Promise<void>;
   /** Cambia la contraseña y reinicia el contador de intentos y el bloqueo. */
   updatePassword(userId: string, passwordHash: string): Promise<void>;
