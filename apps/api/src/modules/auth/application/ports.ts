@@ -87,6 +87,8 @@ export interface SessionRepository {
   revokeIfActive(sessionId: string, at: Date): Promise<boolean>;
   revokeFamily(familyId: string, at: Date): Promise<void>;
   revokeAllForUser(userId: string, at: Date, exceptFamilyId?: string): Promise<void>;
+  /** Revoca las sesiones del usuario cuya organización activa es esa; las demás siguen (F21 CA-5). */
+  revokeForOrganization(userId: string, organizationId: string, at: Date): Promise<void>;
   /**
    * Organización activa de la familia si tiene una sesión sin revocar ni vencer; si no, `null`.
    * El guard lo consulta en cada petición: así un logout o un cambio de contraseña invalidan

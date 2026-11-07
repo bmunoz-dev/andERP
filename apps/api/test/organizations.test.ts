@@ -1,4 +1,11 @@
-import type { CatalogItem, ExpenseCategory, Member, Organization } from '@anderp/shared';
+import type {
+  AuthSessionResponse,
+  CatalogItem,
+  ExpenseCategory,
+  Member,
+  Organization,
+} from '@anderp/shared';
+import type { Response } from 'supertest';
 import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -41,6 +48,35 @@ const newOrg = () => ({
   taxId: randomUUID().slice(0, 18),
   admin: { email: `admin-${randomUUID()}@nueva.co`, firstName: 'Laura', lastName: 'Ríos' },
 });
+
+/** F21 CA-5: miembro de A y de B, con una sesión activa en cada una (cookies de refresh). */
+async function memberOfBoth() {
+  const user = await createMember(t, db, s.orgA.id);
+  await db.insert(organizationMembers).values({
+    userId: user.id,
+    organizationId: s.orgB.id,
+    role: 'admin',
+    createdAt: new Date(Date.now() + 1000),
+  });
+  const cookieOf = (res: Response) =>
+    ([] as string[])
+      .concat(res.headers['set-cookie'] ?? [])
+      .find((c) => c.startsWith('anderp_rt='))!
+      .split(';')[0]!;
+  const enter = () =>
+    t.http
+      .post('/api/v1/auth/login')
+      .send({ email: user.email, password: TEST_PASSWORD })
+      .expect(200);
+  const inA = cookieOf(await enter());
+  const second = await enter();
+  await as(t, (second.body as AuthSessionResponse).accessToken)
+    .post('/auth/organization', { organizationId: s.orgB.id })
+    .expect(204);
+  return { user, inA, inB: cookieOf(second) };
+}
+
+const refreshWith = (cookie: string) => t.http.post('/api/v1/auth/refresh').set('Cookie', cookie);
 
 describe('Organizaciones (plataforma)', () => {
   it('CA-1 crea la organización con categorías, primer admin e invitación', async () => {
@@ -99,23 +135,25 @@ describe('Organizaciones (plataforma)', () => {
     expect(await db.select().from(users).where(eq(users.email, input.admin.email))).toHaveLength(0);
   });
 
-  it('CA-2 suspender revoca las sesiones de sus miembros; el super admin sigue entrando', async () => {
+  it('F21 CA-5 suspender revoca solo las sesiones en esa organización; el super admin sigue entrando', async () => {
+    const both = await memberOfBoth();
     const res = await as(t, s.superAdmin.token)
       .patch(`/platform/organizations/${s.orgA.id}`, { status: 'suspended' })
       .expect(200);
     expect((res.body as Organization).status).toBe('suspended');
 
     await as(t, s.orgA.admin.token).get('/auth/me').expect(401);
-    const denied = await t.http
-      .post('/api/v1/auth/login')
-      .send({ email: s.orgA.admin.email, password: TEST_PASSWORD })
-      .expect(403);
-    expect(denied.body).toMatchObject({ code: 'ACCOUNT_DISABLED' });
+    expect((await refreshWith(both.inA).expect(401)).body).toMatchObject({
+      code: 'SESSION_REVOKED',
+    });
+    const inB = (await refreshWith(both.inB).expect(200)).body as AuthSessionResponse;
+    expect(inB.user.organization.id).toBe(s.orgB.id);
     await as(t, s.superAdmin.token).get('/auth/me').expect(200);
 
     await as(t, s.superAdmin.token)
       .patch(`/platform/organizations/${s.orgA.id}`, { status: 'active' })
       .expect(200);
+    await refreshWith(both.inA).expect(401);
     await login(t, s.orgA.admin.email);
   });
 
@@ -402,13 +440,28 @@ describe('Usuarios de la organización', () => {
     expect(me.body).toMatchObject({ organization: { id: s.orgB.id } });
   });
 
-  it('CA-14 desactivar revoca sus sesiones y le impide entrar; reactivar lo devuelve', async () => {
-    const other = await createMember(t, db, s.orgA.id);
+  it('F21 CA-5 desactivar revoca solo sus sesiones en esa organización; reactivar no las revive', async () => {
+    const both = await memberOfBoth();
     const res = await as(t, s.orgA.admin.token)
-      .patch(`/members/${other.id}`, { isActive: false })
+      .patch(`/members/${both.user.id}`, { isActive: false })
       .expect(200);
     expect((res.body as Member).isActive).toBe(false);
 
+    expect((await refreshWith(both.inA).expect(401)).body).toMatchObject({
+      code: 'SESSION_REVOKED',
+    });
+    const inB = (await refreshWith(both.inB).expect(200)).body as AuthSessionResponse;
+    expect(inB.user.organization.id).toBe(s.orgB.id);
+
+    await as(t, s.orgA.admin.token)
+      .patch(`/members/${both.user.id}`, { isActive: true })
+      .expect(200);
+    await refreshWith(both.inA).expect(401);
+  });
+
+  it('CA-14 desactivado no puede entrar si no tiene otra organización; reactivar lo devuelve', async () => {
+    const other = await createMember(t, db, s.orgA.id);
+    await as(t, s.orgA.admin.token).patch(`/members/${other.id}`, { isActive: false }).expect(200);
     await as(t, other.token).get('/auth/me').expect(401);
     const denied = await t.http
       .post('/api/v1/auth/login')

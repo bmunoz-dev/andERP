@@ -35,7 +35,7 @@
 
 ## Bloque C — Miembros y organizaciones
 
-- [ ] F21-T006 [TDD] Primero los casos de CA-5 y el punto de revisión 3, reemplazando las pruebas de las líneas 102 y 405. Después:
+- [x] F21-T006 [TDD] Primero los casos de CA-5 y el punto de revisión 3, reemplazando las pruebas de las líneas 102 y 405. Después:
       - `revokeOrganizationSessions` en el puerto, Drizzle e `in-memory-auth.ts`;
       - `setActive` y la suspensión la usan después del commit, con `try/catch` y log.
       Archivos: `ports.ts`, `drizzle-auth.repositories.ts`, `in-memory-auth.ts`, `members.service.ts`, `organizations.service.ts`, `apps/api/test/organizations.test.ts`

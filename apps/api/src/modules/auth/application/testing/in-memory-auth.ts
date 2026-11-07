@@ -227,6 +227,13 @@ export class InMemorySessions implements SessionRepository {
     this.selections.push({ userId, organizationId, at });
     return Promise.resolve();
   }
+  revokeForOrganization(userId: string, organizationId: string, at: Date): Promise<void> {
+    for (const row of this.rows) {
+      if (row.userId === userId && row.organizationId === organizationId && !row.revokedAt)
+        row.revokedAt = at;
+    }
+    return Promise.resolve();
+  }
   deleteExpiredForUser(userId: string, at: Date): Promise<void> {
     this.rows = this.rows.filter((r) => r.userId !== userId || r.expiresAt >= at);
     return Promise.resolve();

@@ -1,5 +1,5 @@
 import { ErrorCode, type InviteMember, type Member } from '@anderp/shared';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { and, asc, count, eq, isNull, ne } from 'drizzle-orm';
 import { ClsService } from 'nestjs-cls';
 import { DB, type Database } from '../../db/database.module';
@@ -22,6 +22,8 @@ const notFound = () => new DomainError(ErrorCode.NOT_FOUND, 404);
 /** Usuarios de la organización del actor (F02 CA-11 a CA-15). */
 @Injectable()
 export class MembersService {
+  private readonly logger = new Logger(MembersService.name);
+
   constructor(
     @Inject(DB) private readonly db: Database,
     @Inject(SESSION_REPOSITORY) private readonly sessions: SessionRepository,
@@ -141,8 +143,15 @@ export class MembersService {
         tx,
       );
     });
-    // Después de confirmar: el puerto de sesiones no recibe la transacción (F12 CA-4).
-    if (!isActive) await this.sessions.revokeAllForUser(userId, this.clock.now());
+    // Después de confirmar (F12 CA-4), y solo las sesiones en esta organización (F21 CA-5).
+    if (!isActive) {
+      const organizationId = this.scope.organizationId;
+      await this.sessions
+        .revokeForOrganization(userId, organizationId, this.clock.now())
+        .catch((error: unknown) => {
+          this.logger.error({ err: error, userId, organizationId }, 'Session revocation failed');
+        });
+    }
     return this.get(userId);
   }
 

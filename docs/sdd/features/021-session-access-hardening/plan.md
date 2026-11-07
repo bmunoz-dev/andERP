@@ -110,4 +110,6 @@ Casos que la spec implica y ninguna prueba de arriba cubre. Cada uno lleva su pr
 
 ## Notas de implementación
 
-(Se completan al implementar.)
+- **T004:** el trabajo de `RequestPasswordResetUseCase` pasa a `issue(email)`, y `execute` lo lanza sin esperar. Las pruebas de punta a punta de recuperación esperan el correo con `vi.waitFor`. La prueba del throttle pide el token al principio, antes de agotar el cupo de login.
+- **T005:** `LoginUseCase` recibe los repositorios de sesiones y de tokens para la limpieza; un fallo de la limpieza solo se registra en el log.
+- **T006:** el puerto quedó como `revokeForOrganization(userId, organizationId, at)`, por usuario, en lugar de `revokeOrganizationSessions(organizationId, at, userId?)`: la versión en memoria no sabe quién es super admin, y la suspensión ya consultaba los miembros que no lo son. Que la revocación fallida no dé `500` es un `.catch` con log, sin prueba propia; si se rompe, solo cambia el código de respuesta.

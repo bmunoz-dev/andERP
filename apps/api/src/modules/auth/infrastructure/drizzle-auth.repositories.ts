@@ -225,6 +225,19 @@ export class DrizzleSessionRepository implements SessionRepository {
     });
   }
 
+  async revokeForOrganization(userId: string, organizationId: string, at: Date): Promise<void> {
+    await this.db
+      .update(sessions)
+      .set({ revokedAt: at })
+      .where(
+        and(
+          eq(sessions.userId, userId),
+          eq(sessions.organizationId, organizationId),
+          isNull(sessions.revokedAt),
+        ),
+      );
+  }
+
   async deleteExpiredForUser(userId: string, at: Date): Promise<void> {
     await this.db
       .delete(sessions)
