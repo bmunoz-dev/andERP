@@ -25,7 +25,7 @@
 - [x] F23-T004 [TDD] Trigger de credenciales hacia responsables vigentes y `leftJoin` filtrado. Pruebas de CA-8 y del punto de revisión 4.
       Archivos: la misma migración, `credentials.service.ts`, `apps/api/test/credentials.{db.,}test.ts`
       Depende de: F23-T002 · Verificación: CA-8
-- [ ] F23-T005 [TDD] Prueba de la barrera con una fila que viola cada regla.
+- [x] F23-T005 [TDD] Prueba de la barrera con una fila que viola cada regla.
       Archivos: `apps/api/test/data-integrity.db.test.ts`
       Depende de: F23-T004 · Verificación: CA-12
 
