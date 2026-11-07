@@ -40,7 +40,7 @@
 - [x] F23-T007 [TDD] Rotación por fila (`{ rotated, failed }`) y el runbook 04. Prueba con el lote de tamaño 1 (punto de revisión 5).
       Archivos: `rotate-keys.ts`, `apps/api/test/credentials.test.ts`, `docs/runbooks/04-rotar-llave-credenciales.md`
       Depende de: F23-T001 · Verificación: CA-9
-- [ ] F23-T008 [TDD] `ContractDocumentUploadGuard` y `assertUploadAllowed`, y el runbook 07 de archivos huérfanos.
+- [x] F23-T008 [TDD] `ContractDocumentUploadGuard` y `assertUploadAllowed`, y el runbook 07 de archivos huérfanos.
       Archivos: `contract-documents.{module,service}.ts`, `apps/api/test/contract-documents.test.ts`, `docs/runbooks/07-archivos-huerfanos.md`
       Depende de: F23-T001 · Verificación: CA-10, CA-11
 

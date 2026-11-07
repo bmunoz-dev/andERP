@@ -1,3 +1,8 @@
+import { GUARDS_METADATA } from '@nestjs/common/constants';
+import {
+  ContractDocumentsController,
+  ContractDocumentUploadGuard,
+} from '../src/modules/contract-documents/contract-documents.module';
 import { HeadObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 import { type Contract, type ServiceProvider } from '@anderp/shared';
 import { randomUUID } from 'node:crypto';
@@ -182,6 +187,14 @@ describe('Subir', () => {
       .patch(`/service-providers/${ended.serviceProviderId}`, { isActive: false })
       .expect(200);
     await upload(ended.id, PDF, 'c.pdf').expect(201);
+  });
+
+  it('F23 CA-10 el contrato y el límite se comprueban en un guard, antes de leer el archivo', () => {
+    // Nest ejecuta los guards antes que los interceptores: el de multer no llega a cargar el archivo.
+    const upload = Object.getOwnPropertyDescriptor(ContractDocumentsController.prototype, 'upload')
+      ?.value as object;
+    const guards = Reflect.getMetadata(GUARDS_METADATA, upload) as unknown[];
+    expect(guards).toContain(ContractDocumentUploadGuard);
   });
 
   it('CA-6c la subida 21 de la hora del mismo usuario → 429', async () => {
