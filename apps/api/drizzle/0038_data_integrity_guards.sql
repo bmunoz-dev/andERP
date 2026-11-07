@@ -175,3 +175,36 @@ CREATE CONSTRAINT TRIGGER "fee_payment_days_require_amount"
   AFTER INSERT OR UPDATE OR DELETE ON "anderp"."fee_payment_days"
   DEFERRABLE INITIALLY DEFERRED
   FOR EACH ROW EXECUTE FUNCTION "anderp"."fee_payment_days_require_amount"();
+--> statement-breakpoint
+
+-- CA-8: una credencial solo apunta a un responsable vigente. La misma respuesta que da la FK
+-- compuesta con un responsable de otra organización (UNPROCESSABLE).
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM "anderp"."entity_credentials" c
+      JOIN "anderp"."responsible_persons" r
+        ON r.organization_id = c.organization_id AND r.id = c.responsible_person_id
+     WHERE c.deleted_at IS NULL AND r.deleted_at IS NOT NULL
+  ) THEN
+    RAISE EXCEPTION 'F23: hay credenciales con un responsable borrado; corrígelas antes de migrar';
+  END IF;
+END $$;
+--> statement-breakpoint
+CREATE FUNCTION "anderp"."entity_credentials_require_live_responsible"() RETURNS trigger
+LANGUAGE plpgsql SET search_path = '' AS $$
+BEGIN
+  IF NEW.responsible_person_id IS NOT NULL AND EXISTS (
+    SELECT 1 FROM "anderp"."responsible_persons" r
+     WHERE r.organization_id = NEW.organization_id AND r.id = NEW.responsible_person_id
+       AND r.deleted_at IS NOT NULL
+  ) THEN
+    RAISE EXCEPTION 'UNPROCESSABLE';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+--> statement-breakpoint
+CREATE TRIGGER "entity_credentials_require_live_responsible"
+  BEFORE INSERT OR UPDATE OF "responsible_person_id" ON "anderp"."entity_credentials"
+  FOR EACH ROW EXECUTE FUNCTION "anderp"."entity_credentials_require_live_responsible"();

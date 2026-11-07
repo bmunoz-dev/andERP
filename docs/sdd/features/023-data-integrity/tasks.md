@@ -22,7 +22,7 @@
       Pruebas de CA-6, CA-7 y del punto de revisión 3.
       Archivos: la misma migración, `packages/shared/src/{errors/codes.ts,schemas/fee-payments.ts}`, `apps/web/src/lib/error-messages.es.ts`, `apps/api/test/{fee-payments,fixed-payments}.{db.,}test.ts`
       Depende de: F23-T002 · Verificación: CA-6, CA-7
-- [ ] F23-T004 [TDD] Trigger de credenciales hacia responsables vigentes y `leftJoin` filtrado. Pruebas de CA-8 y del punto de revisión 4.
+- [x] F23-T004 [TDD] Trigger de credenciales hacia responsables vigentes y `leftJoin` filtrado. Pruebas de CA-8 y del punto de revisión 4.
       Archivos: la misma migración, `credentials.service.ts`, `apps/api/test/credentials.{db.,}test.ts`
       Depende de: F23-T002 · Verificación: CA-8
 - [ ] F23-T005 [TDD] Prueba de la barrera con una fila que viola cada regla.

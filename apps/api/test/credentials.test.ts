@@ -97,6 +97,22 @@ describe('Responsables', () => {
     await api().get(`/responsible-persons/${person.id}`).expect(404);
   });
 
+  it('F23 CA-8 crear o editar una credencial con un responsable borrado → 422', async () => {
+    const person = await newPerson();
+    await api().delete(`/responsible-persons/${person.id}`).expect(204);
+    const res = await api()
+      .post('/credentials', {
+        entityName: 'Notaría',
+        username: 'u',
+        password: SECRET,
+        responsiblePersonId: person.id,
+      })
+      .expect(422);
+    expect(res.body).toMatchObject({ code: 'UNPROCESSABLE' });
+    const created = await newCredential({ entityName: 'Cámara' });
+    await api().patch(`/credentials/${created.id}`, { responsiblePersonId: person.id }).expect(422);
+  });
+
   it('CA-2 no se borra un responsable con credenciales', async () => {
     const person = await newPerson();
     const credential = await newCredential({ responsiblePersonId: person.id });
