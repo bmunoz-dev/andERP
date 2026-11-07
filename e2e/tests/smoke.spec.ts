@@ -53,7 +53,7 @@ test('flujo de humo', async ({ page, request }) => {
     startDate: `${year ?? ''}-${month ?? ''}-01`,
     workAgreement: 'Prueba de humo',
     paymentFrequency: 'weekly',
-    totalAmount: '10000000.00',
+    monthlyAmount: '1000000.00',
   });
   await post(request, token, '/credentials', {
     entityName: `Portal E2E ${run}`,
