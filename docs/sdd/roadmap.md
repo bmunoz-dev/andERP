@@ -26,7 +26,7 @@
 | F19 | [Módulos por organización](features/019-organization-modules/spec.md) | F02, F12 | Aprobado | Aprobado | Hecho |
 | F20 | [Selector de organización](features/020-organization-switcher/spec.md) | F01, F02, F12, F15, F19 | Aprobado | Aprobado | Hecho |
 | F21 | [Sesión y acceso](features/021-session-access-hardening/spec.md) | F01, F02, F12, F20 | Aprobado | Aprobado | Hecho |
-| F22 | [Despliegue y operación](features/022-deploy-operations/spec.md) | F07, F21 | Aprobado | Aprobado | Pendiente |
+| F22 | [Despliegue y operación](features/022-deploy-operations/spec.md) | F07, F21 | Aprobado | Aprobado | Hecho |
 | F23 | [Reglas de datos en la base](features/023-data-integrity/spec.md) | F03, F04, F06, F09, F16, F17 | Aprobado | Aprobado | Hecho |
 | F24 | [Robustez y documentación al día](features/024-robustness-docs/spec.md) | F04, F05, F16, F19 | Aprobado | Aprobado | Hecho |
 
@@ -64,6 +64,8 @@ F00 ─► F01 ─► F02 ─┬─► F03 ─► F04 ─► F05 ─┐
 | §10 Migraciones y despliegue | F00 (local), F07 (producción) |
 
 ## Bloqueos y notas
+
+**F22 terminada (2026-11-07), pendiente de merge (PR encadenado sobre F24):** TLS obligatorio fuera de local, un migrador que dice por qué falla, migraciones probadas sin superusuario, `DELETE` de `app_runtime` acotado (`0039`), seed sin la contraseña de ejemplo, CI con build, imagen Docker, esquema sincronizado y e2e, deploy hook con el commit del job, y `health.yml`. **Después del despliegue, con confirmación del usuario:** activar "Enforce SSL" en Supabase (runbook 01, paso 2) y ejecutar `health.yml` a mano.
 
 **F24 terminada (2026-11-07), pendiente de merge (PR encadenado sobre F23):** timeouts SMTP, `categoryId` validado, errores visibles en las tablas, reglas de cuenta y fechas en shared, enlaces de credenciales solo `http(s)`, invalidaciones de caché, hora de Bogotá, perfil actualizado al guardar una organización, y specs de F04 y F16 al día. Queda F22 (despliegue y operación), que va después del merge de F21.
 
