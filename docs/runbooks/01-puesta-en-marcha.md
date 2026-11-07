@@ -30,7 +30,7 @@ Las contraseñas de la base de datos van en **hexadecimal** (solo letras y núme
    - plan **de pago** (backups diarios y sin pausa por inactividad; el gratuito no sirve para producción);
    - Postgres **17**, la misma versión mayor que en local y en CI.
    Anota el precio en la sección "Costos" al final.
-2. **Exige SSL** (F22): *Project Settings → Database → SSL Configuration* → activa **Enforce SSL on incoming connections**. La API, el migrador y el seed ya se conectan con TLS a todo host que no sea local. Después de activarlo, comprueba que `/api/v1/health` responda.
+2. **Exige SSL** (F22): menú lateral **Database → Settings**, sección **SSL Configuration** → activa **Enforce SSL on incoming connections** (enlace directo: `https://supabase.com/dashboard/project/<project-ref>/database/settings#ssl-configuration`). Supabase reinicia la base al aplicarlo: unos minutos sin servicio. Sin la opción en el panel, con la CLI: `npx supabase ssl-enforcement --project-ref <project-ref> update --enable-db-ssl-enforcement --experimental`. La API, el migrador y el seed ya se conectan con TLS a todo host que no sea local. Después de activarlo, comprueba que `/api/v1/health` responda. En producción quedó activado el 2026-11-07.
 3. **Desactiva la Data API**: *Project Settings → Data API* → desactivar. AndERP no la usa; así nada queda expuesto por PostgREST.
 4. Crea el rol de la API en el *SQL Editor* (sin contraseña todavía, así no queda escrita en el historial de consultas):
 
