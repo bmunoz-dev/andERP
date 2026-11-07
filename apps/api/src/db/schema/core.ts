@@ -81,6 +81,8 @@ export const organizationMembers = anderp.table(
     isActive: boolean().notNull().default(true),
     /** Última vez que el usuario eligió esta organización en el selector (F20). */
     lastSelectedAt: timestamptz(),
+    /** Último ingreso a esta organización: login que entra en ella o cambio a ella (F21 CA-8). */
+    lastAccessAt: timestamptz(),
     ...auditColumns,
   },
   (t) => [

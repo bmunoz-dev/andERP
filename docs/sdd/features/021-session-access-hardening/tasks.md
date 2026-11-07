@@ -11,7 +11,7 @@
       - historial de `design.md`: la entrada nueva reemplaza la del 2026-10-09;
       - notas fechadas en F02 (CA-2, CA-14 y CA-20) y F12 (CA-4) que remitan a F21.
       Archivos: `docs/sdd/design.md`, `docs/sdd/features/002-organizations-catalogs/spec.md`, `docs/sdd/features/012-atomic-audit/spec.md`
-- [ ] F21-T002 [TDD] `lastAccessAt` en `core.ts` y migración `0037_session_access`.
+- [x] F21-T002 [TDD] `lastAccessAt` en `core.ts` y migración `0037_session_access`.
       Archivos: `apps/api/src/db/schema/core.ts`, `apps/api/drizzle/0037_*.sql`
       Depende de: F21-T001 · Verificación: `pnpm db:generate` sin cambios pendientes
 
