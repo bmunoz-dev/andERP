@@ -41,6 +41,12 @@ class TestErrorsController {
     await this.db.execute(sql`do $$ begin raise exception 'TEST_TRIGGER_CODE'; end $$`);
   }
 
+  /** F21 CA-9: error real de Drizzle cuyo mensaje y parámetros llevan un dato sensible. */
+  @Get('db-error')
+  async dbError(): Promise<void> {
+    await this.db.execute(sql`select ${'F21-SENTINEL'}::uuid`);
+  }
+
   @Post('things')
   create(@Body() body: CreateThingDto): CreateThingDto {
     return body;
@@ -111,6 +117,16 @@ describe('F00 — fundaciones de la API', () => {
     expect(logs).not.toContain('secret-token-123');
     expect(logs).not.toContain('secret-cookie-456');
     expect(logs).not.toContain('secret-pass-789');
+  });
+
+  it('F21 CA-9 un error de la base se registra sin parámetros ni mensaje', async () => {
+    await t.http.get('/api/v1/test/db-error').expect(500);
+    const logs = t.logs.join('\n');
+    expect(logs).not.toContain('F21-SENTINEL');
+    const errorLog = t.logs
+      .map((line) => JSON.parse(line) as { msg?: string; err?: { code?: string } })
+      .findLast((entry) => entry.msg === 'Unhandled error');
+    expect(errorLog?.err?.code).toBe('22P02');
   });
 
   it('CA-7 cuerpo inválido → 422 VALIDATION_ERROR con errores por campo', async () => {

@@ -52,7 +52,7 @@
 
 ## Bloque D — Logs
 
-- [ ] F21-T009 [TDD] `serializeError` con su prueba contra Postgres real, y `serializers.err` en `logger.module.ts`.
+- [x] F21-T009 [TDD] `serializeError` con su prueba contra Postgres real, y `serializers.err` en `logger.module.ts`.
       Archivos: `apps/api/src/shared/logging/{serialize-error,logger.module}.ts`, `apps/api/test/foundation.test.ts`
       Depende de: F21-T001 · Verificación: CA-9
 
