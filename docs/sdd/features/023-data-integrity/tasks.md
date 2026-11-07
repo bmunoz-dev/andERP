@@ -5,7 +5,7 @@
 
 ## Bloque A — Diseño
 
-- [ ] F23-T001 Actualizar `design.md` (§5.5, §5.8, §5.9, §6.3, §6.5, §11 e historial) según el plan.
+- [x] F23-T001 Actualizar `design.md` (§5.5, §5.8, §5.9, §6.3, §6.5, §11 e historial) según el plan.
       Archivos: `docs/sdd/design.md`
 
 ## Bloque B — Base de datos
