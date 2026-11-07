@@ -79,6 +79,7 @@ function AgendaPage() {
       <AgendaTable
         data={rows}
         isLoading={agenda.isPending}
+        error={agenda.error}
         onComplete={(obligation) => {
           setDialog({ kind: 'complete', obligation });
         }}

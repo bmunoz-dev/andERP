@@ -20,12 +20,15 @@ export function SignedAmount({ value }: { value: string }) {
 export function AccountsTable({
   data,
   isLoading,
+  error,
   onEdit,
   onToggle,
   renderName = (a) => a.name,
 }: {
   data: AirAccount[] | undefined;
   isLoading: boolean;
+  /** Error de la consulta (F24 CA-3). */
+  error?: unknown;
   onEdit: (account: AirAccount) => void;
   onToggle: (account: AirAccount) => void;
   renderName?: (account: AirAccount) => ReactNode;
@@ -106,6 +109,7 @@ export function AccountsTable({
       columns={columns}
       data={data}
       isLoading={isLoading}
+      error={error}
       emptyMessage="Aún no hay cuentas aéreas."
       getRowId={(a) => a.id}
     />

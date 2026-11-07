@@ -23,7 +23,7 @@
 
 ## Bloque C — Web
 
-- [ ] F24-T005 [TDD] `DataTable` con `error` (y el punto de revisión 1), y su uso en las nueve pantallas.
+- [x] F24-T005 [TDD] `DataTable` con `error` (y el punto de revisión 1), y su uso en las nueve pantallas.
       Archivos: `apps/web/src/components/data-table{,.test}.tsx` y las pantallas listadas en el plan
       Verificación: CA-3
 - [ ] F24-T006 [TDD] Formularios de prestador y contrato con los helpers de shared, y prueba del de prestador.

@@ -290,6 +290,7 @@ function ProviderDetailPage() {
         columns={columns}
         data={contracts.data}
         isLoading={contracts.isPending}
+        error={contracts.error}
         emptyMessage="Esta persona aún no tiene contratos."
         getRowId={(c) => c.id}
       />

@@ -104,6 +104,7 @@ function ResponsiblesPage() {
         columns={columns}
         data={persons.data}
         isLoading={persons.isPending}
+        error={persons.error}
         emptyMessage="Aún no hay responsables."
         getRowId={(p) => p.id}
       />

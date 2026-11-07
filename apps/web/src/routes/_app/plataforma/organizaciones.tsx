@@ -161,6 +161,7 @@ function OrganizationsPage() {
         columns={columns}
         data={organizations.data}
         isLoading={organizations.isPending}
+        error={organizations.error}
         emptyMessage="Aún no hay organizaciones."
         getRowId={(o) => o.id}
       />

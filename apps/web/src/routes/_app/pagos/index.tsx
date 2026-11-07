@@ -204,6 +204,7 @@ function DailyPaymentsTab() {
         columns={columns}
         data={payments.data}
         isLoading={payments.isPending}
+        error={payments.error}
         emptyMessage="No hay pagos en ese periodo."
         getRowId={(p) => p.id}
       />

@@ -2,6 +2,8 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+import { ApiError } from '@/lib/api-client';
+import { errorMessage } from '@/lib/error-messages.es';
 import { DataTable } from './data-table';
 
 interface Row {
@@ -34,7 +36,9 @@ const rows: Row[] = [
   { id: '2', name: 'Luis', city: 'Cali' },
 ];
 
-const table = (props: Partial<{ data: Row[] | undefined; isLoading: boolean }> = {}) => (
+const table = (
+  props: Partial<{ data: Row[] | undefined; isLoading: boolean; error: unknown }> = {},
+) => (
   <DataTable
     columns={columns}
     data={rows}
@@ -73,5 +77,31 @@ describe('DataTable en el celular (F15 CA-1–CA-4)', () => {
     expect(container.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(3);
     rerender(table({ data: [] }));
     expect(screen.getByText('Sin datos.')).toBeInTheDocument();
+  });
+});
+
+describe('DataTable con error (F24 CA-3)', () => {
+  const failure = new ApiError(500, 'INTERNAL_ERROR');
+
+  it.each([
+    ['en la tabla', 1024],
+    ['en el celular', 375],
+  ])('si falla la carga muestra el error y no "sin datos" %s', (_label, width) => {
+    vi.stubGlobal('innerWidth', width);
+    render(table({ data: undefined, error: failure }));
+    expect(screen.getByRole('alert')).toHaveTextContent(errorMessage(failure));
+    expect(screen.queryByText('Sin datos.')).not.toBeInTheDocument();
+  });
+
+  it('sin error y sin datos muestra el mensaje de vacío', () => {
+    render(table({ data: [] }));
+    expect(screen.getByText('Sin datos.')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('con datos en caché y un error al refrescar, sigue mostrando los datos', () => {
+    render(table({ error: failure }));
+    expect(screen.getByText('Ana')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });

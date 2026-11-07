@@ -157,6 +157,7 @@ function MembersPage() {
         columns={columns}
         data={members.data}
         isLoading={members.isPending}
+        error={members.error}
         emptyMessage="Aún no hay usuarios."
         getRowId={(m) => m.userId}
       />

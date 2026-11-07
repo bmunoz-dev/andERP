@@ -194,6 +194,7 @@ function CategoriesPage() {
         columns={columns}
         data={categories.data}
         isLoading={categories.isPending}
+        error={categories.error}
         emptyMessage="Aún no hay departamentos."
         getRowId={(c) => c.id}
       />

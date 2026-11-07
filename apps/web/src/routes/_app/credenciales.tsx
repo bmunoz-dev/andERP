@@ -155,6 +155,7 @@ function CredentialsPage() {
         columns={columns}
         data={credentials.data}
         isLoading={credentials.isPending}
+        error={credentials.error}
         emptyMessage={
           search ? 'Ninguna credencial coincide con la búsqueda.' : 'Aún no hay credenciales.'
         }

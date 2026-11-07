@@ -11,6 +11,7 @@ import { dueText, FREQUENCY_LABELS, STATUS_CLASSES, STATUS_LABELS } from '@/lib/
 export function AgendaTable({
   data,
   isLoading,
+  error,
   onComplete,
   onHistory,
   onEdit,
@@ -18,6 +19,8 @@ export function AgendaTable({
 }: {
   data: Obligation[] | undefined;
   isLoading: boolean;
+  /** Error de la consulta (F24 CA-3). */
+  error?: unknown;
   onComplete: (o: Obligation) => void;
   onHistory: (o: Obligation) => void;
   onEdit: (o: Obligation) => void;
@@ -117,6 +120,7 @@ export function AgendaTable({
       columns={columns}
       data={data}
       isLoading={isLoading}
+      error={error}
       emptyMessage="No hay obligaciones en esta vista."
       getRowId={(o) => o.id}
     />
