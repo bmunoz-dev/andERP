@@ -11,7 +11,7 @@ import { resetDb, withOwnerSql } from './setup/reset-db';
  * apagados dentro de una transacción que después se revierte.
  */
 const barrier = readFileSync(
-  path.join(import.meta.dirname, '../drizzle/0038_data_integrity_guards.sql'),
+  path.resolve(__dirname, '../drizzle/0038_data_integrity_guards.sql'),
   'utf8',
 )
   .split('--> statement-breakpoint')

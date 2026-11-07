@@ -20,6 +20,7 @@ import {
 } from '../../db/schema';
 import { OrgScope } from '../../shared/db/org-scope';
 import { DomainError } from '../../shared/errors/domain-error';
+import { AUDIT_LOGGER, type AuditLogger } from '../audit/audit.service';
 import { CLOCK, type Clock } from '../auth/application/ports';
 import { GlobalCatalogsService } from '../catalogs/global-catalogs.service';
 import { activeOn, contractColumns, monthTotalsJoin } from './contract-queries';
@@ -30,6 +31,8 @@ const notFound = () => new DomainError(ErrorCode.NOT_FOUND, 404);
 const likePattern = (text: string) => `%${text.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
 
 export interface ProviderFilters {
+  /** Un solo prestador (F23 CA-4): `get` no lista todos para devolver uno. */
+  id?: string;
   search?: string;
   hasActiveContract?: boolean;
 }
@@ -53,6 +56,7 @@ export class ServiceProvidersService {
   constructor(
     @Inject(DB) private readonly db: Database,
     @Inject(CLOCK) private readonly clock: Clock,
+    @Inject(AUDIT_LOGGER) private readonly audit: AuditLogger,
     private readonly scope: OrgScope,
     private readonly catalogs: GlobalCatalogsService,
   ) {}
@@ -64,6 +68,7 @@ export class ServiceProvidersService {
   async list(filters: ProviderFilters = {}): Promise<ServiceProvider[]> {
     const today = this.today();
     const conditions: (SQL | undefined)[] = [this.scope.where(serviceProviders)];
+    if (filters.id) conditions.push(eq(serviceProviders.id, filters.id));
 
     const search = filters.search?.trim();
     if (search) {
@@ -148,7 +153,7 @@ export class ServiceProvidersService {
   }
 
   async get(id: string): Promise<ServiceProvider> {
-    const [provider] = (await this.list()).filter((p) => p.id === id);
+    const [provider] = await this.list({ id });
     if (!provider) throw notFound();
     return provider;
   }
@@ -206,37 +211,53 @@ export class ServiceProvidersService {
         bankAccount.accountTypeId !== current.accountTypeId ? bankAccount.accountTypeId : null,
     });
 
-    await this.db
-      .update(serviceProviders)
-      .set(
-        this.scope.forUpdate({
-          ...(changes.name !== undefined ? { name: changes.name } : {}),
-          ...(changes.documentTypeId !== undefined
-            ? { documentTypeId: changes.documentTypeId }
-            : {}),
-          ...(changes.documentNumber !== undefined
-            ? { documentNumber: changes.documentNumber }
-            : {}),
-          ...(changes.description !== undefined ? { description: changes.description } : {}),
-          // F09: las reglas de desactivación las aplica el trigger `service_providers_guard_deactivation`.
-          ...(changes.isActive !== undefined ? { isActive: changes.isActive } : {}),
-          ...bankAccount,
-        }),
-      )
-      .where(and(this.scope.where(serviceProviders), eq(serviceProviders.id, id)));
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(serviceProviders)
+        .set(
+          this.scope.forUpdate({
+            ...(changes.name !== undefined ? { name: changes.name } : {}),
+            ...(changes.documentTypeId !== undefined
+              ? { documentTypeId: changes.documentTypeId }
+              : {}),
+            ...(changes.documentNumber !== undefined
+              ? { documentNumber: changes.documentNumber }
+              : {}),
+            ...(changes.description !== undefined ? { description: changes.description } : {}),
+            // F09: las reglas de desactivación las aplica el trigger `service_providers_guard_deactivation`.
+            ...(changes.isActive !== undefined ? { isActive: changes.isActive } : {}),
+            ...bankAccount,
+          }),
+        )
+        .where(and(this.scope.where(serviceProviders), eq(serviceProviders.id, id)));
+      // F23 CA-5: cambiar la cuenta a la que se paga es el camino típico de fraude (constitución X).
+      const before: BankAccount = {
+        bankId: current.bankId,
+        accountTypeId: current.accountTypeId,
+        accountNumber: current.accountNumber,
+      };
+      if (
+        before.bankId !== bankAccount.bankId ||
+        before.accountTypeId !== bankAccount.accountTypeId ||
+        before.accountNumber !== bankAccount.accountNumber
+      ) {
+        await this.audit.log(
+          {
+            action: 'provider.bank_account_update',
+            entityType: 'service_provider',
+            entityId: id,
+            changes: { before, after: bankAccount },
+          },
+          tx,
+        );
+      }
+    });
     return this.get(id);
   }
 
-  /** No se borra un prestador con contratos: primero se borran sus contratos (CA-5). */
+  /** No se borra un prestador con contratos (CA-5): lo impide el trigger `service_providers_guard_delete` (F23). */
   async remove(id: string): Promise<void> {
     await this.assertExists(id);
-    const [contract] = await this.db
-      .select({ id: providerContracts.id })
-      .from(providerContracts)
-      .where(and(this.scope.where(providerContracts), eq(providerContracts.serviceProviderId, id)))
-      .limit(1);
-    if (contract) throw new DomainError(ErrorCode.PROVIDER_HAS_CONTRACTS, 422);
-
     await this.db
       .update(serviceProviders)
       .set(this.scope.forSoftDelete())

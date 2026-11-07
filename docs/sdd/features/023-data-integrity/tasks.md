@@ -31,7 +31,7 @@
 
 ## Bloque C — API
 
-- [ ] F23-T006 [TDD] `ServiceProvidersService`:
+- [x] F23-T006 [TDD] `ServiceProvidersService`:
       - `list({ id })` y `get` (CA-4);
       - `remove` sin la consulta previa;
       - `update` en una transacción, con `provider.bank_account_update` (CA-5).

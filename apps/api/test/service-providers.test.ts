@@ -122,6 +122,44 @@ describe('Prestadores', () => {
     expect((cleared.body as ServiceProvider).bank).toBeNull();
   });
 
+  it('F23 CA-5 cambiar la cuenta bancaria queda en la auditoría con antes y después; el nombre no', async () => {
+    const provider = await createProvider({
+      bankId: catalog.bank,
+      accountTypeId: catalog.savings,
+      accountNumber: '1234-5678',
+    });
+    const bankAudits = () =>
+      db
+        .select()
+        .from(auditLogs)
+        .where(
+          and(
+            eq(auditLogs.action, 'provider.bank_account_update'),
+            eq(auditLogs.entityId, provider.id),
+          ),
+        );
+
+    await api().patch(`/service-providers/${provider.id}`, { name: 'Otro nombre' }).expect(200);
+    expect(await bankAudits()).toHaveLength(0);
+
+    await api()
+      .patch(`/service-providers/${provider.id}`, { accountNumber: '9999-0000' })
+      .expect(200);
+    const [entry] = await bankAudits();
+    expect(entry).toMatchObject({
+      entityType: 'service_provider',
+      organizationId: s.orgA.id,
+      changes: {
+        before: {
+          bankId: catalog.bank,
+          accountTypeId: catalog.savings,
+          accountNumber: '1234-5678',
+        },
+        after: { bankId: catalog.bank, accountTypeId: catalog.savings, accountNumber: '9999-0000' },
+      },
+    });
+  });
+
   it('CA-2 valida el número de documento y lo exige único por organización', async () => {
     const invalid = await api()
       .post('/service-providers', providerInput({ documentNumber: '1' }))
