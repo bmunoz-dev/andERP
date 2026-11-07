@@ -144,6 +144,8 @@ export class ResetPasswordUseCase {
     if (!(await this.resets.markUsedIfUnused(reset.id, now))) throw authErrors.invalidResetToken();
 
     await this.users.updatePassword(user.id, await this.hasher.hash(newPassword));
+    // F21 CA-7: al activar una cuenta con varias invitaciones, se entra en la más reciente.
+    if (reset.purpose === 'invite') await this.users.selectNewestMembership(user.id, now);
     await this.sessions.revokeAllForUser(user.id, now);
     await this.audit.log({
       action: 'auth.password_reset',

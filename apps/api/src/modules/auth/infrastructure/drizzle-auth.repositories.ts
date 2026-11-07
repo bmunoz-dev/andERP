@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, eq, gt, isNotNull, isNull, lt, ne, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, isNotNull, isNull, lt, ne, or, sql } from 'drizzle-orm';
 import { DB, type Database } from '../../../db/database.module';
 import {
   organizationMembers,
@@ -129,6 +129,31 @@ export class DrizzleUserRepository implements UserRepository {
         and(
           eq(organizationMembers.userId, userId),
           eq(organizationMembers.organizationId, organizationId),
+        ),
+      );
+  }
+
+  async selectNewestMembership(userId: string, at: Date): Promise<void> {
+    const [newest] = await this.db
+      .select({ organizationId: organizationMembers.organizationId })
+      .from(organizationMembers)
+      .where(
+        and(
+          eq(organizationMembers.userId, userId),
+          eq(organizationMembers.isActive, true),
+          isNull(organizationMembers.deletedAt),
+        ),
+      )
+      .orderBy(desc(organizationMembers.createdAt))
+      .limit(1);
+    if (!newest) return;
+    await this.db
+      .update(organizationMembers)
+      .set({ lastSelectedAt: at })
+      .where(
+        and(
+          eq(organizationMembers.userId, userId),
+          eq(organizationMembers.organizationId, newest.organizationId),
         ),
       );
   }

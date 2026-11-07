@@ -178,6 +178,12 @@ export class InMemoryUsers implements UserRepository {
     this.lastLoginAt.set(userId, at);
     return Promise.resolve();
   }
+  selectNewestMembership(userId: string, at: Date): Promise<void> {
+    this.selectedNewest.push({ userId, at });
+    return Promise.resolve();
+  }
+  /** Llamadas a `selectNewestMembership` (F21 CA-7). */
+  selectedNewest: { userId: string; at: Date }[] = [];
   updatePassword(userId: string, passwordHash: string): Promise<void> {
     const user = this.users.get(userId)!;
     this.users.set(userId, { ...user, passwordHash, failedLoginAttempts: 0, lockedUntil: null });

@@ -68,6 +68,8 @@ export interface UserRepository {
   ): Promise<void>;
   /** Cambia la contraseña y reinicia el contador de intentos y el bloqueo. */
   updatePassword(userId: string, passwordHash: string): Promise<void>;
+  /** Marca como elegida la membresía activa más reciente: el primer login entra ahí (F21 CA-7). */
+  selectNewestMembership(userId: string, at: Date): Promise<void>;
 }
 
 export interface NewSession {
