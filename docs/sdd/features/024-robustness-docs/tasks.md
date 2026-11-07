@@ -32,7 +32,7 @@
 - [x] F24-T007 [TDD] Enlace de credencial (`isWebUrl`) y `url` estricto en el schema de respuesta. Prueba del formulario de credencial sin contraseña.
       Archivos: `apps/web/src/lib/format{,.test}.ts`, `apps/web/src/routes/_app/credenciales.tsx`, `packages/shared/src/schemas/credentials.ts`, la prueba del formulario
       Verificación: CA-6, CA-9
-- [ ] F24-T008 Cambios sin lógica nueva:
+- [x] F24-T008 Cambios sin lógica nueva:
       - invalidaciones de caché;
       - `timeZone` en las fechas;
       - `refreshSession()` al guardar una organización;

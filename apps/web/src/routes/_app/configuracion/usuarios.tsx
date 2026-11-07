@@ -28,7 +28,11 @@ export const Route = createFileRoute('/_app/configuracion/usuarios')({
   component: MembersPage,
 });
 
-const dateTime = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
+const dateTime = new Intl.DateTimeFormat('es-CO', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'America/Bogota',
+});
 
 function MembersPage() {
   const auth = useAuth();

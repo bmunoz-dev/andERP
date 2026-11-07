@@ -23,6 +23,7 @@ import {
   updateExpenseCategory,
 } from '@/lib/admin-api';
 import { errorMessage } from '@/lib/error-messages.es';
+import { expenseKeys } from '@/lib/expenses-api';
 import { moveItem } from '@/lib/reorder';
 
 export const Route = createFileRoute('/_app/configuracion/categorias')({
@@ -40,7 +41,13 @@ function CategoriesPage() {
   const [editing, setEditing] = useState<Editing>(null);
   const [deleting, setDeleting] = useState<ExpenseCategory | null>(null);
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: queryKeys.expenseCategories });
+  // F24 CA-5: el nombre del departamento también aparece en la matriz y el libro de egresos.
+  const refresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.expenseCategories }),
+      queryClient.invalidateQueries({ queryKey: expenseKeys.all }),
+    ]);
+  };
   const onError = (error: unknown) => toast.error(errorMessage(error));
 
   const toggle = useMutation({
