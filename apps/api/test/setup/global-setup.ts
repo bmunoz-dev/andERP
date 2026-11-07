@@ -1,11 +1,9 @@
 import path from 'node:path';
 import { CreateBucketCommand, S3Client } from '@aws-sdk/client-s3';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import postgres from 'postgres';
 import { GenericContainer, Wait } from 'testcontainers';
 import type { TestProject } from 'vitest/node';
+import { migrateDatabase } from '../../src/db/migrate';
 
 declare module 'vitest' {
   export interface ProvidedContext {
@@ -56,16 +54,16 @@ export default async function setup(project: TestProject): Promise<() => Promise
   }
 
   const ownerUrl = container.getConnectionUri();
-  const sql = postgres(ownerUrl, { max: 1, onnotice: () => undefined });
-  try {
-    await migrate(drizzle(sql), {
-      migrationsFolder: path.join(API_ROOT, 'drizzle'),
-      migrationsSchema: 'drizzle',
-      migrationsTable: '__drizzle_migrations',
-    });
-  } finally {
-    await sql.end();
-  }
+  // F22: el mismo migrador que `pnpm db:migrate` en producción.
+  const output: string[] = [];
+  const migrated = await migrateDatabase({
+    url: ownerUrl,
+    migrationsFolder: path.join(API_ROOT, 'drizzle'),
+    write: (line) => {
+      output.push(line);
+    },
+  });
+  if (migrated !== 0) throw new Error(`Migrations failed: ${output.join(' | ')}`);
 
   const runtimeUrl = new URL(ownerUrl);
   runtimeUrl.username = 'app_runtime';
