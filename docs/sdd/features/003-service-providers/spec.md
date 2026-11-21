@@ -10,7 +10,7 @@ Registrar a los prestadores de servicios con sus datos bancarios y el histórico
 ## Historias
 
 - **HU1.** Como admin, quiero registrar un prestador con su documento y su cuenta bancaria.
-- **HU2.** Como admin, quiero registrar los contratos de un prestador (fechas, acuerdo, periodicidad y valor total) y conservar su histórico cuando se renuevan.
+- **HU2.** Como admin, quiero registrar los contratos de un prestador (fechas, acuerdo, periodicidad y monto mensual de referencia, que reemplazó al valor total en F10) y conservar su histórico cuando se renuevan.
 - **HU3.** Como admin, quiero buscar prestadores y ver cuál tiene un contrato vigente.
 
 ## Criterios de aceptación

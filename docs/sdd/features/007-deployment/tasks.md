@@ -21,28 +21,31 @@
 
 ## Bloque C — Infraestructura (manual y documentada)
 
-- [ ] F07-T006 Crear el proyecto de Supabase en `sa-east-1` con plan de pago, desactivar la Data API y crear `app_runtime` con `bootstrap.sql` (contraseña robusta y `search_path = anderp`). Comprobar con la llave `anon` que no se obtienen datos.
+> Hecho en planes Free de Supabase y Render, no de pago (decisión del usuario del 2026-10-10; ver `roadmap.md`, estado de producción).
+
+- [x] F07-T006 Crear el proyecto de Supabase en `sa-east-1` con plan de pago, desactivar la Data API y crear `app_runtime` con `bootstrap.sql` (contraseña robusta y `search_path = anderp`). Comprobar con la llave `anon` que no se obtienen datos.
       Verificación: CA-1–CA-3, CA-5
-- [ ] F07-T007 Configurar la conexión por Supavisor en modo sesión con `app_runtime` y ejecutar `db:migrate` + `db:seed` desde un equipo local por primera vez.
+- [x] F07-T007 Configurar la conexión por Supavisor en modo sesión con `app_runtime` y ejecutar `db:migrate` + `db:seed` desde un equipo local por primera vez.
       Depende de: F07-T006 · Verificación: CA-4
-- [ ] F07-T008 Crear el servicio web en Render (Docker, plan de pago, health check, secretos) y obtener el deploy hook.
+- [x] F07-T008 Crear el servicio web en Render (Docker, plan de pago, health check, secretos) y obtener el deploy hook.
       Depende de: F07-T003, F07-T007 · Verificación: CA-7
-- [ ] F07-T009 Crear el Worker en Cloudflare (Workers Builds desde git, build de `apps/web`, variables `API_ORIGIN` y `PROXY_SECRET`).
+- [x] F07-T009 Crear el Worker en Cloudflare (Workers Builds desde git, build de `apps/web`, variables `API_ORIGIN` y `PROXY_SECRET`).
       Depende de: F07-T004, F07-T008
-- [ ] F07-T010 Configurar el proveedor SMTP y verificar que llega un correo real de recuperación de contraseña.
+- [x] F07-T010 Configurar el proveedor SMTP y verificar que llega un correo real de recuperación de contraseña.
       Depende de: F07-T008
 
 ## Bloque D — Pipeline
 
 - [x] F07-T011 Crear `.github/workflows/deploy.yml`: CI → aprobación del environment `production` → `db:migrate` → deploy hook de Render → espera del health check.
       Depende de: F07-T008 · Verificación: CA-13, CA-14
-- [ ] F07-T012 Probar el pipeline con una migración deliberadamente rota en una rama de prueba, y comprobar que la API no se despliega.
+- [x] F07-T012 Probar el pipeline con una migración deliberadamente rota en una rama de prueba, y comprobar que la API no se despliega.
       Depende de: F07-T011 · Verificación: CA-14
+      Estado: cubierta por F22 (2026-11-07) con la prueba del migrador sobre una migración rota.
 
 ## Bloque E — E2E y runbooks
 
-- [ ] F07-T013 Crear el paquete `e2e/` con Playwright y los flujos de humo de CA-15, ejecutables contra local (`BASE_URL`).
-      Estado: escrito y compila; falta la primera ejecución (abre un navegador: requiere autorización del usuario).
+- [x] F07-T013 Crear el paquete `e2e/` con Playwright y los flujos de humo de CA-15, ejecutables contra local (`BASE_URL`).
+      Estado: cubierta por F22 (2026-11-07): el smoke de Playwright corre en el CI.
       Verificación: CA-15
 - [x] F07-T014 [P] Escribir los runbooks 01–06 en `docs/runbooks/`.
       Verificación: CA-16
